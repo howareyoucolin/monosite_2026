@@ -16,6 +16,15 @@ PAGE_PATHS = [
     "/join/",
     "/contacts/",
 ]
+PAGE_FILE_NAMES = {
+    "/": "index.php",
+    "/events/": "events.php",
+    "/photos/": "photos.php",
+    "/posts/": "posts.php",
+    "/join/": "join.php",
+    "/contacts/": "contacts.php",
+}
+HIDDEN_MENU_IDS = ("103", "112", "113")
 RESOURCE_EXTENSIONS = (
     ".jpg",
     ".jpeg",
@@ -173,11 +182,155 @@ def rewrite_html(content: str, current_url: str) -> str:
     content = re.sub(r'''(href|src)\s*=\s*(["'])(.*?)\2''', lambda m: m.group(0), content)
     content = re.sub(r'''(?P<attr>(?:href|src)\s*=\s*["'])(?P<url>[^"']+)(?P<quote>["'])''', repl, content)
     content = rewrite_srcset(content, current_url)
-    return rewrite_css_urls(content, current_url)
+    content = rewrite_css_urls(content, current_url)
+    return inject_hidden_nav_css(content)
+
+
+def inject_hidden_nav_css(content: str) -> str:
+    selectors = ",".join(
+        [
+            *(f"#menu-item-{menu_id}" for menu_id in HIDDEN_MENU_IDS),
+            *(f".menu-item-{menu_id}" for menu_id in HIDDEN_MENU_IDS),
+        ]
+    )
+    style_block = (
+        "\n<style id=\"local-hidden-nav-items\">\n"
+        f"{selectors} {{ display: none !important; }}\n"
+        "</style>\n"
+    )
+    if "local-hidden-nav-items" in content:
+        return content
+    return content.replace("</head>", f"{style_block}</head>", 1)
 
 
 def rewrite_css(content: str, current_url: str) -> str:
     return rewrite_css_urls(content, current_url)
+
+
+def extract_first_match(pattern: str, text: str, fallback: str = "") -> str:
+    match = re.search(pattern, text, re.DOTALL)
+    return match.group(1).strip() if match else fallback
+
+
+def extract_header_fragment(html: str) -> str:
+    desktop_index = html.find('<div class="desktop-simple-header">')
+    if desktop_index == -1:
+        raise ValueError("Could not locate shared desktop header")
+
+    header_style_start = html.rfind("<style>", 0, desktop_index)
+    header_script_end = html.find("</script>", desktop_index)
+    if header_style_start == -1 or header_script_end == -1:
+        raise ValueError("Could not locate complete shared header block")
+
+    fragment = html[header_style_start : header_script_end + len("</script>")]
+    fragment = re.sub(r"</body>\s*</html>\s*", "", fragment, count=1, flags=re.DOTALL)
+    fragment = fragment.replace("https://www.ycbeautycenter.com/", "/")
+    fragment = fragment.replace(' aria-current="page"', "")
+    fragment = re.sub(r"\s+current-menu-item\b", "", fragment)
+    fragment = re.sub(r"\s+current_page_item\b", "", fragment)
+    fragment = re.sub(r"\s+page_item\b", "", fragment)
+    fragment = re.sub(r"\s+page-id-\d+\b", "", fragment)
+    fragment = re.sub(r"\s+page-item-\d+\b", "", fragment)
+    return fragment.strip()
+
+
+def extract_page_content(html: str) -> str:
+    start = html.find('<div class="intro">')
+    end = html.find('<style>\n    .footer {', start)
+    if start == -1 or end == -1:
+        raise ValueError("Could not isolate page content block")
+    content = html[start:end].strip()
+    return re.sub(r"</div>\s*</div>\s*$", "</div>", content, flags=re.DOTALL)
+
+
+def extract_footer_fragment(html: str) -> str:
+    start = html.find('<style>\n    .footer {')
+    end = html.rfind("</body>")
+    if start == -1 or end == -1:
+        raise ValueError("Could not isolate footer block")
+    fragment = html[start:end].strip()
+    return re.sub(r"</head>\s*<body>\s*", "", fragment, count=1, flags=re.DOTALL)
+
+
+def build_header_include(index_html: str) -> str:
+    outer_head = extract_first_match(r"<head>(.*?)</head>", index_html)
+    outer_head = re.sub(r"<title>.*?</title>\s*", "", outer_head, count=1, flags=re.DOTALL)
+    outer_head = re.sub(r'<link rel="alternate"[^>]+>\s*', "", outer_head)
+    outer_head = re.sub(r"<link rel='shortlink'[^>]+>\s*", "", outer_head)
+    outer_head = re.sub(r'<link rel="canonical"[^>]+>\s*', "", outer_head)
+    outer_head = re.sub(r'<link rel="https://api\.w\.org/"[^>]+>\s*', "", outer_head)
+    outer_head = re.sub(r'<link rel="EditURI"[^>]+>\s*', "", outer_head)
+    outer_head = re.sub(r'<meta name="generator"[^>]+>\s*', "", outer_head)
+    outer_head = re.sub(r'<meta charset="utf-8">\s*', "", outer_head)
+    outer_head = re.sub(r'<meta name="viewport" content="width=device-width, initial-scale=1">\s*', "", outer_head)
+    outer_head = outer_head.strip()
+
+    header_fragment = extract_header_fragment(index_html)
+
+    return f"""<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?php echo htmlspecialchars($pageTitle ?? '美國信陽同鄉會', ENT_QUOTES, 'UTF-8'); ?></title>
+    {outer_head}
+    <link rel="stylesheet" href="/wp-content/themes/yc-colin/global.css" />
+</head>
+<body>
+{header_fragment}
+    <div class="content">
+"""
+
+
+def build_footer_include(index_html: str) -> str:
+    footer_fragment = extract_footer_fragment(index_html)
+    return f"""    </div>
+{footer_fragment}
+</body>
+</html>
+"""
+
+
+def build_page_php(html: str, route: str) -> str:
+    raw_title = extract_first_match(r"<title>(.*?)</title>", html, "美國信陽同鄉會")
+    page_title = raw_title.replace(" &#8211; 美國信陽同鄉會", "").replace(" – 美國信陽同鄉會", "")
+    content = extract_page_content(html)
+    return f"""<?php
+$pageTitle = {page_title!r};
+include __DIR__ . '/includes/header.php';
+?>
+{content}
+<?php include __DIR__ . '/includes/footer.php'; ?>
+"""
+
+
+def build_php_site() -> None:
+    index_html_path = SITE_ROOT / "index.html"
+    if not index_html_path.exists():
+        return
+
+    includes_dir = SITE_ROOT / "includes"
+    includes_dir.mkdir(parents=True, exist_ok=True)
+
+    index_html = index_html_path.read_text()
+    (includes_dir / "header.php").write_text(build_header_include(index_html))
+    (includes_dir / "footer.php").write_text(build_footer_include(index_html))
+
+    for route, php_name in PAGE_FILE_NAMES.items():
+        html_path = SITE_ROOT / path_for_url(urllib.parse.urljoin(BASE_URL, route), True).lstrip("/")
+        if not html_path.exists():
+            continue
+        php_path = SITE_ROOT / php_name
+        php_path.write_text(build_page_php(html_path.read_text(), route))
+
+    for route in PAGE_FILE_NAMES:
+        html_path = SITE_ROOT / path_for_url(urllib.parse.urljoin(BASE_URL, route), True).lstrip("/")
+        if html_path.exists():
+            html_path.unlink()
+        if route != "/":
+            page_dir = SITE_ROOT / route.strip("/")
+            if page_dir.exists():
+                page_dir.rmdir()
 
 
 def iter_resource_urls(content: str, current_url: str) -> Iterable[str]:
@@ -280,6 +433,8 @@ def main() -> None:
         if url in seen:
             continue
         download_page(url, seen, queue)
+
+    build_php_site()
 
     print(f"Mirrored site into {SITE_ROOT}")
 
