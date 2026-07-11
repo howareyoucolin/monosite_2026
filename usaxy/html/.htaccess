@@ -1,0 +1,12 @@
+DirectoryIndex index.html index.php
+
+RewriteEngine On
+
+# Leave real files and directories alone
+RewriteCond %{REQUEST_FILENAME} -d [OR]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Serve /page or /page/ as /page.php
+RewriteRule ^$ index.html [L]
+RewriteRule ^([A-Za-z0-9._-]+)/?$ $1.php [L,QSA]
