@@ -1,4 +1,5 @@
 import re
+import shutil
 import ssl
 import urllib.parse
 import urllib.request
@@ -52,6 +53,15 @@ SKIP_PREFIXES = (
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
+ASSET_PATH_REWRITES = {
+    "/wp-content/themes/yc-colin/global.css": "/assets/styles/global.css",
+    "/wp-content/plugins/simply-gallery-block/plugins/pgc_sgb_lightbox.min.style__ver-3.2.4.3.css": "/assets/vendor/pgc_sgb_lightbox.min.style__ver-3.2.4.3.css",
+    "/wp-content/plugins/simply-gallery-block/plugins/pgc_sgb_lightbox.min__ver-3.2.4.3.js": "/assets/vendor/pgc_sgb_lightbox.min__ver-3.2.4.3.js",
+}
+ASSET_PREFIX_REWRITES = {
+    "/wp-content/uploads/": "/assets/images/",
+}
+
 
 def fetch(url: str) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -64,9 +74,20 @@ def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def remap_asset_path(path: str) -> str:
+    if path in ASSET_PATH_REWRITES:
+        return ASSET_PATH_REWRITES[path]
+    for old_prefix, new_prefix in ASSET_PREFIX_REWRITES.items():
+        if path.startswith(old_prefix):
+            return path.replace(old_prefix, new_prefix, 1)
+    return path
+
+
 def path_for_url(url: str, is_page: bool) -> str:
     parsed = urllib.parse.urlparse(url)
     path = parsed.path or "/"
+    if not is_page:
+        path = remap_asset_path(path)
     suffix = ""
     if parsed.query:
         safe_query = re.sub(r"[^A-Za-z0-9._-]+", "-", parsed.query).strip("-")
@@ -204,7 +225,26 @@ def inject_hidden_nav_css(content: str) -> str:
 
 
 def rewrite_css(content: str, current_url: str) -> str:
-    return rewrite_css_urls(content, current_url)
+    return rewrite_asset_paths(rewrite_css_urls(content, current_url))
+
+
+def rewrite_asset_paths(content: str) -> str:
+    replacements = []
+    for old_path, new_path in ASSET_PATH_REWRITES.items():
+        replacements.append((f"https://usaxy.org{old_path}", new_path))
+        replacements.append((old_path, new_path))
+    for old_prefix, new_prefix in ASSET_PREFIX_REWRITES.items():
+        replacements.append((f"https://usaxy.org{old_prefix}", new_prefix))
+        replacements.append((old_prefix, new_prefix))
+
+    for old, new in replacements:
+        content = content.replace(old, new)
+
+    content = content.replace("/wp-content/themes/yc-colin/*", "/assets/styles/*")
+    content = content.replace("/wp-content/plugins/*", "/assets/vendor/*")
+    content = content.replace("/wp-content/uploads/*", "/assets/images/*")
+    content = content.replace("/wp-content/*", "/assets/*")
+    return content
 
 
 def extract_first_match(pattern: str, text: str, fallback: str = "") -> str:
@@ -263,9 +303,9 @@ def build_header_include(index_html: str) -> str:
     outer_head = re.sub(r'<meta name="generator"[^>]+>\s*', "", outer_head)
     outer_head = re.sub(r'<meta charset="utf-8">\s*', "", outer_head)
     outer_head = re.sub(r'<meta name="viewport" content="width=device-width, initial-scale=1">\s*', "", outer_head)
-    outer_head = outer_head.strip()
+    outer_head = rewrite_asset_paths(outer_head.strip())
 
-    header_fragment = extract_header_fragment(index_html)
+    header_fragment = rewrite_asset_paths(extract_header_fragment(index_html))
 
     return f"""<!DOCTYPE html>
 <html lang="en-US">
@@ -274,7 +314,7 @@ def build_header_include(index_html: str) -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($pageTitle ?? '美國信陽同鄉會', ENT_QUOTES, 'UTF-8'); ?></title>
     {outer_head}
-    <link rel="stylesheet" href="/wp-content/themes/yc-colin/global.css" />
+    <link rel="stylesheet" href="/assets/styles/global.css" />
 </head>
 <body>
 {header_fragment}
@@ -283,7 +323,7 @@ def build_header_include(index_html: str) -> str:
 
 
 def build_footer_include(index_html: str) -> str:
-    footer_fragment = extract_footer_fragment(index_html)
+    footer_fragment = rewrite_asset_paths(extract_footer_fragment(index_html))
     return f"""    </div>
 {footer_fragment}
 </body>
@@ -294,7 +334,7 @@ def build_footer_include(index_html: str) -> str:
 def build_page_php(html: str, route: str) -> str:
     raw_title = extract_first_match(r"<title>(.*?)</title>", html, "美國信陽同鄉會")
     page_title = raw_title.replace(" &#8211; 美國信陽同鄉會", "").replace(" – 美國信陽同鄉會", "")
-    content = extract_page_content(html)
+    content = rewrite_asset_paths(extract_page_content(html))
     return f"""<?php
 $pageTitle = {page_title!r};
 include __DIR__ . '/includes/header.php';
@@ -331,6 +371,10 @@ def build_php_site() -> None:
             page_dir = SITE_ROOT / route.strip("/")
             if page_dir.exists():
                 page_dir.rmdir()
+
+    wp_content_dir = SITE_ROOT / "wp-content"
+    if wp_content_dir.exists():
+        shutil.rmtree(wp_content_dir)
 
 
 def iter_resource_urls(content: str, current_url: str) -> Iterable[str]:

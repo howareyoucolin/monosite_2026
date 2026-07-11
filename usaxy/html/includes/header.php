@@ -61,7 +61,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
 /*# sourceURL=global-styles-inline-css */
 </style>
 
-<link rel='stylesheet' id='pgc-simply-gallery-plugin-lightbox-style-css' href='/wp-content/plugins/simply-gallery-block/plugins/pgc_sgb_lightbox.min.style__ver-3.2.4.3.css' media='all' />
+<link rel='stylesheet' id='pgc-simply-gallery-plugin-lightbox-style-css' href='/assets/vendor/pgc_sgb_lightbox.min.style__ver-3.2.4.3.css' media='all' />
 <noscript><style>.simply-gallery-amp{ display: block !important; }</style></noscript><noscript><style>.sgb-preloader{ display: none !important; }</style></noscript>    <style>
         .single-post-title {
             font-size: 28px;
@@ -88,7 +88,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
 <style id="local-hidden-nav-items">
 #menu-item-103,#menu-item-112,#menu-item-113,.menu-item-103,.menu-item-112,.menu-item-113 { display: none !important; }
 </style>
-    <link rel="stylesheet" href="/wp-content/themes/yc-colin/global.css" />
+    <link rel="stylesheet" href="/assets/styles/global.css" />
 </head>
 <body>
 <style>

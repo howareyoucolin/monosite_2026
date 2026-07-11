@@ -26,14 +26,14 @@
     </footer>
 
     <script type="speculationrules">
-{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/yc-colin/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/assets/images/*","/assets/*","/assets/vendor/*","/assets/styles/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
 </script>
 <script id="pgc-simply-gallery-plugin-lightbox-script-js-extra">
 var PGC_SGB_LIGHTBOX = {"lightboxPreset":"","postType":"page","lightboxSettigs":""};
 var PGC_SGB_LIGHTBOX = {"lightboxPreset":"","postType":"page","lightboxSettigs":""};
 //# sourceURL=pgc-simply-gallery-plugin-lightbox-script-js-extra
 </script>
-<script id="pgc-simply-gallery-plugin-lightbox-script-js" src="/wp-content/plugins/simply-gallery-block/plugins/pgc_sgb_lightbox.min__ver-3.2.4.3.js"></script>
+<script id="pgc-simply-gallery-plugin-lightbox-script-js" src="/assets/vendor/pgc_sgb_lightbox.min__ver-3.2.4.3.js"></script>
 <script id="wp-emoji-settings" type="application/json">
 {"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://usaxy.org/wp-includes/js/wp-emoji-release.min.js?ver=7.0.1"}}
 </script>
