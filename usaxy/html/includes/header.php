@@ -90,8 +90,16 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
 </style>
     <link rel="stylesheet" href="/assets/styles/global.css" />
 </head>
-<body>
+<body<?php if (!empty($pageClass)) echo ' class="' . htmlspecialchars($pageClass, ENT_QUOTES, 'UTF-8') . '"'; ?>>
 <style>
+    :root {
+        --brand-red-deep: #6f3430;
+        --brand-red: #9a5a45;
+        --brand-red-soft: #fdf4ee;
+        --brand-gold: #d9b15f;
+        --brand-ink: #3e2d26;
+    }
+
     .desktop-simple-header {
         display: none;
     }
@@ -110,107 +118,153 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
         text-decoration: none;
     }
 
+    .desktop-simple-header .container,
+    .header-container,
+    .navbar .container {
+        width: min(1400px, calc(100% - 40px));
+    }
+
     /* Overhead Bar */
     .overhead {
-        background-color: #f0f0f0;
-        color: #333;
-        padding: 10px 0;
-        font-size: 12px;
+        background: #f5f1eb;
+        color: #7a6656;
+        padding: 6px 0;
+        font-size: 11px;
+        border-bottom: 1px solid rgba(122, 102, 86, 0.12);
     }
 
     .overhead .container {
-        max-width: 1400px;
         margin: 0 auto;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 40px;
+        gap: 16px;
+        padding: 0;
     }
 
-    .overhead .social-icons a {
-        margin-left: 15px;
-        color: #555;
+    .contact-info,
+    .social-icons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .contact-info span,
+    .social-icons span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        letter-spacing: 0.02em;
+    }
+
+    .contact-info a {
+        color: inherit;
     }
 
     /* Header Section */
     header {
-        background-color: #fff;
-        padding: 30px 0;
+        position: relative;
+        background:
+            radial-gradient(circle at top, rgba(217, 177, 95, 0.14), transparent 32%),
+            linear-gradient(180deg, #fffbf7 0%, #f8efe6 100%);
+        padding: 38px 0 34px;
+        border-bottom: 1px solid rgba(154, 90, 69, 0.1);
     }
 
     .header-container {
-        max-width: 1400px;
         margin: 0 auto;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        padding: 0 40px;
+        padding: 0;
+        text-align: center;
     }
 
     .logo {
-        font-size: 18px;
-        /* Reduced font size for the logo text */
-        font-weight: bold;
+        position: relative;
     }
 
-    .logo img {
-        height: 60px;
+    .logo h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 2.85rem);
+        line-height: 1.08;
+        letter-spacing: 0.08em;
+        color: var(--brand-red-deep);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .logo p {
+        margin: 10px 0 0;
+        color: #82644b;
+        font-size: 0.95rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
     }
 
     /* Navbar */
     .navbar {
-        background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
+        background: linear-gradient(180deg, #181818 0%, #232323 100%);
         color: white;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        /* Subtle shadow for depth */
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
 
     .navbar .container {
-        max-width: 1400px;
         margin: 0 auto;
-        padding: 0 40px;
+        padding: 0;
     }
 
     .navbar ul {
         display: flex;
-        justify-content: flex-start;
-        padding: 20px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        /* Subtle bottom line for structure */
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0;
+        padding: 12px 0;
     }
 
     .navbar ul li {
-        margin-right: 30px;
         position: relative;
+        margin: 0;
     }
 
     .navbar ul li:not(:last-child)::after {
-        content: "|";
-        color: rgba(255, 255, 255, 0.2);
-        /* Divider between menu items */
-        margin-left: 20px;
+        content: none;
     }
 
     .navbar ul li a {
-        color: white;
-        font-size: 18px;
-        padding: 10px;
-        transition: color 0.3s, border-bottom 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .navbar ul li a:hover {
-        color: #ffcc00;
-        /* Professional gold accent */
-        border-bottom: 2px solid #ffcc00;
-        /* Underline effect on hover */
+        color: #fff7e3;
+        background: rgba(217, 177, 95, 0.12);
+        border-color: rgba(217, 177, 95, 0.14);
     }
 
-    /* .navbar ul li a.active {
-        border-bottom: 3px solid #007BFF;
-    } */
-
     .navbar ul li a[aria-current="page"] {
-        border-bottom: 3px solid #007BFF;
+        color: #fff7e3;
+        background: rgba(217, 177, 95, 0.18);
+        border-color: rgba(217, 177, 95, 0.2);
+        box-shadow: none;
     }
 </style>
 
@@ -219,7 +273,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     <div class="overhead">
         <div class="container">
             <div class="contact-info">
-                <span>電話：1 (516) 558-5788</span>
+                <span>電話：<a href="tel:+15165585788">1 (516) 558-5788</a></span>
             </div>
             <div class="social-icons">
                 <span>地址: 33-70 Prince St. Flushing NY 11355</span>
@@ -232,6 +286,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
         <div class="header-container">
             <div class="logo">
                 <h1>美國信陽同鄉會</h1>
+                <p>United States Xinyang Association</p>
             </div>
         </div>
     </header>
@@ -242,7 +297,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
             <ul><li id="menu-item-56" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-56"><a href="/">首頁</a></li>
 <li id="menu-item-103" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-103"><a href="/events/">最新活動</a></li>
 <li id="menu-item-17" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-17"><a href="/photos/">相冊</a></li>
-<li id="menu-item-114" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-114"><a href="https://www.youtube.com/@Lingsmusic2023">視頻</a></li>
+<li id="menu-item-114" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-114"><a href="https://www.youtube.com/@Lingsmusic888" target="_blank" rel="noopener noreferrer">視頻</a></li>
 <li id="menu-item-112" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-112"><a href="/posts/">文章投稿</a></li>
 <li id="menu-item-113" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-113"><a href="/join/">成為一員</a></li>
 <li id="menu-item-24" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-24"><a href="/contacts/">聯繫我們</a></li>
@@ -254,36 +309,65 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     }
 
     /* Mobile Header */
+    .mobile-header-container {
+        --mobile-header-height: 74px;
+    }
+
     .mobile-header-container .mobile-header {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
-        padding: 0 15px;
+        gap: 14px;
+        min-height: var(--mobile-header-height);
+        padding: 10px 16px;
         position: fixed;
         top: 0;
         width: 100%;
-        background-color: rgba(255, 255, 255, 1);
-        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 250, 245, 0.96);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 18px rgba(90, 67, 49, 0.06);
         z-index: 1000;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid rgba(154, 90, 69, 0.08);
         box-sizing: border-box;
     }
 
+    .mobile-header-container .mobile-header .logo {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .mobile-header-container .mobile-header .logo a {
+        display: block;
+    }
+
     .mobile-header-container .mobile-header .logo h1 {
-        Font-size:26px;
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        letter-spacing: 0.04em;
+        color: var(--brand-red-deep);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Hamburger and Close button */
     .mobile-header-container .mobile-header .hamburger-menu,
     .mobile-header-container .mobile-header .close-menu {
-        font-size: 32px;
-        /* Slightly larger for better visibility */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        background: rgba(111, 52, 48, 0.08);
+        border: 1px solid rgba(111, 52, 48, 0.08);
+        font-size: 28px;
+        line-height: 1;
         cursor: pointer;
-        color: #333;
-        position: absolute;
-        right: 25px;
-        top: 9px;
-        transition: transform 0.3s ease;
+        color: var(--brand-red-deep);
+        transition: background-color 0.25s ease, transform 0.3s ease;
     }
 
     /* Initially hide the close button */
@@ -315,12 +399,12 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
         position: fixed;
         top: 0;
         left: -100%;
-        width: 80%;
+        width: min(82vw, 340px);
         height: 100%;
-        background-color: white;
+        background: linear-gradient(180deg, #fffaf6, #f8eee6);
         overflow-y: auto;
         z-index: 1000;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 8px 0 24px rgba(90, 67, 49, 0.12);
         transition: left 0.3s ease-in-out;
     }
 
@@ -331,29 +415,29 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     /* Styling Menu Items */
     .mobile-header-container .mobile-menu .mobile-menu-list {
         list-style: none;
-        padding: 20px;
+        padding: 92px 18px 24px;
         margin: 0;
     }
 
     .mobile-header-container .mobile-menu .mobile-menu-list>li {
         margin-bottom: 0;
-        border-bottom: 1px solid #ddd;
-        /* Subtle line separator */
+        border-bottom: 1px solid rgba(154, 90, 69, 0.08);
         padding-bottom: 0;
     }
 
     .mobile-header-container .mobile-menu .mobile-menu-list>li>a {
         text-decoration: none;
-        font-size: 20px;
-        color: #262626;
-        padding: 8px 0;
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--brand-ink);
+        padding: 14px 0;
         display: block;
         background-color: transparent;
         transition: background-color 0.3s ease, padding-left 0.3s ease;
     }
 
     .mobile-header-container .mobile-menu .mobile-menu-list>li>a:hover {
-        background-color: #f1f1f1;
+        background-color: rgba(154, 90, 69, 0.05);
         padding-left: 12px;
     }
 
@@ -366,7 +450,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     }
 
     .mobile-header-container .mobile-menu .submenu>li {
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid rgba(154, 90, 69, 0.06);
         padding-bottom: 0;
         margin-bottom: 0;
     }
@@ -374,20 +458,15 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     .mobile-header-container .mobile-menu .submenu>li>a {
         text-decoration: none;
         font-size: 16px;
-        /* Smaller font for submenu items */
-        color: #666;
-        /* Lighter color for submenu text */
-        padding: 5px 0;
-        /* Padding around submenu text */
+        color: #7b4a2b;
+        padding: 6px 0;
         display: block;
         transition: background-color 0.3s ease, padding-left 0.3s ease;
     }
 
     .mobile-header-container .mobile-menu .submenu>li>a:hover {
-        background-color: #f9f9f9;
-        /* Light background on hover */
+        background-color: rgba(240, 191, 82, 0.08);
         padding-left: 12px;
-        /* Slightly increased left padding on hover */
     }
 
     /* Hide Hamburger, Show Close Button when menu is open */
@@ -403,6 +482,23 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     @media (max-width: 769px) {
         .mobile-header-container {
             display: block;
+        }
+
+        .content {
+            padding-top: calc(var(--mobile-header-height) + 12px);
+        }
+    }
+
+    @media (max-width: 960px) {
+        .overhead .container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .contact-info span,
+        .social-icons span {
+            width: 100%;
+            justify-content: flex-start;
         }
     }
 </style>
@@ -425,7 +521,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
         <ul id="menu-menu-2" class="mobile-menu-list"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-56 main-menu-item"><a href="/" class="menu-link">首頁</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-103 main-menu-item"><a href="/events/" class="menu-link">最新活動</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-17 main-menu-item"><a href="/photos/" class="menu-link">相冊</a></li>
-<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-114 main-menu-item"><a href="https://www.youtube.com/@Lingsmusic2023" class="menu-link">視頻</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-114 main-menu-item"><a href="https://www.youtube.com/@Lingsmusic888" class="menu-link" target="_blank" rel="noopener noreferrer">視頻</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-112 main-menu-item"><a href="/posts/" class="menu-link">文章投稿</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-113 main-menu-item"><a href="/join/" class="menu-link">成為一員</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-24 main-menu-item"><a href="/contacts/" class="menu-link">聯繫我們</a></li>

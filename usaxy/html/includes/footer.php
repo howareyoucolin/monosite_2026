@@ -16,6 +16,20 @@
         padding: 10px 15px 0;
         text-align: center;
     }
+
+    @media (max-width: 768px) {
+        .footer {
+            margin-top: 56px;
+            padding: 16px 0;
+        }
+
+        .footer-bottom {
+            margin-top: 0;
+            padding: 12px 16px 0;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+    }
 </style>
 <footer class="footer">
         <div class="footer-bottom">

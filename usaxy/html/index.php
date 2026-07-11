@@ -1,10 +1,9 @@
 <?php
 $pageTitle = '美國信陽同鄉會';
+$pageClass = 'home-page';
 include __DIR__ . '/includes/header.php';
 ?>
 <div class="intro">
-    <h2>美國信陽同鄉會商会</h2>
-    
 <figure class="wp-block-image size-large"><img fetchpriority="high" decoding="async" width="1024" height="760" src="/assets/images/2024/12/WechatIMG138-1024x760.jpg" alt="" class="wp-image-67" srcset="/assets/images/2024/12/WechatIMG138-1024x760.jpg 1024w, /assets/images/2024/12/WechatIMG138-300x223.jpg 300w, /assets/images/2024/12/WechatIMG138-768x570.jpg 768w, /assets/images/2024/12/WechatIMG138-1536x1140.jpg 1536w, /assets/images/2024/12/WechatIMG138.jpg 1724w" sizes="(max-width: 1024px) 100vw, 1024px" /></figure>
 
 
