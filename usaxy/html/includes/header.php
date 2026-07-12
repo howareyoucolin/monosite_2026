@@ -273,7 +273,7 @@ ol,ul{box-sizing:border-box}:root :where(.wp-block-list.has-background){padding:
     <div class="overhead">
         <div class="container">
             <div class="contact-info">
-                <span>電話：<a href="tel:+15165585788">1 (516) 558-5788</a></span>
+                <span>電話：<a href="tel:+15168998818">1 (516) 899-8818</a></span>
             </div>
             <div class="social-icons">
                 <span>地址: 33-70 Prince St. Flushing NY 11355</span>

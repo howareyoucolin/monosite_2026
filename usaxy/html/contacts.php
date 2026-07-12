@@ -26,7 +26,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="contact-detail">
                     <span class="contact-label">電話</span>
-                    <p><a href="tel:+15165585788">1 (516) 558-5788</a></p>
+                    <p><a href="tel:+15168998818">1 (516) 899-8818</a></p>
                 </div>
                 <div class="contact-detail">
                     <span class="contact-label">電子郵箱</span>

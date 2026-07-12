@@ -9,7 +9,7 @@ include __DIR__ . '/includes/header.php';
         <span class="page-chip">入會資訊</span>
         <p>歡迎關心家鄉、熱心社區的同鄉與朋友加入美國信陽同鄉會。入會流程與資料正在整理中，您可以先透過電話或郵件與我們聯繫。</p>
         <div class="page-actions">
-            <a class="page-link-button" href="tel:+15165585788">致電協會</a>
+            <a class="page-link-button" href="tel:+15168998818">致電協會</a>
             <a class="page-link-button alt" href="mailto:chen5165585788@gmail.com">郵件聯絡</a>
         </div>
     </div>
