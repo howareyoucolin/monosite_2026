@@ -2,6 +2,7 @@
   "sites": {
     "usaxy": {
       "sourceDir": "html",
+      "transport": "scp",
       "user": "your-dreamhost-ssh-user",
       "host": "yourserver.dreamhost.com",
       "remoteDir": "/home/your-dreamhost-ssh-user/example.com",

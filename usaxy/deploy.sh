@@ -5,7 +5,11 @@ usage() {
   cat <<'EOF'
 Usage: ./deploy.sh [options]
 
-Deploy the current site to DreamHost with rsync over SSH.
+Deploy the current site to DreamHost.
+
+By default, this script uses `scp`, which works well with DreamHost SFTP-style
+access. You can switch to `rsync` with `--transport rsync` if full SSH shell
+access is enabled for the account.
 
 By default, this script loads the current site's settings from ../deploy.config.json
 using the site directory name as the site key.
@@ -16,13 +20,16 @@ Options:
   --site NAME               Site key in the JSON config
                             (default: current directory name)
   --source DIR              Local directory to sync (default: ./html)
+  --transport NAME          Deploy transport: scp or rsync (default: scp)
   --user USER               DreamHost SSH username
   --host HOST               DreamHost SSH hostname
   --remote-dir DIR          Remote document root on DreamHost
   --port PORT               SSH port (default: 22)
   --identity-file FILE      Optional SSH private key to use
   --delete                  Remove remote files that no longer exist locally
+                            (rsync transport only)
   --dry-run                 Preview changes without uploading anything
+  --no-progress             Hide per-file upload progress output
   -h, --help                Show this help
 
 JSON config shape:
@@ -30,6 +37,7 @@ JSON config shape:
   "sites": {
     "usaxy": {
       "sourceDir": "html",
+      "transport": "scp",
       "user": "ssh-user",
       "host": "yourserver.dreamhost.com",
       "remoteDir": "/home/ssh-user/example.com",
@@ -42,6 +50,7 @@ Examples:
   ./deploy.sh
   ./deploy.sh --dry-run
   ./deploy.sh --delete
+  ./deploy.sh --transport rsync --dry-run
   ./deploy.sh --site usaxy
 EOF
 }
@@ -137,7 +146,7 @@ if not isinstance(site_config, dict):
     )
     sys.exit(1)
 
-for key in ("sourceDir", "user", "host", "remoteDir", "port", "sshKey"):
+for key in ("sourceDir", "transport", "user", "host", "remoteDir", "port", "sshKey"):
     value = site_config.get(key, "")
     if value is None:
         value = ""
@@ -151,6 +160,9 @@ PY
     case "$key" in
       sourceDir)
         CONFIG_SOURCE_DIR="$value"
+        ;;
+      transport)
+        CONFIG_TRANSPORT="$value"
         ;;
       user)
         CONFIG_REMOTE_USER="$value"
@@ -202,6 +214,15 @@ while [[ $INDEX -lt ${#ARGS[@]} ]]; do
     --site=*)
       SITE_NAME="${ARGS[$INDEX]#*=}"
       ;;
+    --transport)
+      INDEX=$((INDEX + 1))
+      if [[ $INDEX -ge ${#ARGS[@]} ]]; then
+        printf 'Error: --transport requires a value.\n' >&2
+        exit 1
+      fi
+      ;;
+    --transport=*)
+      ;;
   esac
   INDEX=$((INDEX + 1))
 done
@@ -209,6 +230,7 @@ done
 CONFIG_FILE="$(expand_home "$CONFIG_FILE")"
 
 CONFIG_SOURCE_DIR=""
+CONFIG_TRANSPORT=""
 CONFIG_REMOTE_USER=""
 CONFIG_REMOTE_HOST=""
 CONFIG_REMOTE_DIR=""
@@ -220,6 +242,7 @@ if [[ -f "$CONFIG_FILE" ]]; then
 fi
 
 SOURCE_DIR="${CONFIG_SOURCE_DIR:-html}"
+TRANSPORT="${CONFIG_TRANSPORT:-scp}"
 REMOTE_USER="${CONFIG_REMOTE_USER:-}"
 REMOTE_HOST="${CONFIG_REMOTE_HOST:-}"
 REMOTE_DIR="${CONFIG_REMOTE_DIR:-}"
@@ -227,6 +250,7 @@ SSH_PORT="${CONFIG_SSH_PORT:-22}"
 SSH_KEY="${CONFIG_SSH_KEY:-}"
 DELETE_REMOTE=0
 DRY_RUN=0
+SHOW_PROGRESS=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -260,6 +284,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --source=*)
       SOURCE_DIR="${1#*=}"
+      shift
+      ;;
+    --transport)
+      if [[ $# -lt 2 ]]; then
+        printf 'Error: --transport requires a value.\n' >&2
+        exit 1
+      fi
+      TRANSPORT="$2"
+      shift 2
+      ;;
+    --transport=*)
+      TRANSPORT="${1#*=}"
       shift
       ;;
     --user)
@@ -330,6 +366,10 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN=1
       shift
       ;;
+    --no-progress)
+      SHOW_PROGRESS=0
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -344,9 +384,23 @@ done
 
 SOURCE_DIR="$(resolve_from_base "$SOURCE_DIR" "$SCRIPT_DIR")"
 SSH_KEY="$(expand_home "$SSH_KEY")"
+TRANSPORT="$(printf '%s' "$TRANSPORT" | tr '[:upper:]' '[:lower:]')"
 
-require_command rsync
-require_command ssh
+case "$TRANSPORT" in
+  scp|rsync)
+    ;;
+  *)
+    printf 'Error: unsupported transport: %s. Use "scp" or "rsync".\n' "$TRANSPORT" >&2
+    exit 1
+    ;;
+esac
+
+if [[ "$TRANSPORT" == "scp" ]]; then
+  require_command scp
+else
+  require_command rsync
+  require_command ssh
+fi
 
 if [[ ! -d "$SOURCE_DIR" ]]; then
   printf 'Error: source directory not found: %s\n' "$SOURCE_DIR" >&2
@@ -381,49 +435,92 @@ fi
 REMOTE_DIR="${REMOTE_DIR%/}"
 REMOTE_DESTINATION="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 
-SSH_CMD=(ssh -p "$SSH_PORT")
+AUTH_OPTIONS=(-o ConnectTimeout=15)
 if [[ -n "$SSH_KEY" ]]; then
-  SSH_CMD+=(-i "$SSH_KEY")
+  AUTH_OPTIONS+=(-i "$SSH_KEY")
 else
-  SSH_CMD+=(
+  AUTH_OPTIONS+=(
     -o PubkeyAuthentication=no
     -o PreferredAuthentications=password,keyboard-interactive
   )
 fi
 
-printf -v SSH_TRANSPORT '%q ' "${SSH_CMD[@]}"
-SSH_TRANSPORT="${SSH_TRANSPORT% }"
-
-RSYNC_ARGS=(
-  -azh
-  --itemize-changes
-  --exclude=.DS_Store
-  -e "$SSH_TRANSPORT"
-  --rsync-path="mkdir -p -- $(printf '%q' "$REMOTE_DIR") && rsync"
-)
-
-if [[ $DELETE_REMOTE -eq 1 ]]; then
-  RSYNC_ARGS+=(--delete)
-fi
-
-if [[ $DRY_RUN -eq 1 ]]; then
-  RSYNC_ARGS+=(--dry-run)
-fi
-
 printf 'Deploying site "%s"\n' "$SITE_NAME"
 printf 'Source: %s/\n' "$SOURCE_DIR"
 printf 'Destination: %s\n' "$REMOTE_DESTINATION"
+printf 'Transport: %s\n' "$TRANSPORT"
 if [[ $DRY_RUN -eq 1 ]]; then
   printf 'Dry run enabled; no remote files will be changed.\n'
 fi
-if [[ $DELETE_REMOTE -eq 0 ]]; then
+if [[ "$TRANSPORT" == "rsync" && $DELETE_REMOTE -eq 0 ]]; then
   printf 'Remote-only files will be kept. Pass --delete to remove them.\n'
 fi
-if [[ -z "$SSH_KEY" ]]; then
-  printf 'SSH key not configured. You will be prompted for your DreamHost password.\n'
+if [[ "$TRANSPORT" == "scp" ]]; then
+  printf 'scp transport uploads the current site tree to the remote directory.\n'
+fi
+if [[ -z "$SSH_KEY" && $DRY_RUN -eq 0 ]]; then
+  printf 'SSH key not configured. Type your DreamHost password, press Enter, and note that nothing will appear while you type.\n'
 fi
 
-rsync "${RSYNC_ARGS[@]}" "$SOURCE_DIR/" "$REMOTE_DESTINATION"
+if [[ "$TRANSPORT" == "scp" ]]; then
+  if [[ $DELETE_REMOTE -eq 1 ]]; then
+    printf 'Error: --delete is only supported with the rsync transport.\n' >&2
+    exit 1
+  fi
+
+  SCP_SOURCES=()
+  while IFS= read -r -d '' source_path; do
+    SCP_SOURCES+=("$source_path")
+  done < <(find "$SOURCE_DIR" -mindepth 1 -maxdepth 1 ! -name '.DS_Store' -print0)
+
+  if [[ ${#SCP_SOURCES[@]} -eq 0 ]]; then
+    printf 'Error: nothing to upload from %s\n' "$SOURCE_DIR" >&2
+    exit 1
+  fi
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    FILE_COUNT="$(find "$SOURCE_DIR" -type f ! -name '.DS_Store' | wc -l | tr -d ' ')"
+    printf 'Dry run for scp: this transport uploads the current site tree without remote diffing.\n'
+    printf 'Would upload %s top-level entries and %s files.\n' "${#SCP_SOURCES[@]}" "$FILE_COUNT"
+    printf 'Top-level entries:\n'
+    for source_path in "${SCP_SOURCES[@]}"; do
+      printf '  %s\n' "${source_path#$SOURCE_DIR/}"
+    done
+  else
+    SCP_CMD=(scp -r -p -P "$SSH_PORT")
+    if [[ $SHOW_PROGRESS -eq 0 ]]; then
+      SCP_CMD+=(-q)
+    fi
+    SCP_CMD+=("${AUTH_OPTIONS[@]}")
+    "${SCP_CMD[@]}" "${SCP_SOURCES[@]}" "$REMOTE_DESTINATION"
+  fi
+else
+  SSH_CMD=(ssh -p "$SSH_PORT" "${AUTH_OPTIONS[@]}")
+  printf -v SSH_TRANSPORT '%q ' "${SSH_CMD[@]}"
+  SSH_TRANSPORT="${SSH_TRANSPORT% }"
+
+  RSYNC_ARGS=(
+    -azh
+    --itemize-changes
+    --exclude=.DS_Store
+    -e "$SSH_TRANSPORT"
+    --rsync-path="mkdir -p -- $(printf '%q' "$REMOTE_DIR") && rsync"
+  )
+
+  if [[ $DELETE_REMOTE -eq 1 ]]; then
+    RSYNC_ARGS+=(--delete)
+  fi
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    RSYNC_ARGS+=(--dry-run)
+  fi
+
+  if [[ $SHOW_PROGRESS -eq 1 && $DRY_RUN -eq 0 ]]; then
+    RSYNC_ARGS+=(--progress)
+  fi
+
+  rsync "${RSYNC_ARGS[@]}" "$SOURCE_DIR/" "$REMOTE_DESTINATION"
+fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   printf 'Dry run complete.\n'
