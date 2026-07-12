@@ -35,7 +35,7 @@ Options:
 JSON config shape:
 {
   "sites": {
-    "usaxy": {
+    "your-site-name": {
       "sourceDir": "html",
       "transport": "scp",
       "user": "ssh-user",
@@ -51,7 +51,7 @@ Examples:
   ./deploy.sh --dry-run
   ./deploy.sh --delete
   ./deploy.sh --transport rsync --dry-run
-  ./deploy.sh --site usaxy
+  ./deploy.sh --site your-site-name
 EOF
 }
 

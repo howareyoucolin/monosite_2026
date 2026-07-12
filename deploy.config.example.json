@@ -1,6 +1,6 @@
 {
   "sites": {
-    "usaxy": {
+    "your-site-name": {
       "sourceDir": "html",
       "transport": "scp",
       "user": "your-dreamhost-ssh-user",
