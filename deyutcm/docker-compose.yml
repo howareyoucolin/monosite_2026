@@ -8,10 +8,10 @@ services:
       MARIADB_USER: deyutcm
       MARIADB_PASSWORD: deyutcm
       MARIADB_ROOT_PASSWORD: root
-    # 3307-3309 are already used by other local containers; 3310 is free.
-    # Published so a GUI client (Sequel Ace, TablePlus, phpMyAdmin) can reach it.
+    # Published so a GUI client (Sequel Ace, TablePlus) can reach it. Kept in
+    # this site's 83xx block rather than the 33xx one other local containers use.
     ports:
-      - "3310:3306"
+      - "8301:3306"
     volumes:
       - db-data:/var/lib/mysql
     healthcheck:
@@ -51,6 +51,24 @@ services:
     volumes:
       - wp-core:/var/www/html
       - ./wp-content:/var/www/html/wp-content
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: monosites-deyutcm-pma
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8302:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      # Local-only database with local-only credentials, so it signs itself in.
+      PMA_USER: deyutcm
+      PMA_PASSWORD: deyutcm
+      # Large enough to import a prod dump from backups/ through the browser.
+      UPLOAD_LIMIT: 512M
 
   wpcli:
     image: wordpress:cli-php8.2

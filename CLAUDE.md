@@ -6,7 +6,8 @@ tooling; there is no shared build. `scripts/mirror_site.py` and the per-site
 
 - `usaxy/` — static PHP site, served by `php:8.2-apache` on port 8600.
 - `deyutcm/` — WordPress, served on port 8300. Only `wp-content/` is committed;
-  core comes from the Docker image.
+  core comes from the Docker image. The local MariaDB is published on 8301 and
+  phpMyAdmin on 8302.
 
 ## deyutcm uses a local copy of the prod database
 
@@ -44,6 +45,13 @@ WordPress image's default would garble the site's existing Chinese content, so
 `WORDPRESS_DB_CHARSET` is pinned in `docker-compose.yml`).
 
 ## deyutcm deploys themes only
+
+The active theme is `twentysixteen` — not stock, but the site's own fork of
+Twenty Sixteen 1.1, carrying the custom `front-page.php`, `page-appointment.php`,
+and the rest of the Chinese page templates. It is the only theme in
+`wp-content/themes/`; the stock Twenty Twenty-One/Two/Three copies were deleted
+(recoverable from `06db8d4`). Note the Dockerfile strips the image's bundled
+themes, so whatever is in `wp-content/themes/` is site code, never core.
 
 `deyutcm/deploy.sh` (`npm run deploy`) pushes `wp-content/themes/` to prod over
 rsync and nothing else — plugins, uploads, and the database never go up. It

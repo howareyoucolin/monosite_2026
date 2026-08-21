@@ -45,10 +45,13 @@ needs one of two things. The script supports both and tells you which is missing
 
 ## The database
 
-Local MariaDB, published on **3310** (3307–3309 are already used by other
-local containers), so a GUI client can connect:
+Local MariaDB, published on **8301**, so a GUI client can connect:
 
-    host 127.0.0.1   port 3310   user deyutcm   password deyutcm   db deyutcm
+    host 127.0.0.1   port 8301   user deyutcm   password deyutcm   db deyutcm
+
+phpMyAdmin runs alongside it at **http://localhost:8302** and signs itself in
+against the same local credentials — no login screen. Its upload limit is raised
+to 512M so a dump from `backups/` can be imported through the browser.
 
 Since it is local, edit posts, activate plugins, and change settings freely —
 nothing reaches the live site. `pull:db` only ever *reads* prod, with
@@ -126,9 +129,11 @@ instead of a password. Every setting also has a flag (`--host`, `--remote-dir`,
 `--identity-file`, …); run `./deploy.sh --help` for the list.
 
 Nothing here writes to prod's database, so `home`/`siteurl` are untouched by a
-deploy. Since local `themes/` currently holds only the bundled default themes,
-run `./pull-files.sh themes` before the first deploy so the local copy matches
-what prod is actually serving.
+deploy. `themes/` holds exactly one theme — `twentysixteen`, the site's own fork
+of Twenty Sixteen 1.1, which is what prod serves — so a bare `npm run deploy`
+pushes that and nothing else. The stock Twenty Twenty-One/Two/Three copies that
+used to sit beside it were removed; recover them from commit `06db8d4` if a
+default theme is ever needed as a fallback.
 
 ## Layout
 
