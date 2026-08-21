@@ -1,39 +1,31 @@
 services:
-  db:
-    image: mariadb:11
-    container_name: monosites-deyutcm-db
-    restart: unless-stopped
-    environment:
-      MARIADB_DATABASE: deyutcm
-      MARIADB_USER: deyutcm
-      MARIADB_PASSWORD: deyutcm
-      MARIADB_ROOT_PASSWORD: root
-    volumes:
-      - ./db-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
   wordpress:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: monosites-deyutcm
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     ports:
       - "8300:80"
+    # Lets DEYUTCM_DB_HOST be host.docker.internal when the prod DB is reached
+    # through an SSH tunnel running on the Mac.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_NAME: deyutcm
-      WORDPRESS_DB_USER: deyutcm
-      WORDPRESS_DB_PASSWORD: deyutcm
+      WORDPRESS_DB_HOST: ${DEYUTCM_DB_HOST:?set DEYUTCM_DB_* in deyutcm/.env — see .env.example}
+      WORDPRESS_DB_NAME: ${DEYUTCM_DB_NAME:?missing DEYUTCM_DB_NAME}
+      WORDPRESS_DB_USER: ${DEYUTCM_DB_USER:?missing DEYUTCM_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DEYUTCM_DB_PASSWORD:?missing DEYUTCM_DB_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${DEYUTCM_DB_PREFIX:-wp_}
+      # Prod wp-config uses utf8, not the image's utf8mb4 default. Mismatching
+      # this garbles existing non-ASCII content.
+      WORDPRESS_DB_CHARSET: ${DEYUTCM_DB_CHARSET:-utf8}
+      WORDPRESS_DB_COLLATE: ${DEYUTCM_DB_COLLATE:-}
       WORDPRESS_DEBUG: 1
       WORDPRESS_CONFIG_EXTRA: |
+        // Overrides the siteurl/home stored in the prod database, so this
+        // container serves on localhost instead of redirecting to the live
+        // domain. Constants only — nothing is written back to the DB.
         define( 'WP_HOME', 'http://localhost:8300' );
         define( 'WP_SITEURL', 'http://localhost:8300' );
         define( 'FS_METHOD', 'direct' );
@@ -45,15 +37,17 @@ services:
     image: wordpress:cli-php8.2
     container_name: monosites-deyutcm-cli
     profiles: ["cli"]
-    depends_on:
-      db:
-        condition: service_healthy
     user: "33:33"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_NAME: deyutcm
-      WORDPRESS_DB_USER: deyutcm
-      WORDPRESS_DB_PASSWORD: deyutcm
+      WORDPRESS_DB_HOST: ${DEYUTCM_DB_HOST:?set DEYUTCM_DB_* in deyutcm/.env — see .env.example}
+      WORDPRESS_DB_NAME: ${DEYUTCM_DB_NAME:?missing DEYUTCM_DB_NAME}
+      WORDPRESS_DB_USER: ${DEYUTCM_DB_USER:?missing DEYUTCM_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DEYUTCM_DB_PASSWORD:?missing DEYUTCM_DB_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${DEYUTCM_DB_PREFIX:-wp_}
+      WORDPRESS_DB_CHARSET: ${DEYUTCM_DB_CHARSET:-utf8}
+      WORDPRESS_DB_COLLATE: ${DEYUTCM_DB_COLLATE:-}
     volumes:
       - wp-core:/var/www/html
       - ./wp-content:/var/www/html/wp-content

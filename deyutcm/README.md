@@ -1,8 +1,26 @@
 # deyutcm — local WordPress
 
 `wp-content/` is the only part of the site that is committed here. WordPress core
-and the database come from Docker, so this folder stays a clean mirror of what
-gets deployed.
+comes from the Docker image, so this folder stays a clean mirror of what gets
+deployed.
+
+## The database is production
+
+This container talks to the **live production database** — there is no local one.
+Browsing `localhost:8300` reads live data, and anything that writes (activating a
+plugin, switching a theme, editing a post, changing a setting in wp-admin) writes
+to the live site. Treat wp-admin here as if it were the real thing, and keep local
+work to files under `wp-content/`. See `../CLAUDE.md` for the full list of
+operations to avoid.
+
+Credentials go in `.env` (gitignored; copy `.env.example`). Compose refuses to
+start until they are set, rather than silently coming up broken. Reaching the DB
+means either allowing remote MySQL for your IP on the host, or an SSH tunnel:
+
+    ssh -N -L 3307:<db-host>:3306 fatfat@iad1-shared-b8-32.dreamhost.com
+
+then setting `DEYUTCM_DB_HOST=host.docker.internal:3307`. The tunnel has to be up
+before `npm run dev`.
 
 ## Run
 
@@ -20,32 +38,28 @@ running in the background instead.
 | --- | --- |
 | `npm run dev` | build + start, logs in foreground |
 | `npm run start` | same, detached |
-| `npm run stop` | stop; database survives |
+| `npm run stop` | stop the container |
 | `npm run logs` | tail the WordPress container |
-| `npm run wp -- <args>` | run any wp-cli command |
-| `npm run reset` | drop core + database, back to a fresh install |
+| `npm run wp -- <args>` | run a wp-cli command (read-only — hits prod) |
+| `npm run reset` | drop the local WordPress core volume (never the database) |
 
-First boot lands on the install screen. Either fill it in through the browser or
-run:
-
-    npm run wp -- core install \
-      --url=http://localhost:8300 --title=deyutcm \
-      --admin_user=admin --admin_password=admin \
-      --admin_email=dev@example.com --skip-email
+There is no install step — the prod database is already populated. Log in with
+the real site's credentials.
 
 ## wp-cli
 
 Any wp-cli command works through the `wpcli` service:
 
     npm run wp -- plugin list
-    npm run wp -- theme activate twentytwentythree
+    npm run wp -- option get blogname
 
-Note the `--`, which is what passes the arguments through to wp-cli.
+Note the `--`, which is what passes the arguments through to wp-cli. Keep these
+read-only: the target is the prod database.
 
 ## Stop / reset
 
-    npm run stop     # stop, keep the database
-    npm run reset    # drop WordPress core and wipe the database
+    npm run stop     # stop the container
+    npm run reset    # drop the local WordPress core volume only
 
 Both wrap `docker compose`, so the raw commands still work if you prefer them:
 
@@ -55,7 +69,8 @@ Both wrap `docker compose`, so the raw commands still work if you prefer them:
 
 - `package.json` — the npm scripts above; no dependencies, nothing to install.
 - `wp-content/` — bind-mounted into the container; the site's real files.
-- `db-data/` — MariaDB data, gitignored. Delete it to start from a blank database.
+- `.env` — prod DB credentials, gitignored.
+- `db-data/` — leftover from the old local MariaDB, now unused. Safe to delete.
 - `Dockerfile` — strips the themes/plugins bundled in the upstream image so the
   entrypoint cannot copy them into `wp-content/` on first boot.
 - WordPress core lives in the `wp-core` Docker volume, not on disk here.

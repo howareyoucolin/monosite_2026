@@ -1,13 +1,13 @@
 {
   "name": "deyutcm",
   "private": true,
-  "description": "Local WordPress for deyutcm (Docker)",
+  "description": "Local WordPress for deyutcm (Docker, connects to the prod database)",
   "scripts": {
-    "dev": "docker compose up --build",
-    "start": "docker compose up -d --build",
-    "stop": "docker compose down",
+    "dev": "docker compose up --build --remove-orphans",
+    "start": "docker compose up -d --build --remove-orphans",
+    "stop": "docker compose down --remove-orphans",
     "logs": "docker compose logs -f wordpress",
     "wp": "docker compose run --rm wpcli",
-    "reset": "docker compose down -v && rm -rf db-data"
+    "reset": "docker compose down -v --remove-orphans"
   }
 }
