@@ -39,6 +39,8 @@ needs one of two things. The script supports both and tells you which is missing
 | `npm run pull:files` | fetch `uploads/` and `plugins/` from prod |
 | `npm run pull:uploads` | just `uploads/` |
 | `npm run pull:plugins` | just `plugins/` |
+| `npm run deploy` | push `wp-content/themes/` up to prod (asks first) |
+| `npm run deploy:dry` | show what a deploy would change, then stop |
 | `npm run reset` | drop the local database and WP core volumes |
 
 ## The database
@@ -89,10 +91,50 @@ falls back to `tar` over the SSH pipe when it does not, so repeat pulls only mov
 what changed. The remote site root is `PROD_WP_DIR` in `.env`; leave it empty and
 the script looks for `~/*/wp-content` itself, reporting what it found.
 
+## Deploying themes to prod
+
+Themes are the only thing this repo pushes upward. Plugins, uploads, and the
+database are never sent.
+
+    npm run deploy:dry              show what differs from prod, change nothing
+    npm run deploy                  push every theme, after confirming
+    npm run deploy -- mytheme       push just one theme
+    npm run deploy -- --delete      also remove theme files that are gone locally
+    npm run deploy -- --yes         skip the prompt (for scripted runs)
+
+The push is incremental: `rsync` compares against prod and moves only what
+changed, printing that list and waiting for a `y` before it writes anything. A
+theme prod has never seen is flagged as `new on prod` before the upload. Hosts
+without a remote `rsync` fall back to `tar` over the SSH pipe, which cannot diff
+— it says so and asks before overwriting.
+
+Target settings live in the repo-root `deploy.config.json` (gitignored) under the
+`deyutcm` site key, the same file and shape `usaxy/deploy.sh` uses:
+
+    "deyutcm": {
+      "sourceDir": "wp-content/themes",
+      "transport": "rsync",
+      "user": "ssh-user",
+      "host": "yourserver.example.com",
+      "remoteDir": "/home/ssh-user/example.com",
+      "port": 22
+    }
+
+`remoteDir` can point at the site root, its `wp-content`, or `wp-content/themes`
+— the script probes for the themes directory. Add `"sshKey"` to use a key
+instead of a password. Every setting also has a flag (`--host`, `--remote-dir`,
+`--identity-file`, …); run `./deploy.sh --help` for the list.
+
+Nothing here writes to prod's database, so `home`/`siteurl` are untouched by a
+deploy. Since local `themes/` currently holds only the bundled default themes,
+run `./pull-files.sh themes` before the first deploy so the local copy matches
+what prod is actually serving.
+
 ## Layout
 
 - `package.json` — the npm scripts above; no dependencies, nothing to install.
 - `pull-db.sh` — what `pull:db` runs.
+- `deploy.sh` — what `deploy` runs; pushes `wp-content/themes/` only.
 - `.env` — prod credentials, used only for dumping. Gitignored.
 - `backups/` — timestamped dumps. Gitignored.
 - `wp-content/` — bind-mounted into the container. Only `themes/` is tracked.

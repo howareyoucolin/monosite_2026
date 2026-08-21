@@ -43,6 +43,16 @@ The prod schema uses table prefix `wp_` and charset `utf8` (not `utf8mb4` — th
 WordPress image's default would garble the site's existing Chinese content, so
 `WORDPRESS_DB_CHARSET` is pinned in `docker-compose.yml`).
 
+## deyutcm deploys themes only
+
+`deyutcm/deploy.sh` (`npm run deploy`) pushes `wp-content/themes/` to prod over
+rsync and nothing else — plugins, uploads, and the database never go up. It
+prints the rsync diff and waits for a `y` before writing, so it is safe to run to
+inspect; `npm run deploy:dry` stops after the diff. Remote-only files survive
+unless `--delete` is passed. Target settings come from the repo-root
+`deploy.config.json` under the `deyutcm` key, not from `.env` — `.env` stays
+read-only prod credentials for the pull scripts.
+
 `wp-content/plugins/` and `wp-content/uploads/` are gitignored, so a fresh clone
 has no plugin files while an imported database still lists them in
 `active_plugins`. Opening wp-admin → Plugins in that state makes WordPress

@@ -7,6 +7,14 @@
       "host": "yourserver.example.com",
       "remoteDir": "/home/ssh-user/example.com",
       "port": 22
+    },
+    "deyutcm": {
+      "sourceDir": "wp-content/themes",
+      "transport": "rsync",
+      "user": "ssh-user",
+      "host": "yourserver.example.com",
+      "remoteDir": "/home/ssh-user/example.com",
+      "port": 22
     }
   }
 }

@@ -12,6 +12,8 @@
     "pull:files": "./pull-files.sh",
     "pull:uploads": "./pull-files.sh uploads",
     "pull:plugins": "./pull-files.sh plugins",
+    "deploy": "./deploy.sh",
+    "deploy:dry": "./deploy.sh --dry-run",
     "reset": "docker compose down -v --remove-orphans"
   }
 }
