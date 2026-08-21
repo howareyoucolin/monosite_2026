@@ -5,7 +5,7 @@
  *
  * Colours are taken from the site's own assets — the gold of the bagua mark in
  * images/top.png, the amber of images/bann.jpg, and the ink-on-cream of the
- * images/med_top.png watermark behind it all.
+ * images/med_top.png script that now lines the heading.
  */
 
 :root {
@@ -21,114 +21,179 @@
 	--dy-cjk: "Microsoft Yahei", "微软雅黑", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
 }
 
-/* ---------------------------------------------------------------- top bar */
+/* --------------------------------------------------------------- masthead */
 
-.site-top-contact {
-	background: linear-gradient(105deg, #a1750f 0%, #6b4d07 58%, #46310a 100%);
-	border-bottom: 1px solid rgba(255, 236, 185, 0.28);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 6px rgba(0, 0, 0, 0.16);
-	color: var(--dy-gold-pale);
+/* Aged-paper masthead.
+ *
+ * images/med_top.png is a 590x117 sheet of faded prescription script that used to
+ * be tiled on <body>, where it ran out 117px down the page and stopped mid-brand.
+ * Its characters sit at luminance 229-255 though — a 10% delta that no blend mode
+ * can lift — so images/paper-script.png re-maps that delta into a real alpha
+ * channel of warm sepia ink (see the generator note in the theme README).
+ *
+ * Two layers at different scales keep the 590px tile from reading as a repeat.
+ * Full-bleed on purpose: the sheet spans the viewport while its contents stay on
+ * the Bootstrap container inside.
+ */
+.dy-masthead {
+	position: relative;
+	isolation: isolate;
+	background: linear-gradient(180deg, #fffdf8 0%, #fdf6e7 52%, #f6ebd4 100%);
+	/* A gilt edge at the very top of the page, taking over the framing job the
+	   old dark contact bar was doing. */
+	border-top: 3px solid var(--dy-gold);
+	border-image: linear-gradient(90deg, #7a5b06, #eac559 50%, #7a5b06) 1;
+	box-shadow: inset 0 -20px 26px -22px rgba(120, 86, 20, 0.4);
 }
-.site-top-contact__inner {
+.dy-masthead::before,
+.dy-masthead::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-image: url(../images/paper-script.png);
+	background-repeat: repeat-x;
+	mix-blend-mode: multiply;
+	/* Fades out at both edges so the script dissolves into the paper instead of
+	   being sliced off at the top of the page and by the nav below. */
+	-webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, #000 42%, rgba(0, 0, 0, 0.12) 100%);
+	mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, #000 42%, rgba(0, 0, 0, 0.12) 100%);
+}
+/* Near layer: characters roughly twice native size, so they read as brushwork
+   rather than as body text. */
+.dy-masthead::before {
+	background-position: center 22%;
+	background-size: auto 200%;
+	opacity: 0.5;
+}
+/* Far layer: larger, fainter, mirrored — breaks up the repeat and gives the
+   sheet some depth. */
+.dy-masthead::after {
+	background-position: 30% 62%;
+	background-size: auto 330%;
+	opacity: 0.22;
+	transform: scaleX(-1);
+}
+
+/* Address on the left, brand centred, phone on the right. The two side items
+   share the leftover space equally, which is what keeps the brand on the middle
+   of the page rather than the middle of what is left over. */
+.dy-masthead__inner {
+	/* The script is densest through the middle of the sheet, which is exactly
+	   where the text sits. This washes a calm band across that middle while
+	   leaving the script at full strength top and bottom. It sits above the
+	   two layers because they are pushed to z-index -1. */
+	background: linear-gradient(180deg, rgba(255, 253, 246, 0) 0%, rgba(255, 253, 246, 0.62) 32%, rgba(255, 253, 246, 0.68) 62%, rgba(255, 253, 246, 0) 100%);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 16px;
-	padding: 7px 15px;
+	gap: 20px;
+	padding: 16px 15px 18px;
 }
-.site-top-contact__address {
+.dy-masthead__address {
 	display: flex;
+	flex: 1 1 0;
 	align-items: center;
-	gap: 7px;
-	flex: 1;
-	font-size: 14px;
-	line-height: 1.35;
-	color: #fdeec4;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
+	gap: 8px;
+	min-width: 0;
+	font-size: 13px;
+	line-height: 1.4;
+	color: #6b5424;
+	/* A hairline of paper under the text keeps it off the strokes behind it. */
+	text-shadow: 0 1px 0 rgba(255, 253, 246, 0.9);
 }
-.site-top-contact__icon {
+.dy-masthead__phone {
+	display: flex;
+	flex: 1 1 0;
+	justify-content: flex-end;
+	min-width: 0;
+}
+.dy-masthead__icon {
 	flex: 0 0 auto;
-	width: 14px;
-	height: 14px;
-	fill: currentColor;
-	opacity: 0.75;
+	width: 15px;
+	height: 15px;
+	fill: var(--dy-gold);
 }
-.site-top-contact__phone {
-	display: flex;
+.dy-masthead__phone-link {
+	display: inline-flex;
 	align-items: center;
-	gap: 7px;
-	flex-shrink: 0;
-	padding: 5px 15px;
+	gap: 8px;
+	padding: 7px 17px;
+	border: 1px solid rgba(199, 152, 16, 0.55);
 	border-radius: 999px;
-	background: rgba(255, 248, 225, 0.12);
-	border: 1px solid rgba(255, 240, 197, 0.32);
-	color: #fffaf0;
-	font-size: 15px;
+	background: linear-gradient(180deg, #fffdf6 0%, #f8ebca 100%);
+	color: #6b4a05;
+	font-size: 16px;
 	font-weight: bold;
 	letter-spacing: 0.02em;
 	text-decoration: none;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-	transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+	white-space: nowrap;
+	box-shadow: 0 1px 3px rgba(120, 86, 20, 0.18);
+	transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
-.site-top-contact__phone:hover,
-.site-top-contact__phone:focus {
-	background: rgba(255, 248, 225, 0.24);
-	border-color: rgba(255, 240, 197, 0.6);
-	color: #fff;
+.dy-masthead__phone-link:hover,
+.dy-masthead__phone-link:focus {
+	border-color: var(--dy-gold);
+	background: linear-gradient(180deg, #fffef9 0%, #f2dfae 100%);
+	color: #4a3403;
 	text-decoration: none;
 	transform: translateY(-1px);
+	box-shadow: 0 4px 10px rgba(120, 86, 20, 0.22);
 }
-.site-top-contact__phone:focus-visible {
-	outline: 2px solid var(--dy-gold-pale);
-	outline-offset: 2px;
+.dy-masthead__phone-link:focus-visible {
+	outline: 2px solid var(--dy-gold);
+	outline-offset: 3px;
+}
+.dy-masthead__phone-link .dy-masthead__icon {
+	fill: currentColor;
+	opacity: 0.8;
 }
 
 /* ------------------------------------------------------------------ brand */
 
-.dy-header {
-	position: relative;
-}
-.dy-header .dy-brand {
+.dy-masthead .dy-brand {
 	display: flex;
+	flex: 0 1 auto;
 	align-items: center;
 	justify-content: center;
 	gap: 20px;
 	margin: 0;
-	padding: 24px 15px 22px;
+	padding: 0;
 	text-align: center;
 }
-.dy-header .dy-brand__link {
+.dy-masthead .dy-brand__link {
 	display: flex;
 	align-items: center;
 	gap: 20px;
 	color: inherit;
 	text-decoration: none;
 }
-.dy-header .dy-brand__link:hover,
-.dy-header .dy-brand__link:focus {
+.dy-masthead .dy-brand__link:hover,
+.dy-masthead .dy-brand__link:focus {
 	text-decoration: none;
 }
-.dy-header .dy-brand__link:focus-visible {
+.dy-masthead .dy-brand__link:focus-visible {
 	outline: 2px solid var(--dy-gold);
 	outline-offset: 6px;
 	border-radius: 4px;
 }
-.dy-header .dy-brand__mark {
+.dy-masthead .dy-brand__mark {
 	height: 62px;
 	width: auto;
 	filter: drop-shadow(0 2px 4px rgba(74, 52, 3, 0.28));
 	transition: transform 0.4s ease;
 }
-.dy-header .dy-brand__link:hover .dy-brand__mark {
+.dy-masthead .dy-brand__link:hover .dy-brand__mark {
 	transform: rotate(8deg);
 }
-.dy-header .dy-brand__text {
+.dy-masthead .dy-brand__text {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 6px;
 }
-.dy-header .dy-brand__name {
+.dy-masthead .dy-brand__name {
 	display: block;
 	font-family: var(--dy-cjk);
 	font-size: 42px;
@@ -143,7 +208,7 @@
 	-webkit-text-fill-color: transparent;
 	color: var(--dy-gold-deep); /* fallback where background-clip is unsupported */
 }
-.dy-header .dy-brand__tagline {
+.dy-masthead .dy-brand__tagline {
 	display: block;
 	font-family: var(--dy-cjk);
 	font-size: 12px;
@@ -156,7 +221,7 @@
 	color: var(--dy-gold-deep);
 	white-space: nowrap;
 }
-.dy-header .dy-brand__rule {
+.dy-masthead .dy-brand__rule {
 	display: block;
 	width: 100%;
 	max-width: 190px;
@@ -378,7 +443,7 @@
 /* ------------------------------------------------------------ responsive */
 
 @media (max-width: 991px) {
-	.dy-header .dy-brand__name {
+	.dy-masthead .dy-brand__name {
 		font-size: 36px;
 	}
 	#banner.dy-banner {
@@ -390,33 +455,46 @@
 }
 
 @media (max-width: 767px) {
-	.site-top-contact__inner {
-		flex-direction: column;
-		align-items: center;
-		gap: 6px;
-		padding: 7px 10px;
-	}
-	.site-top-contact__address {
-		flex: 0 0 auto;
+	/* Three across does not fit, so it wraps to two rows: contact details stay
+	   at the very top of the page, brand underneath. */
+	.dy-masthead__inner {
+		flex-wrap: wrap;
 		justify-content: center;
-		font-size: 13px;
+		gap: 9px 14px;
+		padding: 10px 12px 13px;
+	}
+	.dy-masthead__address {
+		order: 1;
+		flex: 0 1 auto;
+		justify-content: center;
+		font-size: 12px;
 		text-align: center;
 	}
-	.dy-header .dy-brand,
-	.dy-header .dy-brand__link {
+	.dy-masthead__phone {
+		order: 2;
+		flex: 0 0 auto;
+		justify-content: center;
+	}
+	.dy-masthead__phone-link {
+		padding: 5px 13px;
+		font-size: 15px;
+	}
+	.dy-masthead .dy-brand {
+		order: 3;
+		flex: 0 0 100%;
+	}
+	.dy-masthead .dy-brand,
+	.dy-masthead .dy-brand__link {
 		gap: 13px;
 	}
-	.dy-header .dy-brand {
-		padding: 16px 15px 14px;
-	}
-	.dy-header .dy-brand__mark {
+	.dy-masthead .dy-brand__mark {
 		height: 46px;
 	}
-	.dy-header .dy-brand__name {
+	.dy-masthead .dy-brand__name {
 		font-size: 28px;
 		letter-spacing: 0.12em;
 	}
-	.dy-header .dy-brand__tagline {
+	.dy-masthead .dy-brand__tagline {
 		font-size: 10px;
 		letter-spacing: 0.26em;
 		text-indent: 0.26em;
@@ -477,13 +555,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.site-top-contact__phone,
-	.dy-header .dy-brand__mark,
+	.dy-masthead__phone-link,
+	.dy-masthead .dy-brand__mark,
 	#nav-wrap nav ul li a,
 	.dy-banner .tell button {
 		transition: none;
 	}
-	.dy-header .dy-brand__link:hover .dy-brand__mark,
+	.dy-masthead .dy-brand__link:hover .dy-brand__mark,
 	.dy-banner .tell:hover button {
 		transform: none;
 	}

@@ -53,9 +53,13 @@ the image's bundled themes, so nothing in there is ever core:
   `front-page.php`, `page-appointment.php`, and the rest of the Chinese page
   templates. **This is what prod serves.** Leave it alone unless a change is
   meant for the live site.
-- `dr_cheung_2026` — a full copy of that fork with a reworked header. Only
-  `header.php` and the new `css/header.css` differ; every other file is byte
-  identical, so templates and content behave the same. Active on localhost:8300.
+- `dr_cheung_2026` — a full copy of that fork with a reworked masthead. It adds
+  `css/header.css`, `images/paper-script.png`, and a `README.md`, rewrites
+  `header.php`, and changes only the theme-header comment in `style.css`; every
+  other file is byte identical, so templates and content behave the same. Active
+  on localhost:8300. The old dark contact bar is gone — address and phone now sit
+  in the masthead itself, over the site's watermark script re-derived as real ink
+  (the theme's README documents how to regenerate it).
 
 Two consequences of the active theme living in the database:
 

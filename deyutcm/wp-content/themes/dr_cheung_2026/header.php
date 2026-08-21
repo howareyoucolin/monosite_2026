@@ -30,40 +30,39 @@ function isMobile()
 	</style>
 </head>
 
-<body style="background: #FFF url(<?php echo get_template_directory_uri(); ?>/images/med_top.png) repeat-x top;">
+<body style="background: #FFF;">
 	<a class="skip-link screen-reader-text" href="#main-content">跳到主要内容</a>
-	<div class="site-top-contact">
-		<div class="container site-top-contact__inner">
-			<div class="site-top-contact__address">
-				<svg class="site-top-contact__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+	<header class="dy-masthead">
+		<div class="container dy-masthead__inner">
+
+			<div class="dy-masthead__address">
+				<svg class="dy-masthead__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
 					<path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
 				</svg>
-				<span>
-					<span class="site-top-contact__address-line">136-68 Roosevelt Ave. #4D,</span>
-					<span class="site-top-contact__address-line">Flushing NY 11354</span>
-				</span>
+				<span>136-68 Roosevelt Ave. #4D, Flushing NY 11354</span>
 			</div>
-			<a class="site-top-contact__phone" href="tel:7188880255">
-				<svg class="site-top-contact__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-					<path d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
-				</svg>
-				<span>718-888-0255</span>
-			</a>
+
+			<h1 class="dy-brand">
+				<a class="dy-brand__link" href="<?php echo get_site_url(); ?>">
+					<img class="dy-brand__mark" src="<?php echo get_template_directory_uri(); ?>/images/top.png" alt="" />
+					<span class="dy-brand__text">
+						<span class="dy-brand__name">德誉堂</span>
+						<span class="dy-brand__rule"></span>
+						<span class="dy-brand__tagline">纽约法拉盛中医诊所</span>
+					</span>
+				</a>
+			</h1>
+
+			<div class="dy-masthead__phone">
+				<a class="dy-masthead__phone-link" href="tel:7188880255">
+					<svg class="dy-masthead__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+						<path d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+					</svg>
+					<span>718-888-0255</span>
+				</a>
+			</div>
+
 		</div>
-	</div>
-	<header class="container dy-header">
-
-		<h1 class="dy-brand">
-			<a class="dy-brand__link" href="<?php echo get_site_url(); ?>">
-				<img class="dy-brand__mark" src="<?php echo get_template_directory_uri(); ?>/images/top.png" alt="" />
-				<span class="dy-brand__text">
-					<span class="dy-brand__name">德誉堂</span>
-					<span class="dy-brand__rule"></span>
-					<span class="dy-brand__tagline">纽约法拉盛中医诊所</span>
-				</span>
-			</a>
-		</h1>
-
 	</header>
 	<?php $FullUrl = "//" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>
 	<div id="nav-wrap">
