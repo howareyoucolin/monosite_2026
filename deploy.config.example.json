@@ -3,9 +3,9 @@
     "your-site-name": {
       "sourceDir": "html",
       "transport": "scp",
-      "user": "your-dreamhost-ssh-user",
-      "host": "yourserver.dreamhost.com",
-      "remoteDir": "/home/your-dreamhost-ssh-user/example.com",
+      "user": "ssh-user",
+      "host": "yourserver.example.com",
+      "remoteDir": "/home/ssh-user/example.com",
       "port": 22
     }
   }

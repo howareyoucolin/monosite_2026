@@ -5,9 +5,9 @@ usage() {
   cat <<'EOF'
 Usage: ./deploy.sh [options]
 
-Deploy the current site to DreamHost.
+Deploy the current site to the remote host.
 
-By default, this script uses `scp`, which works well with DreamHost SFTP-style
+By default, this script uses `scp`, which works well with SFTP-style
 access. You can switch to `rsync` with `--transport rsync` if full SSH shell
 access is enabled for the account.
 
@@ -21,9 +21,9 @@ Options:
                             (default: current directory name)
   --source DIR              Local directory to sync (default: ./html)
   --transport NAME          Deploy transport: scp or rsync (default: scp)
-  --user USER               DreamHost SSH username
-  --host HOST               DreamHost SSH hostname
-  --remote-dir DIR          Remote document root on DreamHost
+  --user USER               Remote SSH username
+  --host HOST               Remote SSH hostname
+  --remote-dir DIR          Remote document root
   --port PORT               SSH port (default: 22)
   --identity-file FILE      Optional SSH private key to use
   --delete                  Remove remote files that no longer exist locally
@@ -39,7 +39,7 @@ JSON config shape:
       "sourceDir": "html",
       "transport": "scp",
       "user": "ssh-user",
-      "host": "yourserver.dreamhost.com",
+      "host": "yourserver.example.com",
       "remoteDir": "/home/ssh-user/example.com",
       "port": 22
     }
@@ -459,7 +459,7 @@ if [[ "$TRANSPORT" == "scp" ]]; then
   printf 'scp transport uploads the current site tree to the remote directory.\n'
 fi
 if [[ -z "$SSH_KEY" && $DRY_RUN -eq 0 ]]; then
-  printf 'SSH key not configured. Type your DreamHost password, press Enter, and note that nothing will appear while you type.\n'
+  printf 'SSH key not configured. Type your SSH password, press Enter, and note that nothing will appear while you type.\n'
 fi
 
 if [[ "$TRANSPORT" == "scp" ]]; then

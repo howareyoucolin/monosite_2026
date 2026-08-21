@@ -1,79 +1,104 @@
 # deyutcm — local WordPress
 
-`wp-content/` is the only part of the site that is committed here. WordPress core
-comes from the Docker image, so this folder stays a clean mirror of what gets
-deployed.
+`wp-content/themes/` is the only part of the site committed here. WordPress core
+comes from the Docker image, and the database is a local copy pulled from prod.
 
-## The database is production
+## First run
 
-This container talks to the **live production database** — there is no local one.
-Browsing `localhost:8300` reads live data, and anything that writes (activating a
-plugin, switching a theme, editing a post, changing a setting in wp-admin) writes
-to the live site. Treat wp-admin here as if it were the real thing, and keep local
-work to files under `wp-content/`. See `../CLAUDE.md` for the full list of
-operations to avoid.
+    npm run pull:db       # copy the prod database into the local one
+    npm run pull:files    # fetch uploads/ and plugins/ from prod
+    npm run dev           # start the site
 
-Credentials go in `.env` (gitignored; copy `.env.example`). Compose refuses to
-start until they are set, rather than silently coming up broken. Reaching the DB
-means either allowing remote MySQL for your IP on the host, or an SSH tunnel:
+Then open http://localhost:8300 (admin at `/wp-admin`, using the real site's
+logins, since the users table came from prod).
 
-    ssh -N -L 3307:<db-host>:3306 fatfat@iad1-shared-b8-32.dreamhost.com
+### Getting `pull:db` access to prod
 
-then setting `DEYUTCM_DB_HOST=host.docker.internal:3307`. The tunnel has to be up
-before `npm run dev`.
+The prod DB user's grant rejects connections from arbitrary IPs, so the pull
+needs one of two things. The script supports both and tells you which is missing:
 
-## Run
+1. **Direct** — allow this machine's IP on the database user in the hosting
+   panel, then leave `PROD_SSH` empty in `.env`. The dump then runs from here
+   through a throwaway `mariadb` container; no SSH, no password prompt.
+2. **Over SSH** — set `PROD_SSH=user@host` in `.env`. This needs *real shell
+   access* on that account. An SFTP-only account authenticates fine but cannot
+   run commands, which looks like a silent hang; the script now detects that and
+   says so. `ssh-copy-id` on that host avoids retyping the password.
 
-From this folder:
-
-    npm run dev
-
-Streams logs in the foreground; Ctrl-C stops it. Use `npm run start` to leave it
-running in the background instead.
-
-- Site: http://localhost:8300
-- Admin: http://localhost:8300/wp-admin
+## Scripts
 
 | script | what it does |
 | --- | --- |
 | `npm run dev` | build + start, logs in foreground |
 | `npm run start` | same, detached |
-| `npm run stop` | stop the container |
+| `npm run stop` | stop; local database survives |
 | `npm run logs` | tail the WordPress container |
-| `npm run wp -- <args>` | run a wp-cli command (read-only — hits prod) |
-| `npm run reset` | drop the local WordPress core volume (never the database) |
+| `npm run wp -- <args>` | run any wp-cli command |
+| `npm run pull:db` | fresh dump from prod, then import |
+| `npm run pull:db <file.gz>` | re-import an earlier dump from `backups/` |
+| `npm run pull:files` | fetch `uploads/` and `plugins/` from prod |
+| `npm run pull:uploads` | just `uploads/` |
+| `npm run pull:plugins` | just `plugins/` |
+| `npm run reset` | drop the local database and WP core volumes |
 
-There is no install step — the prod database is already populated. Log in with
-the real site's credentials.
+## The database
+
+Local MariaDB, published on **3310** (3307–3309 are already used by other
+local containers), so a GUI client can connect:
+
+    host 127.0.0.1   port 3310   user deyutcm   password deyutcm   db deyutcm
+
+Since it is local, edit posts, activate plugins, and change settings freely —
+nothing reaches the live site. `pull:db` only ever *reads* prod, with
+`--skip-lock-tables` so the live site is never locked by the dump. Dumps are kept
+in `backups/` (gitignored) so you can roll back without hitting prod again.
+
+The imported database holds the live domain in `siteurl`/`home`. `WP_HOME` and
+`WP_SITEURL` are set as constants in `docker-compose.yml`, which overrides that
+so the copy serves on localhost — no search-replace needed, and nothing is
+written back.
 
 ## wp-cli
-
-Any wp-cli command works through the `wpcli` service:
 
     npm run wp -- plugin list
     npm run wp -- option get blogname
 
-Note the `--`, which is what passes the arguments through to wp-cli. Keep these
-read-only: the target is the prod database.
+Note the `--`, which passes the arguments through to wp-cli.
 
-## Stop / reset
+## What is committed
 
-    npm run stop     # stop the container
-    npm run reset    # drop the local WordPress core volume only
+Only `wp-content/themes/` and the `index.php` guards. Plugins, uploads, and
+`upgrade/` are gitignored — they stay on disk and are still mounted, but are not
+tracked.
 
-Both wrap `docker compose`, so the raw commands still work if you prefer them:
+One consequence: a fresh clone has no plugin files while an imported database
+still lists them as active, so opening wp-admin → Plugins makes WordPress
+deactivate them. Harmless locally (it only drifts the local copy) — run
+`npm run pull:files` before touching that screen.
 
-    docker compose -f deyutcm/docker-compose.yml up -d --build
+## Pulling files from prod
+
+    npm run pull:files              uploads and plugins
+    npm run pull:uploads            just uploads
+    npm run pull:plugins            just plugins
+    ./pull-files.sh themes          themes (overwrites tracked files — careful)
+    ./pull-files.sh --delete ...    also remove local files that are gone on prod
+
+Read-only on the prod side, over SSH. It uses `rsync` when the remote has it and
+falls back to `tar` over the SSH pipe when it does not, so repeat pulls only move
+what changed. The remote site root is `PROD_WP_DIR` in `.env`; leave it empty and
+the script looks for `~/*/wp-content` itself, reporting what it found.
 
 ## Layout
 
 - `package.json` — the npm scripts above; no dependencies, nothing to install.
-- `wp-content/` — bind-mounted into the container; the site's real files.
-- `.env` — prod DB credentials, gitignored.
-- `db-data/` — leftover from the old local MariaDB, now unused. Safe to delete.
+- `pull-db.sh` — what `pull:db` runs.
+- `.env` — prod credentials, used only for dumping. Gitignored.
+- `backups/` — timestamped dumps. Gitignored.
+- `wp-content/` — bind-mounted into the container. Only `themes/` is tracked.
 - `Dockerfile` — strips the themes/plugins bundled in the upstream image so the
   entrypoint cannot copy them into `wp-content/` on first boot.
-- WordPress core lives in the `wp-core` Docker volume, not on disk here.
+- WordPress core and the database live in Docker volumes, not on disk here.
 
 ## Notes
 

@@ -1,2 +1,8 @@
-db-data/
 .env
+backups/
+
+# Not source: third-party plugin code, WP update scratch dir, and media.
+# These stay on disk and are still mounted into the container.
+wp-content/plugins/
+wp-content/upgrade/
+wp-content/uploads/

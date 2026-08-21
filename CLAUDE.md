@@ -8,39 +8,45 @@ tooling; there is no shared build. `scripts/mirror_site.py` and the per-site
 - `deyutcm/` — WordPress, served on port 8300. Only `wp-content/` is committed;
   core comes from the Docker image.
 
-## deyutcm connects to the PRODUCTION database
+## deyutcm uses a local copy of the prod database
 
-The local WordPress container at `localhost:8300` is wired to the **live
-production database**. There is no local database. This is deliberate.
+`localhost:8300` runs against a **local MariaDB**, not production. The local copy
+is refreshed on demand:
 
-The consequence: local is not a sandbox. Anything that writes to the DB while
-you are on `localhost:8300` writes to the live site. That includes actions that
-feel local and harmless:
+    cd deyutcm && npm run pull:db
 
-- activating or deactivating a plugin or switching themes (`active_plugins`,
-  `stylesheet` are DB options)
-- editing posts, pages, menus, widgets, or users
-- changing any setting in wp-admin
-- plugin setup wizards and first-run routines that seed their own options
+That dumps prod into `deyutcm/backups/` and replaces the local database with it.
+Prod is only ever read — `--skip-lock-tables` keeps the live site unlocked.
+`npm run pull:db <file.gz>` reloads an earlier dump without touching prod.
 
-So, when working in this repo:
+The prod DB grant rejects arbitrary IPs, so the dump runs one of two ways,
+selected by whether `PROD_SSH` is set in `.env`: over SSH on a shell host that
+the grant already allows (requires real shell access — an SFTP-only account
+authenticates but silently runs nothing), or directly from this machine through a
+throwaway `mariadb` container once the machine's IP is allowed in the hosting
+panel.
 
-- **Never run write-mode wp-cli against it.** No `wp option update`, `wp
-  search-replace`, `wp plugin activate/deactivate`, `wp theme activate`, `wp db
-  import`, `wp db reset`, `wp post`/`term`/`user` mutations. Read-only commands
-  (`wp plugin list`, `wp option get`, `wp db export`) are fine.
-- **Never touch `home` or `siteurl`.** `WP_HOME`/`WP_SITEURL` are set as
-  constants in `docker-compose.yml`, which is what keeps the container serving on
-  localhost instead of redirecting to the live domain. They override the DB
-  without writing to it. Rewriting those options would change the live site's
-  URLs.
-- `npm run reset` only drops the local WordPress core volume. It does not and
-  must not touch the database.
-- Treat `wp-content/` edits (theme/plugin code) as the safe way to work locally,
-  since those are files, not database rows.
+Because the database is local, editing posts, activating plugins, and changing
+settings are all safe. Write-mode wp-cli is fine here.
 
-Credentials live in `deyutcm/.env` (gitignored, template in `.env.example`).
-Reaching the DB usually means either allowing remote MySQL for your IP on the
-host, or an SSH tunnel plus `DEYUTCM_DB_HOST=host.docker.internal:<port>`.
+Two things to keep in mind:
 
-Ask before any operation that writes to the deyutcm database.
+- **Never point the running site at prod.** The connection details in
+  `docker-compose.yml` are local-only by design. `.env` holds the prod
+  credentials for dumping and nothing else.
+- **Do not rewrite `home`/`siteurl`.** `WP_HOME`/`WP_SITEURL` are constants in
+  `docker-compose.yml`, which is what makes an imported prod database serve on
+  localhost. They override the DB values without writing to it, so no
+  search-replace is needed after a pull.
+
+The prod schema uses table prefix `wp_` and charset `utf8` (not `utf8mb4` — the
+WordPress image's default would garble the site's existing Chinese content, so
+`WORDPRESS_DB_CHARSET` is pinned in `docker-compose.yml`).
+
+`wp-content/plugins/` and `wp-content/uploads/` are gitignored, so a fresh clone
+has no plugin files while an imported database still lists them in
+`active_plugins`. Opening wp-admin → Plugins in that state makes WordPress
+deactivate them (`validate_active_plugins()` → `deactivate_plugins()`). Harmless
+locally, but it drifts the local DB from prod until the next pull. `npm run
+pull:files` fetches both directories from prod (rsync over SSH, `tar` fallback),
+so run it alongside `pull:db` when setting up.
