@@ -1,0 +1,105 @@
+.mobile-hidden{
+	display:none;
+}
+.mobile-only{
+	display:block;
+}
+.site-top-contact__inner{
+	padding:6px 10px;
+}
+.site-top-contact__address,
+.site-top-contact__phone{
+	text-align:center;
+}
+.site-top-contact__address{
+	font-size:13px;
+	line-height:1.25;
+}
+.site-top-contact__address-line{
+	display:block;
+}
+.site-top-contact__address-line + .site-top-contact__address-line{
+	margin-left:0;
+}
+.site-top-contact__phone{
+	width:auto;
+	padding:5px 10px;
+	align-self:center;
+	font-size:14px;
+}
+/* re-define for mobile */
+.pull-right {
+    float: none !important;
+}
+/* header{
+	height:80px;
+} */
+header .logo{
+	padding-left:15%;
+}
+/* header img{
+	height:45px;
+	width:57px;
+	margin-top:-4px;
+} */
+header h1{
+	font-size:22px;
+	/* height:32px; */
+	margin-top:28px;
+	padding:0;
+	font-weight:bold;
+}
+header p{
+	float:none;
+	margin:0 auto;
+	cursor:pointer;
+}
+header p a{
+	color:#000;
+}
+header .phone{
+	text-align:center;
+	color:#FFF;
+	font-size:11px;
+	color:#ddd;
+	margin-bottom:15px;
+}
+#nav-wrap{
+	background:none;
+}
+nav ul li a{
+	margin-top:3px;
+	margin-bottom:3px;
+}
+main{
+	margin-top:10px;
+}
+main section{
+	-webkit-border-radius: 0px;
+	-moz-border-radius: 0px;
+	border-radius: 0px;
+}
+main aside{
+	margin-top:10px;
+	width:100%;
+	border:0;
+	border-bottom:1px solid #888;
+}
+main #sidebar{
+	padding-left:0px !important;
+	padding-right:0px !important;
+}
+
+main section article{
+	padding:10px 3px 3px 3px;
+}
+.slogan{
+	font-size:30px;	
+}
+
+
+
+#banner {
+	height: 220px;
+	background-size: cover; 
+}

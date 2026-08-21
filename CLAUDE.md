@@ -46,12 +46,26 @@ WordPress image's default would garble the site's existing Chinese content, so
 
 ## deyutcm deploys themes only
 
-The active theme is `twentysixteen` — not stock, but the site's own fork of
-Twenty Sixteen 1.1, carrying the custom `front-page.php`, `page-appointment.php`,
-and the rest of the Chinese page templates. It is the only theme in
-`wp-content/themes/`; the stock Twenty Twenty-One/Two/Three copies were deleted
-(recoverable from `06db8d4`). Note the Dockerfile strips the image's bundled
-themes, so whatever is in `wp-content/themes/` is site code, never core.
+`wp-content/themes/` holds two themes, both site code — the Dockerfile strips
+the image's bundled themes, so nothing in there is ever core:
+
+- `twentysixteen` — the site's own fork of Twenty Sixteen 1.1, with the custom
+  `front-page.php`, `page-appointment.php`, and the rest of the Chinese page
+  templates. **This is what prod serves.** Leave it alone unless a change is
+  meant for the live site.
+- `dr_cheung_2026` — a full copy of that fork with a reworked header. Only
+  `header.php` and the new `css/header.css` differ; every other file is byte
+  identical, so templates and content behave the same. Active on localhost:8300.
+
+Two consequences of the active theme living in the database:
+
+- `npm run pull:db` overwrites the local copy with prod's, which still says
+  `twentysixteen`. Re-run `npm run wp -- theme activate dr_cheung_2026` after a
+  pull to get back to the new header locally.
+- Deploying `dr_cheung_2026` uploads the files but does **not** switch prod to
+  it — activation is a database setting, and the deploy never touches prod's
+  database. Prod keeps serving `twentysixteen` until someone activates the new
+  theme in wp-admin there.
 
 `deyutcm/deploy.sh` (`npm run deploy`) pushes `wp-content/themes/` to prod over
 rsync and nothing else — plugins, uploads, and the database never go up. It
