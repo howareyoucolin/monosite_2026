@@ -1,0 +1,64 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: monosites-deyutcm-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: deyutcm
+      MARIADB_USER: deyutcm
+      MARIADB_PASSWORD: deyutcm
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - ./db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monosites-deyutcm
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8300:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: deyutcm
+      WORDPRESS_DB_USER: deyutcm
+      WORDPRESS_DB_PASSWORD: deyutcm
+      WORDPRESS_DEBUG: 1
+      WORDPRESS_CONFIG_EXTRA: |
+        define( 'WP_HOME', 'http://localhost:8300' );
+        define( 'WP_SITEURL', 'http://localhost:8300' );
+        define( 'FS_METHOD', 'direct' );
+    volumes:
+      - wp-core:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+
+  wpcli:
+    image: wordpress:cli-php8.2
+    container_name: monosites-deyutcm-cli
+    profiles: ["cli"]
+    depends_on:
+      db:
+        condition: service_healthy
+    user: "33:33"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: deyutcm
+      WORDPRESS_DB_USER: deyutcm
+      WORDPRESS_DB_PASSWORD: deyutcm
+    volumes:
+      - wp-core:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+    entrypoint: ["wp"]
+    command: ["--info"]
+
+volumes:
+  wp-core:
