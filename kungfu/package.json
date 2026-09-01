@@ -1,0 +1,19 @@
+{
+  "name": "kungfu",
+  "private": true,
+  "description": "Local WordPress for kungfu (novel.369usa.com) (Docker, local DB copied from prod)",
+  "scripts": {
+    "dev": "docker compose up --build --remove-orphans",
+    "start": "docker compose up -d --build --remove-orphans",
+    "stop": "docker compose down --remove-orphans",
+    "logs": "docker compose logs -f wordpress",
+    "wp": "docker compose run --rm wpcli",
+    "pull:db": "./pull-db.sh",
+    "pull:files": "./pull-files.sh",
+    "pull:uploads": "./pull-files.sh uploads",
+    "pull:plugins": "./pull-files.sh plugins",
+    "deploy": "./deploy.sh",
+    "deploy:dry": "./deploy.sh --dry-run",
+    "reset": "docker compose down -v --remove-orphans"
+  }
+}

@@ -1,0 +1,97 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: monosites-kungfu-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: kungfu
+      MARIADB_USER: kungfu
+      MARIADB_PASSWORD: kungfu
+      MARIADB_ROOT_PASSWORD: root
+    # Published so a GUI client (Sequel Ace, TablePlus) can reach it. Kept in
+    # this site's 83xx block rather than the 33xx one other local containers use.
+    ports:
+      - "8301:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monosites-kungfu
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8300:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: kungfu
+      WORDPRESS_DB_USER: kungfu
+      WORDPRESS_DB_PASSWORD: kungfu
+      WORDPRESS_TABLE_PREFIX: wp_
+      # Matches the prod schema: utf8, not the image's utf8mb4 default.
+      WORDPRESS_DB_CHARSET: utf8
+      WORDPRESS_DB_COLLATE: ""
+      WORDPRESS_DEBUG: 1
+      WORDPRESS_CONFIG_EXTRA: |
+        // The imported prod database holds the live domain in siteurl/home.
+        // These constants override it so the copy serves on localhost, without
+        // writing anything back to the database.
+        define( 'WP_HOME', 'http://localhost:8300' );
+        define( 'WP_SITEURL', 'http://localhost:8300' );
+        define( 'FS_METHOD', 'direct' );
+    volumes:
+      - wp-core:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: monosites-kungfu-pma
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8302:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      # Local-only database with local-only credentials, so it signs itself in.
+      PMA_USER: kungfu
+      PMA_PASSWORD: kungfu
+      # Large enough to import a prod dump from backups/ through the browser.
+      UPLOAD_LIMIT: 512M
+
+  wpcli:
+    image: wordpress:cli-php8.2
+    container_name: monosites-kungfu-cli
+    profiles: ["cli"]
+    depends_on:
+      db:
+        condition: service_healthy
+    user: "33:33"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: kungfu
+      WORDPRESS_DB_USER: kungfu
+      WORDPRESS_DB_PASSWORD: kungfu
+      WORDPRESS_TABLE_PREFIX: wp_
+      WORDPRESS_DB_CHARSET: utf8
+      WORDPRESS_DB_COLLATE: ""
+    volumes:
+      - wp-core:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+    entrypoint: ["wp"]
+    command: ["--info"]
+
+volumes:
+  wp-core:
+  db-data:

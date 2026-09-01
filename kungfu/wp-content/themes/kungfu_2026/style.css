@@ -1,0 +1,33 @@
+/*
+Theme Name: Kungfu 2026
+Theme URI: https://novel.369usa.com/
+Author: Townsquare Interactive
+Description: Starter theme for novel.369usa.com. Minimal scaffolding only.
+Version: 1.0.0
+Requires at least: 5.0
+Tested up to: 6.5
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: kungfu_2026
+*/
+
+:root {
+	--ink: #1a1a1a;
+	--paper: #fbfaf7;
+}
+
+body {
+	margin: 0;
+	background: var(--paper);
+	color: var(--ink);
+	font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+		"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+	line-height: 1.6;
+}
+
+.site {
+	max-width: 46rem;
+	margin: 0 auto;
+	padding: 3rem 1.25rem;
+}
