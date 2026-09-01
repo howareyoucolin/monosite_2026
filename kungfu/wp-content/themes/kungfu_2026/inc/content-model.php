@@ -2,6 +2,11 @@
 /**
  * Chapters, series and arcs.
  *
+ * A chapter is an ordinary post. There is no custom post type: the site has
+ * nothing to write but chapters, so a second type would only have split the
+ * editor in two. The constant stays because every query below reads better
+ * saying AKW_CHAPTER than 'post'.
+ *
  * A series is a top-level akw_series term; its arcs are that term's children.
  * A chapter is filed under its arc, and the series term is kept on the post as
  * well, so series-wide queries never have to walk the hierarchy.
@@ -13,49 +18,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/** Post type holding one chapter. */
-define( 'AKW_CHAPTER', 'akw_chapter' );
+/** Chapters are plain posts. */
+define( 'AKW_CHAPTER', 'post' );
 
 /** Hierarchical taxonomy: top level is a series, its children are that series' arcs. */
 define( 'AKW_SERIES', 'akw_series' );
 
 /**
- * Register the chapter post type.
- *
- * page-attributes is what gives each chapter a menu_order, which is how
- * chapters are sequenced inside their arc.
+ * Posts need a menu_order to be sequenced inside their arc, and only
+ * page-attributes puts that field in the editor.
  */
-function kungfu_2026_register_chapter_type() {
-	register_post_type(
-		AKW_CHAPTER,
-		array(
-			'labels'        => array(
-				'name'               => __( 'Chapters', 'kungfu_2026' ),
-				'singular_name'      => __( 'Chapter', 'kungfu_2026' ),
-				'menu_name'          => __( 'Chapters', 'kungfu_2026' ),
-				'add_new_item'       => __( 'Add New Chapter', 'kungfu_2026' ),
-				'edit_item'          => __( 'Edit Chapter', 'kungfu_2026' ),
-				'new_item'           => __( 'New Chapter', 'kungfu_2026' ),
-				'view_item'          => __( 'View Chapter', 'kungfu_2026' ),
-				'search_items'       => __( 'Search Chapters', 'kungfu_2026' ),
-				'not_found'          => __( 'No chapters found.', 'kungfu_2026' ),
-				'all_items'          => __( 'All Chapters', 'kungfu_2026' ),
-			),
-			'public'        => true,
-			'has_archive'   => true,
-			'menu_icon'     => 'dashicons-book-alt',
-			'menu_position' => 5,
-			'supports'      => array( 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'revisions', 'page-attributes' ),
-			'taxonomies'    => array( AKW_SERIES ),
-			'rewrite'       => array(
-				'slug'       => 'chapter',
-				'with_front' => false,
-			),
-			'show_in_rest'  => true,
-		)
-	);
+function kungfu_2026_support_chapter_order() {
+	add_post_type_support( AKW_CHAPTER, 'page-attributes' );
 }
-add_action( 'init', 'kungfu_2026_register_chapter_type' );
+add_action( 'init', 'kungfu_2026_support_chapter_order' );
 
 /**
  * Register the series/arc taxonomy.
@@ -123,22 +99,6 @@ function kungfu_2026_register_chapter_meta() {
 			'default'           => 0,
 			'show_in_rest'      => true,
 			'sanitize_callback' => 'absint',
-			'auth_callback'     => function () {
-				return current_user_can( 'manage_categories' );
-			},
-		)
-	);
-
-	// Author-set on a series: 'en' or 'zh'. Drives how labels are formatted.
-	register_term_meta(
-		AKW_SERIES,
-		'akw_lang',
-		array(
-			'type'              => 'string',
-			'single'            => true,
-			'default'           => 'en',
-			'show_in_rest'      => true,
-			'sanitize_callback' => 'sanitize_key',
 			'auth_callback'     => function () {
 				return current_user_can( 'manage_categories' );
 			},

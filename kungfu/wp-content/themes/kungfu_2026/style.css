@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Series, arcs, and chapters numbered continuously across a whole series.
-Version: 1.1.0
+Version: 1.2.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -12,29 +12,26 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: kungfu_2026
 */
 
+/*
+ * Light only, on purpose. The palette, the blackletter masthead and the ruled
+ * chapter table follow fk.369usa.com, so there is no dark variant to switch to:
+ * a prefers-color-scheme block here would only produce a second, unintended
+ * design.
+ */
 :root {
-	--ink: #1a1815;
-	--ink-soft: #5c554c;
-	--ink-faint: #8b8377;
-	--paper: #fbfaf7;
-	--paper-raised: #ffffff;
-	--rule: #e3ded4;
-	--accent: #8c2f23;
-	--accent-soft: #f4e9e6;
-	--radius: 10px;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--ink: #ece7df;
-		--ink-soft: #b3aca1;
-		--ink-faint: #8a8378;
-		--paper: #14130f;
-		--paper-raised: #1d1b17;
-		--rule: #302c25;
-		--accent: #d4776a;
-		--accent-soft: #2a1d1a;
-	}
+	--ink: #333;
+	--ink-strong: #1a2530;
+	--ink-soft: #555;
+	--ink-faint: #999;
+	--link: #141414;
+	--paper: #fff;
+	--rule: #ccc;
+	--rule-soft: #eee;
+	--shade: #f2f2f2;
+	--measure: 62rem;
+	--font-body: "Poppins", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+	--font-display: "UnifrakturMaguntia", "Old English Text MT", "Luminari", serif;
+	--font-nav: "Coustard", Georgia, serif;
 }
 
 *,
@@ -47,106 +44,119 @@ body {
 	margin: 0;
 	background: var(--paper);
 	color: var(--ink);
-	font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
-		"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-	line-height: 1.65;
+	font-family: var(--font-body);
+	font-size: 15px;
+	line-height: 1.7;
 	-webkit-font-smoothing: antialiased;
 }
 
 a {
-	color: var(--accent);
-	text-decoration-thickness: 1px;
+	color: var(--link);
 	text-underline-offset: 2px;
 }
 
-a:hover {
-	text-decoration-thickness: 2px;
+a:hover,
+a:focus {
+	color: var(--ink-strong);
+}
+
+h1,
+h2,
+h3 {
+	color: var(--ink-strong);
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+/* Visible to a screen reader, not to the eye — WordPress' own convention. */
+.screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
 
 /* ---- Masthead ---- */
 
 .masthead {
-	border-bottom: 1px solid var(--rule);
-	background: var(--paper-raised);
+	border-bottom: 1px solid var(--rule-soft);
+	background: var(--paper);
 }
 
 .masthead__inner {
-	max-width: 52rem;
+	max-width: var(--measure);
 	margin: 0 auto;
-	padding: 1rem 1.25rem;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.5rem 1.5rem;
-}
-
-.masthead--hero .masthead__inner {
-	display: block;
-	padding: 3.5rem 1.25rem 2.5rem;
+	padding: 2.4rem 1.25rem 1.9rem;
 	text-align: center;
 }
 
 .site-title {
 	margin: 0;
-	font-size: 1.05rem;
-	font-weight: 700;
-	letter-spacing: 0.01em;
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 400;
+	line-height: 1.2;
 }
 
 .site-title a {
-	color: inherit;
+	color: var(--ink-strong);
 	text-decoration: none;
 }
 
-.masthead--hero .site-title {
-	font-size: clamp(1.9rem, 5vw, 2.9rem);
-	line-height: 1.15;
-	letter-spacing: -0.02em;
+.site-tagline {
+	margin: 0.7rem 0 0;
+	color: var(--ink-faint);
+	font-size: 0.75rem;
+	letter-spacing: 2px;
 }
 
-.site-tagline {
-	margin: 0.6rem 0 0;
-	color: var(--ink-soft);
-	font-size: 1.05rem;
-}
+/* ---- Navigation ---- */
 
 .site-nav {
-	margin-left: auto;
+	border-bottom: 1px solid var(--rule-soft);
+}
+
+.site-nav__inner {
+	max-width: var(--measure);
+	margin: 0 auto;
+	padding: 0 1.25rem;
 }
 
 .site-nav__list {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 1.1rem;
+	justify-content: center;
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	font-size: 0.92rem;
 }
 
-.masthead--hero .site-nav {
-	margin: 1.5rem 0 0;
+.site-nav__list a {
+	display: block;
+	padding: 0.7rem 1rem;
+	color: var(--ink);
+	font-family: var(--font-nav);
+	font-size: 13px;
+	letter-spacing: 0.75px;
+	text-decoration: none;
 }
 
-.masthead--hero .site-nav__list {
-	justify-content: center;
+.site-nav__list a:hover,
+.site-nav__list .current-menu-item > a {
+	color: var(--ink-strong);
 }
 
 /* ---- Layout ---- */
 
 .site {
-	max-width: 52rem;
+	max-width: var(--measure);
 	margin: 0 auto;
-	padding: 2.5rem 1.25rem 4rem;
-}
-
-.section-title {
-	margin: 0 0 1rem;
-	font-size: 0.82rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.09em;
-	color: var(--ink-faint);
+	padding: 3rem 1.25rem 4rem;
 }
 
 .empty {
@@ -154,178 +164,113 @@ a:hover {
 	font-style: italic;
 }
 
-/* ---- Series cards ---- */
+/* ---- Archive header ---- */
 
-.series-grid {
-	display: grid;
-	gap: 1.25rem;
-	grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-	margin-bottom: 3.5rem;
+.archive-head {
+	margin: 0 0 1.6rem;
 }
 
-.series-card {
-	background: var(--paper-raised);
-	border: 1px solid var(--rule);
-	border-radius: var(--radius);
-	padding: 1.4rem 1.5rem 1.5rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.55rem;
-}
-
-.series-card__head {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 0.75rem;
-}
-
-.series-card__title {
+.archive-title {
 	margin: 0;
-	font-size: 1.3rem;
-	line-height: 1.25;
+	font-size: 1.6rem;
+	line-height: 1.3;
 	letter-spacing: -0.01em;
 }
 
-.series-card__title a {
+.archive-meta {
+	margin: 0.45rem 0 0;
+	color: var(--ink-faint);
+	font-size: 0.85rem;
+}
+
+.archive-meta a {
+	color: inherit;
+}
+
+.archive-desc {
+	margin: 0.7rem 0 0;
+	max-width: 40rem;
+	color: var(--ink-soft);
+}
+
+/* ---- Chapter table ---- */
+
+.chapter-table {
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+}
+
+.chapter-table th,
+.chapter-table td {
+	padding: 0.7rem 0.9rem;
+	border: 1px solid var(--rule);
+	text-align: left;
+	vertical-align: top;
+}
+
+.chapter-table th {
+	background: var(--shade);
+	color: var(--ink-strong);
+	font-weight: 600;
+}
+
+.chapter-table__number {
+	width: 14%;
+	white-space: nowrap;
+	color: var(--ink-soft);
+	font-variant-numeric: tabular-nums;
+}
+
+.chapter-table__arc {
+	width: 24%;
+	color: var(--ink-soft);
+}
+
+.chapter-table a {
 	color: inherit;
 	text-decoration: none;
 }
 
-.series-card__title a:hover {
-	color: var(--accent);
+.chapter-table a:hover {
+	color: var(--ink-strong);
+	text-decoration: underline;
 }
 
-.badge {
-	flex: none;
-	font-size: 0.7rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	padding: 0.2rem 0.5rem;
-	border-radius: 999px;
-	background: var(--accent-soft);
-	color: var(--accent);
-	white-space: nowrap;
-}
-
-.series-card__desc {
-	margin: 0;
-	color: var(--ink-soft);
-}
-
-.series-card__stats {
-	margin: 0;
-	font-size: 0.88rem;
-	color: var(--ink-faint);
-	font-variant-numeric: tabular-nums;
-}
-
-.series-card__latest {
-	margin: 0;
-	font-size: 0.94rem;
-	padding-top: 0.55rem;
-	border-top: 1px solid var(--rule);
-}
-
-.series-card__latest-label {
-	display: inline-block;
-	margin-right: 0.4rem;
-	font-size: 0.72rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.07em;
-	color: var(--ink-faint);
-}
-
-.series-card__actions {
-	margin: 0.35rem 0 0;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem;
-}
+/* ---- Buttons ---- */
 
 .button {
 	display: inline-block;
-	padding: 0.45rem 0.95rem;
-	border-radius: 999px;
-	background: var(--accent);
-	color: var(--paper-raised);
-	font-size: 0.88rem;
-	font-weight: 600;
+	padding: 0.45rem 1.1rem;
+	border: 1px solid var(--ink-strong);
+	background: var(--ink-strong);
+	color: var(--paper);
+	font-size: 0.85rem;
+	font-weight: 500;
 	text-decoration: none;
-	border: 1px solid var(--accent);
 }
 
 .button:hover {
-	opacity: 0.9;
+	background: var(--paper);
+	color: var(--ink-strong);
 }
 
 .button--quiet {
+	border-color: var(--rule);
 	background: transparent;
 	color: var(--ink-soft);
-	border-color: var(--rule);
 }
 
 .button--quiet:hover {
-	color: var(--accent);
-	border-color: var(--accent);
-}
-
-/* ---- Latest chapters ---- */
-
-.recent__list {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	border-top: 1px solid var(--rule);
-}
-
-.recent__item {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.25rem 0.85rem;
-	padding: 0.7rem 0;
-	border-bottom: 1px solid var(--rule);
-}
-
-.recent__link {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.25rem 0.75rem;
-	text-decoration: none;
-	color: inherit;
-}
-
-.recent__number {
-	flex: none;
-	min-width: 10.5rem;
-	font-size: 0.82rem;
-	color: var(--ink-faint);
-	font-variant-numeric: tabular-nums;
-}
-
-.recent__title {
-	font-weight: 500;
-}
-
-.recent__link:hover .recent__title {
-	color: var(--accent);
-}
-
-.recent__series {
-	margin-left: auto;
-	font-size: 0.78rem;
-	color: var(--ink-faint);
+	border-color: var(--ink-strong);
+	background: transparent;
 }
 
 /* ---- Chapter body ---- */
 
 .chapter-body {
 	font-size: 1.06rem;
-	line-height: 1.8;
+	line-height: 1.85;
 	max-width: 38rem;
 }
 
@@ -334,12 +279,17 @@ a:hover {
 }
 
 @media (max-width: 34rem) {
-	.recent__number {
-		min-width: 0;
-		width: 100%;
+	.chapter-table th,
+	.chapter-table td {
+		padding: 0.6rem;
 	}
 
-	.recent__series {
-		margin-left: 0;
+	.chapter-table__number {
+		width: 18%;
+	}
+
+	.chapter-table__arc {
+		width: 28%;
+		font-size: 0.85rem;
 	}
 }

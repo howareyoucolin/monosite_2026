@@ -19,14 +19,6 @@ function kungfu_2026_series_add_fields() {
 		<input type="number" name="akw_order" id="akw_order" value="0" step="1">
 		<p><?php esc_html_e( 'Position of this arc within its series. Ignored for a series itself.', 'kungfu_2026' ); ?></p>
 	</div>
-	<div class="form-field term-akw-lang-wrap">
-		<label for="akw_lang"><?php esc_html_e( 'Language', 'kungfu_2026' ); ?></label>
-		<select name="akw_lang" id="akw_lang">
-			<option value="en"><?php esc_html_e( 'English', 'kungfu_2026' ); ?></option>
-			<option value="zh"><?php esc_html_e( 'Chinese', 'kungfu_2026' ); ?></option>
-		</select>
-		<p><?php esc_html_e( 'Set on a series. Decides how chapter labels are formatted.', 'kungfu_2026' ); ?></p>
-	</div>
 	<?php
 }
 add_action( AKW_SERIES . '_add_form_fields', 'kungfu_2026_series_add_fields' );
@@ -38,7 +30,6 @@ add_action( AKW_SERIES . '_add_form_fields', 'kungfu_2026_series_add_fields' );
  */
 function kungfu_2026_series_edit_fields( $term ) {
 	$order = (int) get_term_meta( $term->term_id, 'akw_order', true );
-	$lang  = akw_get_series_language( $term->parent ? $term->parent : $term );
 	?>
 	<tr class="form-field term-akw-order-wrap">
 		<th scope="row"><label for="akw_order"><?php esc_html_e( 'Order', 'kungfu_2026' ); ?></label></th>
@@ -47,19 +38,7 @@ function kungfu_2026_series_edit_fields( $term ) {
 			<p class="description"><?php esc_html_e( 'Position of this arc within its series. Ignored for a series itself.', 'kungfu_2026' ); ?></p>
 		</td>
 	</tr>
-	<?php if ( ! $term->parent ) : ?>
-	<tr class="form-field term-akw-lang-wrap">
-		<th scope="row"><label for="akw_lang"><?php esc_html_e( 'Language', 'kungfu_2026' ); ?></label></th>
-		<td>
-			<select name="akw_lang" id="akw_lang">
-				<option value="en" <?php selected( $lang, 'en' ); ?>><?php esc_html_e( 'English', 'kungfu_2026' ); ?></option>
-				<option value="zh" <?php selected( $lang, 'zh' ); ?>><?php esc_html_e( 'Chinese', 'kungfu_2026' ); ?></option>
-			</select>
-			<p class="description"><?php esc_html_e( 'Decides how chapter labels are formatted.', 'kungfu_2026' ); ?></p>
-		</td>
-	</tr>
-		<?php
-	endif;
+	<?php
 }
 add_action( AKW_SERIES . '_edit_form_fields', 'kungfu_2026_series_edit_fields' );
 
@@ -78,11 +57,6 @@ function kungfu_2026_save_series_fields( $term_id ) {
 
 	if ( isset( $_POST['akw_order'] ) ) {
 		update_term_meta( $term_id, 'akw_order', absint( wp_unslash( $_POST['akw_order'] ) ) );
-	}
-
-	if ( isset( $_POST['akw_lang'] ) ) {
-		$lang = sanitize_key( wp_unslash( $_POST['akw_lang'] ) );
-		update_term_meta( $term_id, 'akw_lang', in_array( $lang, array( 'en', 'zh' ), true ) ? $lang : 'en' );
 	}
 }
 add_action( 'created_' . AKW_SERIES, 'kungfu_2026_save_series_fields' );
@@ -155,25 +129,38 @@ function kungfu_2026_chapter_sortable_columns( $columns ) {
 add_filter( 'manage_edit-' . AKW_CHAPTER . '_sortable_columns', 'kungfu_2026_chapter_sortable_columns' );
 
 /**
- * Default the chapter list to reading order.
+ * Sort the post list by chapter number when that column is clicked.
  *
- * @param WP_Query $query Query.
+ * Done as a LEFT JOIN rather than the usual meta_key/meta_value_num pair, which
+ * joins on postmeta INNER: now that chapters are ordinary posts, that would
+ * drop every post without a number — an unfiled chapter, or anything on the
+ * site that is not a chapter at all — straight out of the list. Unnumbered
+ * posts sort first here instead, which is also where they want attention.
+ *
+ * Only when asked: the list keeps WordPress' own newest-first default.
+ *
+ * @param string[] $clauses Query clauses.
+ * @param WP_Query $query   Query.
+ * @return string[]
  */
-function kungfu_2026_chapter_admin_order( $query ) {
+function kungfu_2026_chapter_admin_order( $clauses, $query ) {
+	global $wpdb;
+
 	if ( ! is_admin() || ! $query->is_main_query() || AKW_CHAPTER !== $query->get( 'post_type' ) ) {
-		return;
+		return $clauses;
 	}
 
-	if ( 'akw_number' === $query->get( 'orderby' ) ) {
-		$query->set( 'meta_key', 'akw_chapter_number' );
-		$query->set( 'orderby', 'meta_value_num' );
-		return;
+	if ( 'akw_number' !== $query->get( 'orderby' ) ) {
+		return $clauses;
 	}
 
-	if ( ! $query->get( 'orderby' ) ) {
-		$query->set( 'meta_key', 'akw_chapter_number' );
-		$query->set( 'orderby', 'meta_value_num' );
-		$query->set( 'order', 'ASC' );
-	}
+	$order = 'desc' === strtolower( (string) $query->get( 'order' ) ) ? 'DESC' : 'ASC';
+
+	$clauses['join']   .= " LEFT JOIN {$wpdb->postmeta} AS akw_number_sort"
+		. " ON ( {$wpdb->posts}.ID = akw_number_sort.post_id"
+		. " AND akw_number_sort.meta_key = 'akw_chapter_number' )";
+	$clauses['orderby'] = "CAST( akw_number_sort.meta_value AS SIGNED ) {$order}, {$wpdb->posts}.ID {$order}";
+
+	return $clauses;
 }
-add_action( 'pre_get_posts', 'kungfu_2026_chapter_admin_order' );
+add_filter( 'posts_clauses', 'kungfu_2026_chapter_admin_order', 10, 2 );

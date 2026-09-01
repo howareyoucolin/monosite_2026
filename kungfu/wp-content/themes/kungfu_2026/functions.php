@@ -27,17 +27,49 @@ function kungfu_2026_setup() {
 add_action( 'after_setup_theme', 'kungfu_2026_setup' );
 
 /**
- * Load the stylesheet.
+ * The three faces the design is built on.
+ *
+ * UnifrakturMaguntia is the masthead, Coustard the menu, Poppins everything
+ * else. Version is null because Google serves its own versioned URLs, and a
+ * ?ver= query on top of that only breaks their caching.
+ */
+function kungfu_2026_fonts_url() {
+	return 'https://fonts.googleapis.com/css2?family=Coustard&family=Poppins:wght@400;500;600&family=UnifrakturMaguntia&display=swap';
+}
+
+/**
+ * Load the fonts and the stylesheet.
  */
 function kungfu_2026_scripts() {
+	wp_enqueue_style( 'kungfu-2026-fonts', kungfu_2026_fonts_url(), array(), null );
+
 	wp_enqueue_style(
 		'kungfu-2026-style',
 		get_stylesheet_uri(),
-		array(),
+		array( 'kungfu-2026-fonts' ),
 		wp_get_theme()->get( 'Version' )
 	);
 }
 add_action( 'wp_enqueue_scripts', 'kungfu_2026_scripts' );
+
+/**
+ * Open the connection to the font host while the page is still parsing.
+ *
+ * @param string[] $urls          URLs for the relation.
+ * @param string   $relation_type Hint type.
+ * @return array
+ */
+function kungfu_2026_resource_hints( $urls, $relation_type ) {
+	if ( 'preconnect' === $relation_type && wp_style_is( 'kungfu-2026-fonts', 'queue' ) ) {
+		$urls[] = array(
+			'href'        => 'https://fonts.gstatic.com',
+			'crossorigin' => '',
+		);
+	}
+
+	return $urls;
+}
+add_filter( 'wp_resource_hints', 'kungfu_2026_resource_hints', 10, 2 );
 
 /**
  * Chapter/series/arc content model.
@@ -51,10 +83,9 @@ if ( is_admin() ) {
 }
 
 /**
- * The chapter and series permalinks only exist once their rules are rebuilt.
+ * The series permalinks only exist once their rules are rebuilt.
  */
 function kungfu_2026_flush_rewrites() {
-	kungfu_2026_register_chapter_type();
 	kungfu_2026_register_series_taxonomy();
 	flush_rewrite_rules();
 }

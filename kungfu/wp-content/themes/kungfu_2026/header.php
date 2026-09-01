@@ -2,8 +2,10 @@
 /**
  * Page head, masthead and opening markup.
  *
- * On the front page the masthead doubles as the hero, so the site name is not
- * printed twice.
+ * The masthead is the same on every page — centred blackletter title, then the
+ * menu in its own ruled bar, the way fk.369usa.com does it. Only the heading
+ * level changes: h1 on the front page, a paragraph elsewhere, where the h1
+ * belongs to the chapter.
  *
  * @package kungfu_2026
  */
@@ -20,33 +22,39 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-<header class="masthead<?php echo is_front_page() ? ' masthead--hero' : ''; ?>">
+<header class="masthead">
 	<div class="masthead__inner">
 		<?php if ( is_front_page() ) : ?>
-			<h1 class="site-title"><?php bloginfo( 'name' ); ?></h1>
-			<?php if ( get_bloginfo( 'description' ) ) : ?>
-				<p class="site-tagline"><?php bloginfo( 'description' ); ?></p>
-			<?php endif; ?>
+			<h1 class="site-title">
+				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a>
+			</h1>
 		<?php else : ?>
 			<p class="site-title">
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a>
 			</p>
 		<?php endif; ?>
 
-		<?php
-		if ( has_nav_menu( 'primary' ) ) {
-			wp_nav_menu(
-				array(
-					'theme_location' => 'primary',
-					'container'      => 'nav',
-					'container_class' => 'site-nav',
-					'menu_class'     => 'site-nav__list',
-					'depth'          => 1,
-				)
-			);
-		}
-		?>
+		<?php if ( get_bloginfo( 'description' ) ) : ?>
+			<p class="site-tagline"><?php bloginfo( 'description' ); ?></p>
+		<?php endif; ?>
 	</div>
+
+	<?php if ( has_nav_menu( 'primary' ) ) : ?>
+		<nav class="site-nav" aria-label="<?php esc_attr_e( 'Primary menu', 'kungfu_2026' ); ?>">
+			<div class="site-nav__inner">
+				<?php
+				wp_nav_menu(
+					array(
+						'theme_location' => 'primary',
+						'container'      => false,
+						'menu_class'     => 'site-nav__list',
+						'depth'          => 1,
+					)
+				);
+				?>
+			</div>
+		</nav>
+	<?php endif; ?>
 </header>
 
 <div class="site">
