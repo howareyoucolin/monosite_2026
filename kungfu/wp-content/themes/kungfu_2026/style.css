@@ -2,8 +2,8 @@
 Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
-Description: Starter theme for novel.369usa.com. Minimal scaffolding only.
-Version: 1.0.0
+Description: Serial fiction theme for novel.369usa.com. Series, arcs, and chapters numbered continuously across a whole series.
+Version: 1.1.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -13,8 +13,34 @@ Text Domain: kungfu_2026
 */
 
 :root {
-	--ink: #1a1a1a;
+	--ink: #1a1815;
+	--ink-soft: #5c554c;
+	--ink-faint: #8b8377;
 	--paper: #fbfaf7;
+	--paper-raised: #ffffff;
+	--rule: #e3ded4;
+	--accent: #8c2f23;
+	--accent-soft: #f4e9e6;
+	--radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--ink: #ece7df;
+		--ink-soft: #b3aca1;
+		--ink-faint: #8a8378;
+		--paper: #14130f;
+		--paper-raised: #1d1b17;
+		--rule: #302c25;
+		--accent: #d4776a;
+		--accent-soft: #2a1d1a;
+	}
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 }
 
 body {
@@ -23,11 +49,297 @@ body {
 	color: var(--ink);
 	font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
 		"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-	line-height: 1.6;
+	line-height: 1.65;
+	-webkit-font-smoothing: antialiased;
 }
 
-.site {
-	max-width: 46rem;
+a {
+	color: var(--accent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+a:hover {
+	text-decoration-thickness: 2px;
+}
+
+/* ---- Masthead ---- */
+
+.masthead {
+	border-bottom: 1px solid var(--rule);
+	background: var(--paper-raised);
+}
+
+.masthead__inner {
+	max-width: 52rem;
 	margin: 0 auto;
-	padding: 3rem 1.25rem;
+	padding: 1rem 1.25rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 1.5rem;
+}
+
+.masthead--hero .masthead__inner {
+	display: block;
+	padding: 3.5rem 1.25rem 2.5rem;
+	text-align: center;
+}
+
+.site-title {
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.site-title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.masthead--hero .site-title {
+	font-size: clamp(1.9rem, 5vw, 2.9rem);
+	line-height: 1.15;
+	letter-spacing: -0.02em;
+}
+
+.site-tagline {
+	margin: 0.6rem 0 0;
+	color: var(--ink-soft);
+	font-size: 1.05rem;
+}
+
+.site-nav {
+	margin-left: auto;
+}
+
+.site-nav__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.92rem;
+}
+
+.masthead--hero .site-nav {
+	margin: 1.5rem 0 0;
+}
+
+.masthead--hero .site-nav__list {
+	justify-content: center;
+}
+
+/* ---- Layout ---- */
+
+.site {
+	max-width: 52rem;
+	margin: 0 auto;
+	padding: 2.5rem 1.25rem 4rem;
+}
+
+.section-title {
+	margin: 0 0 1rem;
+	font-size: 0.82rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	color: var(--ink-faint);
+}
+
+.empty {
+	color: var(--ink-faint);
+	font-style: italic;
+}
+
+/* ---- Series cards ---- */
+
+.series-grid {
+	display: grid;
+	gap: 1.25rem;
+	grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+	margin-bottom: 3.5rem;
+}
+
+.series-card {
+	background: var(--paper-raised);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	padding: 1.4rem 1.5rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+
+.series-card__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.series-card__title {
+	margin: 0;
+	font-size: 1.3rem;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+}
+
+.series-card__title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.series-card__title a:hover {
+	color: var(--accent);
+}
+
+.badge {
+	flex: none;
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	padding: 0.2rem 0.5rem;
+	border-radius: 999px;
+	background: var(--accent-soft);
+	color: var(--accent);
+	white-space: nowrap;
+}
+
+.series-card__desc {
+	margin: 0;
+	color: var(--ink-soft);
+}
+
+.series-card__stats {
+	margin: 0;
+	font-size: 0.88rem;
+	color: var(--ink-faint);
+	font-variant-numeric: tabular-nums;
+}
+
+.series-card__latest {
+	margin: 0;
+	font-size: 0.94rem;
+	padding-top: 0.55rem;
+	border-top: 1px solid var(--rule);
+}
+
+.series-card__latest-label {
+	display: inline-block;
+	margin-right: 0.4rem;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--ink-faint);
+}
+
+.series-card__actions {
+	margin: 0.35rem 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.button {
+	display: inline-block;
+	padding: 0.45rem 0.95rem;
+	border-radius: 999px;
+	background: var(--accent);
+	color: var(--paper-raised);
+	font-size: 0.88rem;
+	font-weight: 600;
+	text-decoration: none;
+	border: 1px solid var(--accent);
+}
+
+.button:hover {
+	opacity: 0.9;
+}
+
+.button--quiet {
+	background: transparent;
+	color: var(--ink-soft);
+	border-color: var(--rule);
+}
+
+.button--quiet:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* ---- Latest chapters ---- */
+
+.recent__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid var(--rule);
+}
+
+.recent__item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25rem 0.85rem;
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--rule);
+}
+
+.recent__link {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.25rem 0.75rem;
+	text-decoration: none;
+	color: inherit;
+}
+
+.recent__number {
+	flex: none;
+	min-width: 10.5rem;
+	font-size: 0.82rem;
+	color: var(--ink-faint);
+	font-variant-numeric: tabular-nums;
+}
+
+.recent__title {
+	font-weight: 500;
+}
+
+.recent__link:hover .recent__title {
+	color: var(--accent);
+}
+
+.recent__series {
+	margin-left: auto;
+	font-size: 0.78rem;
+	color: var(--ink-faint);
+}
+
+/* ---- Chapter body ---- */
+
+.chapter-body {
+	font-size: 1.06rem;
+	line-height: 1.8;
+	max-width: 38rem;
+}
+
+.chapter-body p {
+	margin: 0 0 1.2em;
+}
+
+@media (max-width: 34rem) {
+	.recent__number {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.recent__series {
+		margin-left: 0;
+	}
 }
