@@ -1,7 +1,13 @@
 <?php
 /**
- * Reading the chapter structure from templates, and rendering the parts of it
- * that more than one template needs.
+ * Reading the chapter structure, and rendering the parts of it that more than
+ * one template needs.
+ *
+ * Everything here derives from one thing: publication order. Chapter 1 is the
+ * oldest counted post, and each arc's position follows the chapter that opens
+ * it. Nothing is stored, so there is nothing to renumber and nothing to drift —
+ * the previous stored-meta scheme existed only because arcs used to carry a
+ * manual order, and tags have no such field.
  *
  * @package kungfu_2026
  */
@@ -11,10 +17,156 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * The whole chapter structure, resolved once per request.
+ *
+ * Two queries: the ordered chapter IDs, then every arc term attached to them.
+ * Deriving each chapter's number on its own would mean a query per table row,
+ * which is why this is built in one pass and memoized.
+ *
+ * @return array {
+ *     @type int[]     $order        Chapter IDs in reading order.
+ *     @type int[]     $numbers      Chapter ID => its number, 1-based.
+ *     @type WP_Term[] $arc          Chapter ID => its arc.
+ *     @type int[]     $arc_index    Chapter ID => its position inside its arc.
+ *     @type int[]     $arc_position Arc term ID => which arc it is, 1-based.
+ *     @type array[]   $arc_chapters Arc term ID => its chapter IDs, in order.
+ * }
+ */
+function akw_chapter_structure() {
+	static $structure = null;
+
+	if ( null !== $structure ) {
+		return $structure;
+	}
+
+	$structure = array(
+		'order'        => array(),
+		'numbers'      => array(),
+		'arc'          => array(),
+		'arc_index'    => array(),
+		'arc_position' => array(),
+		'arc_chapters' => array(),
+	);
+
+	$ids = get_posts(
+		array(
+			'post_type'      => AKW_CHAPTER,
+			'post_status'    => akw_counted_statuses(),
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => array(
+				'date' => 'ASC',
+				'ID'   => 'ASC',
+			),
+		)
+	);
+
+	if ( ! $ids ) {
+		return $structure;
+	}
+
+	$arcs     = akw_map_chapter_arcs( $ids );
+	$number   = 0;
+	$position = 0;
+
+	foreach ( $ids as $id ) {
+		$id = (int) $id;
+
+		$structure['order'][]        = $id;
+		$structure['numbers'][ $id ] = ++$number;
+
+		if ( ! isset( $arcs[ $id ] ) ) {
+			continue;
+		}
+
+		$arc     = $arcs[ $id ];
+		$term_id = (int) $arc->term_id;
+
+		$structure['arc'][ $id ] = $arc;
+
+		// First chapter of this arc: that is what fixes the arc's position.
+		if ( ! isset( $structure['arc_position'][ $term_id ] ) ) {
+			$structure['arc_position'][ $term_id ] = ++$position;
+			$structure['arc_chapters'][ $term_id ] = array();
+		}
+
+		$structure['arc_chapters'][ $term_id ][] = $id;
+		$structure['arc_index'][ $id ]           = count( $structure['arc_chapters'][ $term_id ] );
+	}
+
+	return $structure;
+}
+
+/**
+ * Each chapter's arc, in one query.
+ *
+ * A chapter is meant to carry a single tag. When one carries several, the
+ * oldest tag wins — term_id order — so the answer is at least stable between
+ * requests, which alphabetical order would not be as arcs are added.
+ *
+ * @param int[] $ids Chapter IDs.
+ * @return WP_Term[] Chapter ID => arc term. Untagged chapters are absent.
+ */
+function akw_map_chapter_arcs( $ids ) {
+	$terms = wp_get_object_terms(
+		$ids,
+		AKW_ARC,
+		array(
+			'fields'  => 'all_with_object_id',
+			'orderby' => 'term_id',
+			'order'   => 'ASC',
+		)
+	);
+
+	if ( is_wp_error( $terms ) ) {
+		return array();
+	}
+
+	$map = array();
+
+	foreach ( $terms as $term ) {
+		$object_id = (int) $term->object_id;
+
+		if ( ! isset( $map[ $object_id ] ) ) {
+			$map[ $object_id ] = $term;
+		}
+	}
+
+	return $map;
+}
+
+/**
+ * A chapter's number.
+ *
+ * @param int|WP_Post|null $post Chapter.
+ * @return int Zero for a draft, which holds no place in the sequence.
+ */
+function akw_get_chapter_number( $post = null ) {
+	$post = get_post( $post );
+
+	if ( ! $post ) {
+		return 0;
+	}
+
+	$numbers = akw_chapter_structure()['numbers'];
+
+	return isset( $numbers[ $post->ID ] ) ? $numbers[ $post->ID ] : 0;
+}
+
+/**
+ * How many chapters the run holds.
+ *
+ * @return int
+ */
+function akw_get_chapter_total() {
+	return count( akw_chapter_structure()['order'] );
+}
+
+/**
  * The arc a chapter belongs to.
  *
  * @param int|WP_Post|null $post Chapter.
- * @return WP_Term|null
+ * @return WP_Term|null Null for an untagged chapter.
  */
 function akw_get_arc( $post = null ) {
 	$post = get_post( $post );
@@ -23,70 +175,17 @@ function akw_get_arc( $post = null ) {
 		return null;
 	}
 
-	$terms = wp_get_object_terms( $post->ID, AKW_SERIES );
+	$arcs = akw_chapter_structure()['arc'];
 
-	if ( is_wp_error( $terms ) ) {
-		return null;
+	if ( isset( $arcs[ $post->ID ] ) ) {
+		return $arcs[ $post->ID ];
 	}
 
-	foreach ( $terms as $term ) {
-		if ( $term->parent ) {
-			return $term;
-		}
-	}
+	// A draft is not in the structure at all, but the editor still wants to
+	// show which arc it is being written into.
+	$own = akw_map_chapter_arcs( array( $post->ID ) );
 
-	return null;
-}
-
-/**
- * The series a chapter belongs to.
- *
- * @param int|WP_Post|null $post Chapter.
- * @return WP_Term|null
- */
-function akw_get_series( $post = null ) {
-	$post = get_post( $post );
-
-	if ( ! $post ) {
-		return null;
-	}
-
-	$terms = wp_get_object_terms( $post->ID, AKW_SERIES );
-
-	if ( is_wp_error( $terms ) ) {
-		return null;
-	}
-
-	foreach ( $terms as $term ) {
-		if ( ! $term->parent ) {
-			return $term;
-		}
-	}
-
-	// Arc present but series missing: walk up rather than give up.
-	$arc = akw_get_arc( $post );
-
-	if ( $arc ) {
-		$parent = get_term( $arc->parent, AKW_SERIES );
-
-		if ( $parent && ! is_wp_error( $parent ) ) {
-			return $parent;
-		}
-	}
-
-	return null;
-}
-
-/**
- * A chapter's number within its whole series — the continuous one.
- *
- * @param int|WP_Post|null $post Chapter.
- * @return int Zero if the chapter has not been filed under an arc yet.
- */
-function akw_get_chapter_number( $post = null ) {
-	$post = get_post( $post );
-
-	return $post ? (int) get_post_meta( $post->ID, 'akw_chapter_number', true ) : 0;
+	return isset( $own[ $post->ID ] ) ? $own[ $post->ID ] : null;
 }
 
 /**
@@ -98,47 +197,50 @@ function akw_get_chapter_number( $post = null ) {
 function akw_get_arc_index( $post = null ) {
 	$post = get_post( $post );
 
-	return $post ? (int) get_post_meta( $post->ID, 'akw_arc_index', true ) : 0;
+	if ( ! $post ) {
+		return 0;
+	}
+
+	$indexes = akw_chapter_structure()['arc_index'];
+
+	return isset( $indexes[ $post->ID ] ) ? $indexes[ $post->ID ] : 0;
 }
 
 /**
- * Which arc this is within its series: 1, 2, 3…
+ * Which arc this is in the run: 1, 2, 3…
  *
  * @param WP_Term|int|null $arc Arc term.
- * @return int
+ * @return int Zero for a tag no counted chapter carries.
  */
 function akw_get_arc_position( $arc ) {
-	$arc = is_numeric( $arc ) ? get_term( (int) $arc, AKW_SERIES ) : $arc;
+	$arc = is_numeric( $arc ) ? get_term( (int) $arc, AKW_ARC ) : $arc;
 
 	if ( ! $arc instanceof WP_Term ) {
 		return 0;
 	}
 
-	return (int) get_term_meta( $arc->term_id, 'akw_arc_position', true );
+	$positions = akw_chapter_structure()['arc_position'];
+
+	return isset( $positions[ $arc->term_id ] ) ? $positions[ $arc->term_id ] : 0;
 }
 
 /**
- * How many chapters precede an arc.
+ * Chapter IDs in one arc, in reading order.
  *
- * @param WP_Term|int|null $arc Arc term.
- * @return int
+ * @param WP_Term|int $arc Arc term or term ID.
+ * @return int[]
  */
-function akw_get_arc_offset( $arc ) {
-	$arc = is_numeric( $arc ) ? get_term( (int) $arc, AKW_SERIES ) : $arc;
+function akw_get_arc_chapters( $arc ) {
+	$term_id = $arc instanceof WP_Term ? (int) $arc->term_id : (int) $arc;
+	$chapters = akw_chapter_structure()['arc_chapters'];
 
-	if ( ! $arc instanceof WP_Term ) {
-		return 0;
-	}
-
-	return (int) get_term_meta( $arc->term_id, 'akw_chapter_offset', true );
+	return isset( $chapters[ $term_id ] ) ? $chapters[ $term_id ] : array();
 }
 
 /**
  * A chapter's number on its own: "Chapter 47".
  *
- * The tree already says which arc a chapter sits in, so repeating it in every
- * row would only be noise. Empty for an unnumbered chapter, same as
- * akw_get_chapter_label().
+ * Empty for an unnumbered chapter, same as akw_get_chapter_label().
  *
  * @param int|WP_Post|null $post Chapter.
  * @return string
@@ -150,8 +252,44 @@ function akw_get_chapter_number_label( $post = null ) {
 		return '';
 	}
 
-	/* translators: %d: series-wide chapter number. */
+	/* translators: %d: chapter number. */
 	return sprintf( __( 'Chapter %d', 'kungfu_2026' ), $number );
+}
+
+/**
+ * Human label for a chapter, e.g. "Arc 2, Chapter 47".
+ *
+ * The chapter number is the run-wide one, which is the whole point: arc 2
+ * chapter 1 reads as chapter 47, not chapter 1.
+ *
+ * @param int|WP_Post|null $post Chapter.
+ * @return string Empty for a draft; callers test for that.
+ */
+function akw_get_chapter_label( $post = null ) {
+	$post = get_post( $post );
+
+	if ( ! $post ) {
+		return '';
+	}
+
+	$arc    = akw_get_arc( $post );
+	$number = akw_get_chapter_number( $post );
+	$arc_no = akw_get_arc_position( $arc );
+
+	// Still a draft: there is no number to show, and "Chapter 0" is worse than
+	// nothing.
+	if ( ! $number ) {
+		return apply_filters( 'akw_chapter_label', '', $post, $arc, 0 );
+	}
+
+	if ( $arc_no ) {
+		/* translators: 1: arc number, 2: chapter number. */
+		$label = sprintf( __( 'Arc %1$d, Chapter %2$d', 'kungfu_2026' ), $arc_no, $number );
+	} else {
+		$label = akw_get_chapter_number_label( $post );
+	}
+
+	return apply_filters( 'akw_chapter_label', $label, $post, $arc, $number );
 }
 
 /**
@@ -169,152 +307,26 @@ function akw_is_chapter_visible( $chapter_id ) {
 }
 
 /**
- * The chapters of an arc that the current visitor may read, in reading order.
- *
- * @param int $arc_id Arc term ID.
- * @return int[] Chapter IDs.
- */
-function akw_get_visible_arc_chapters( $arc_id ) {
-	return array_values( array_filter( akw_get_arc_chapters( $arc_id ), 'akw_is_chapter_visible' ) );
-}
-
-/**
- * Chapters filed straight on a series, with no arc in between.
- *
- * Every chapter is meant to live under an arc, but one that carries only its
- * series term would otherwise be missing from the tree entirely — which is
- * exactly the state a chapter is in before its arc exists.
- *
- * Deliberately avoids akw_get_series_chapters(): that orders by
- * akw_chapter_number, and the meta join drops the very chapters this looks for,
- * since an unfiled chapter never got numbered.
- *
- * @param WP_Term|int $series Series term.
- * @return int[] Chapter IDs.
- */
-function akw_get_unfiled_chapters( $series ) {
-	$series = is_numeric( $series ) ? get_term( (int) $series, AKW_SERIES ) : $series;
-
-	if ( ! $series instanceof WP_Term ) {
-		return array();
-	}
-
-	$filed = array();
-
-	foreach ( akw_get_arcs( $series->term_id ) as $arc ) {
-		$filed = array_merge( $filed, akw_get_arc_chapters( $arc->term_id ) );
-	}
-
-	$in_series = get_posts(
-		array(
-			'post_type'      => AKW_CHAPTER,
-			'post_status'    => akw_counted_statuses(),
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-			'orderby'        => array(
-				'menu_order' => 'ASC',
-				'date'       => 'ASC',
-				'ID'         => 'ASC',
-			),
-			'tax_query'      => array(
-				array(
-					'taxonomy'         => AKW_SERIES,
-					'field'            => 'term_id',
-					'terms'            => $series->term_id,
-					'include_children' => true,
-				),
-			),
-		)
-	);
-
-	$unfiled = array_diff( $in_series, $filed );
-
-	return array_values( array_filter( $unfiled, 'akw_is_chapter_visible' ) );
-}
-
-/**
- * Human label for a chapter, e.g. "Arc 2, Chapter 47".
- *
- * The chapter number is the series-wide one, which is the whole point: arc 2
- * chapter 1 reads as chapter 47, not chapter 1.
- *
- * @param int|WP_Post|null $post Chapter.
- * @return string
- */
-function akw_get_chapter_label( $post = null ) {
-	$post = get_post( $post );
-
-	if ( ! $post ) {
-		return '';
-	}
-
-	$arc    = akw_get_arc( $post );
-	$series = akw_get_series( $post );
-	$number = akw_get_chapter_number( $post );
-	$arc_no = akw_get_arc_position( $arc );
-
-	// Not filed under an arc, or still a draft: there is no number to show, and
-	// "Chapter 0" is worse than nothing. Callers test for an empty string.
-	if ( ! $number ) {
-		return apply_filters( 'akw_chapter_label', '', $post, $arc, $series, 0 );
-	}
-
-	if ( $arc_no ) {
-		/* translators: 1: arc number, 2: series-wide chapter number. */
-		$label = sprintf( __( 'Arc %1$d, Chapter %2$d', 'kungfu_2026' ), $arc_no, $number );
-	} else {
-		$label = akw_get_chapter_number_label( $post );
-	}
-
-	return apply_filters( 'akw_chapter_label', $label, $post, $arc, $series, $number );
-}
-
-/**
  * Every chapter a visitor can read, in reading order.
- *
- * Series by series, arc by arc, with anything not yet filed under an arc after
- * its series' arcs — an unfiled chapter has no number, so there is nowhere in
- * the sequence to interleave it.
  *
  * @return int[] Chapter IDs.
  */
 function akw_get_chapter_index() {
-	$chapters = array();
-
-	foreach ( akw_get_all_series() as $series ) {
-		$chapters = array_merge( $chapters, akw_get_series_index( $series ) );
-	}
-
-	// A chapter filed under two series would otherwise be listed twice.
-	return array_values( array_unique( $chapters ) );
+	return array_values( array_filter( akw_chapter_structure()['order'], 'akw_is_chapter_visible' ) );
 }
 
 /**
- * One series' readable chapters, in reading order.
+ * The chapters of an arc that the current visitor may read, in reading order.
  *
- * Arc by arc, then whatever is not filed under an arc yet.
- *
- * @param WP_Term|int $series Series term.
+ * @param WP_Term|int $arc Arc term or term ID.
  * @return int[] Chapter IDs.
  */
-function akw_get_series_index( $series ) {
-	$series = is_numeric( $series ) ? get_term( (int) $series, AKW_SERIES ) : $series;
-
-	if ( ! $series instanceof WP_Term ) {
-		return array();
-	}
-
-	$chapters = array();
-
-	foreach ( akw_get_arcs( $series->term_id ) as $arc ) {
-		$chapters = array_merge( $chapters, akw_get_visible_arc_chapters( $arc->term_id ) );
-	}
-
-	return array_merge( $chapters, akw_get_unfiled_chapters( $series ) );
+function akw_get_visible_arc_chapters( $arc ) {
+	return array_values( array_filter( akw_get_arc_chapters( $arc ), 'akw_is_chapter_visible' ) );
 }
 
 /**
- * The chapter table, as the front page and the series archives both draw it.
+ * The chapter table, as the front page and the arc archives both draw it.
  *
  * @param int[] $chapters Chapter IDs, already in reading order.
  * @param bool  $show_arc Whether to include the Arc column. Pass false inside a
@@ -338,29 +350,23 @@ function akw_the_chapter_table( $chapters, $show_arc = true ) {
 			</tr>
 		</thead>
 		<tbody>
-			<?php
-			foreach ( $chapters as $chapter_id ) :
-				$number = akw_get_chapter_number( $chapter_id );
-				?>
+			<?php foreach ( $chapters as $chapter_id ) : ?>
 				<tr>
 					<td class="chapter-table__number">
-						<?php
-						// An unnumbered chapter is one not filed under an arc yet; a
-						// dash keeps the column aligned without inventing a number.
-						echo $number ? esc_html( number_format_i18n( $number ) ) : '&mdash;';
-						?>
+						<?php echo esc_html( number_format_i18n( akw_get_chapter_number( $chapter_id ) ) ); ?>
 					</td>
 					<td class="chapter-table__title">
 						<a href="<?php echo esc_url( get_permalink( $chapter_id ) ); ?>" rel="bookmark"><?php echo esc_html( get_the_title( $chapter_id ) ); ?></a>
 					</td>
 					<?php
 					if ( $show_arc ) :
-						$arc = akw_get_chapter_arc_or_series( $chapter_id );
+						$arc = akw_get_arc( $chapter_id );
 						?>
 						<td class="chapter-table__arc">
 							<?php if ( $arc ) : ?>
 								<a href="<?php echo esc_url( get_term_link( $arc ) ); ?>"><?php echo esc_html( $arc->name ); ?></a>
 							<?php else : ?>
+								<?php // An untagged chapter still has a number; a dash keeps the column aligned without inventing an arc. ?>
 								&mdash;
 							<?php endif; ?>
 						</td>
@@ -373,153 +379,18 @@ function akw_the_chapter_table( $chapters, $show_arc = true ) {
 }
 
 /**
- * What the Arc column shows: a chapter's arc, or its series while it has no
- * arc — better than an empty cell for a chapter that has not been filed yet.
+ * Read arc archives in reading order rather than newest first.
  *
- * @param int|WP_Post|null $post Chapter.
- * @return WP_Term|null
- */
-function akw_get_chapter_arc_or_series( $post = null ) {
-	$arc = akw_get_arc( $post );
-
-	return $arc ? $arc : akw_get_series( $post );
-}
-
-/**
- * Chapters of a series in reading order, grouped by arc.
- *
- * Handy for a table of contents.
- *
- * @param WP_Term|int $series Series term.
- * @return array[] One entry per arc: 'arc', 'position', 'offset', 'chapters' (post IDs).
- */
-function akw_get_series_contents( $series ) {
-	$series = is_numeric( $series ) ? get_term( (int) $series, AKW_SERIES ) : $series;
-
-	if ( ! $series instanceof WP_Term ) {
-		return array();
-	}
-
-	$contents = array();
-
-	foreach ( akw_get_arcs( $series->term_id ) as $arc ) {
-		$contents[] = array(
-			'arc'      => $arc,
-			'position' => akw_get_arc_position( $arc ),
-			'offset'   => akw_get_arc_offset( $arc ),
-			'chapters' => akw_get_arc_chapters( $arc->term_id ),
-		);
-	}
-
-	return $contents;
-}
-
-/**
- * Order series and arc archives by the series-wide number.
- *
- * Only those: the blog index and the feed are left alone, where newest-first is
- * what a reader coming back expects.
+ * The table on tag.php builds its own order, but the loop still runs, and the
+ * tag feed reads from it.
  *
  * @param WP_Query $query Query.
  */
-function kungfu_2026_order_chapter_archives( $query ) {
-	if ( is_admin() || ! $query->is_main_query() ) {
+function kungfu_2026_order_arc_archives( $query ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_tag() ) {
 		return;
 	}
 
-	if ( $query->is_tax( AKW_SERIES ) ) {
-		$query->set( 'meta_key', 'akw_chapter_number' );
-		$query->set( 'orderby', 'meta_value_num' );
-		$query->set( 'order', 'ASC' );
-	}
+	$query->set( 'orderby', array( 'date' => 'ASC', 'ID' => 'ASC' ) );
 }
-add_action( 'pre_get_posts', 'kungfu_2026_order_chapter_archives' );
-
-/**
- * Chapters anywhere in a series, in reading order.
- *
- * Queries the series term with its children included, so it spans every arc.
- *
- * @param WP_Term|int $series Series term.
- * @param array       $args   Optional query overrides (number, order).
- * @return int[] Chapter IDs.
- */
-function akw_get_series_chapters( $series, $args = array() ) {
-	$series = is_numeric( $series ) ? get_term( (int) $series, AKW_SERIES ) : $series;
-
-	if ( ! $series instanceof WP_Term ) {
-		return array();
-	}
-
-	$defaults = array(
-		'post_type'      => AKW_CHAPTER,
-		'post_status'    => akw_counted_statuses(),
-		'posts_per_page' => -1,
-		'fields'         => 'ids',
-		'meta_key'       => 'akw_chapter_number',
-		'orderby'        => 'meta_value_num',
-		'order'          => 'ASC',
-		'tax_query'      => array(
-			array(
-				'taxonomy'         => AKW_SERIES,
-				'field'            => 'term_id',
-				'terms'            => $series->term_id,
-				'include_children' => true,
-			),
-		),
-	);
-
-	return get_posts( array_merge( $defaults, $args ) );
-}
-
-/**
- * The first chapter of a series, for a "start reading" link.
- *
- * @param WP_Term|int $series Series term.
- * @return int|null Chapter ID.
- */
-function akw_get_first_chapter( $series ) {
-	$chapters = akw_get_series_chapters( $series, array( 'posts_per_page' => 1 ) );
-
-	return $chapters ? (int) $chapters[0] : null;
-}
-
-/**
- * The most recent chapter of a series, by chapter number.
- *
- * @param WP_Term|int $series Series term.
- * @return int|null Chapter ID.
- */
-function akw_get_latest_chapter( $series ) {
-	$chapters = akw_get_series_chapters(
-		$series,
-		array(
-			'posts_per_page' => 1,
-			'order'          => 'DESC',
-		)
-	);
-
-	return $chapters ? (int) $chapters[0] : null;
-}
-
-/**
- * Most recently published chapters across every series.
- *
- * Ordered by publication date rather than chapter number, since this answers
- * "what is new" rather than "where am I".
- *
- * @param int $limit How many.
- * @return int[] Chapter IDs.
- */
-function akw_get_recent_chapters( $limit = 8 ) {
-	return get_posts(
-		array(
-			'post_type'      => AKW_CHAPTER,
-			'post_status'    => 'publish',
-			'posts_per_page' => (int) $limit,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-			'fields'         => 'ids',
-		)
-	);
-}
+add_action( 'pre_get_posts', 'kungfu_2026_order_arc_archives' );

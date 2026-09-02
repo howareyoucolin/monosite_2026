@@ -1,6 +1,6 @@
 <?php
 /**
- * Front page: every chapter in one table, in reading order.
+ * Front page: every post as a chapter, in one table, in reading order.
  *
  * @package kungfu_2026
  */

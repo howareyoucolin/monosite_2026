@@ -72,21 +72,11 @@ function kungfu_2026_resource_hints( $urls, $relation_type ) {
 add_filter( 'wp_resource_hints', 'kungfu_2026_resource_hints', 10, 2 );
 
 /**
- * Chapter/series/arc content model.
+ * Chapter/arc content model.
  */
 require_once get_theme_file_path( 'inc/content-model.php' );
-require_once get_theme_file_path( 'inc/numbering.php' );
 require_once get_theme_file_path( 'inc/template-tags.php' );
 
 if ( is_admin() ) {
 	require_once get_theme_file_path( 'inc/admin.php' );
 }
-
-/**
- * The series permalinks only exist once their rules are rebuilt.
- */
-function kungfu_2026_flush_rewrites() {
-	kungfu_2026_register_series_taxonomy();
-	flush_rewrite_rules();
-}
-add_action( 'after_switch_theme', 'kungfu_2026_flush_rewrites' );
