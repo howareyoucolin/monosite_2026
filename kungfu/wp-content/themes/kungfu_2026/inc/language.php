@@ -48,19 +48,6 @@ function akw_languages() {
 }
 
 /**
- * What to call a language, for the link's accessible name.
- *
- * Separate from akw_languages() so that the translation happens at render time,
- * long after the current language has been resolved.
- *
- * @param string $lang Language key.
- * @return string
- */
-function akw_get_language_label( $lang ) {
-	return 'cn' === $lang ? __( 'Chinese', 'kungfu_2026' ) : __( 'English', 'kungfu_2026' );
-}
-
-/**
  * The language a request gets when nothing says otherwise.
  *
  * @return string
@@ -212,91 +199,33 @@ function akw_get_language_url( $lang ) {
 }
 
 /**
- * A flag, drawn rather than fetched.
+ * The one link out of the language you are reading in.
  *
- * Inline SVG because the alternatives are both worse at this size: flag emoji
- * do not render as flags on Windows, and two image files would be two requests
- * for 30 pixels of artwork.
+ * A single line of text rather than a pair of flags: a flag stands for a
+ * country, not a language, and two of them side by side leave a reader working
+ * out which one is the current state and which one is the button.
  *
- * @param string $lang Language key.
- * @return string SVG markup.
- */
-function akw_get_flag_svg( $lang ) {
-	$star = 'M0,-1 0.2245,-0.309 0.951,-0.309 0.3633,0.1181 0.588,0.809 0,0.382 -0.588,0.809 -0.3633,0.1181 -0.951,-0.309 -0.2245,-0.309Z';
-	$open = '<svg class="lang-switch__flag" viewBox="0 0 30 20" width="30" height="20" aria-hidden="true" focusable="false">';
-
-	if ( 'cn' === $lang ) {
-		$stars = sprintf( '<path d="%s" transform="translate(5,5) scale(3)"/>', $star );
-
-		// Third value is the rotation that turns each small star's point toward
-		// the large one, which is how the flag is actually drawn.
-		$small = array( array( 10, 2, 239.04 ), array( 12.5, 4.5, 266.19 ), array( 12.5, 7.5, -71.57 ), array( 10, 10, -45.0 ) );
-
-		foreach ( $small as $point ) {
-			$stars .= sprintf(
-				'<path d="%s" transform="translate(%s,%s) rotate(%s)"/>',
-				$star,
-				$point[0],
-				$point[1],
-				$point[2]
-			);
-		}
-
-		return $open . '<rect width="30" height="20" fill="#de2910"/><g fill="#ffde00">' . $stars . '</g></svg>';
-	}
-
-	// Thirteen stripes, so seven red ones over a white field.
-	$stripe  = 20 / 13;
-	$stripes = '';
-
-	for ( $i = 0; $i < 13; $i += 2 ) {
-		$stripes .= sprintf( '<rect y="%s" width="30" height="%s"/>', round( $i * $stripe, 3 ), round( $stripe, 3 ) );
-	}
-
-	// The canton's fifty stars would be mud at this size; a five-by-four grid
-	// reads as the flag and stays legible.
-	$canton = '';
-
-	for ( $row = 0; $row < 4; $row++ ) {
-		for ( $col = 0; $col < 5; $col++ ) {
-			$canton .= sprintf(
-				'<path d="%s" transform="translate(%s,%s) scale(0.62)"/>',
-				$star,
-				round( 1.2 + $col * 2.4, 3 ),
-				round( 1.35 + $row * 2.69, 3 )
-			);
-		}
-	}
-
-	return $open
-		. '<rect width="30" height="20" fill="#fff"/>'
-		. '<g fill="#b22234">' . $stripes . '</g>'
-		. '<rect width="12" height="10.769" fill="#3c3b6e"/>'
-		. '<g fill="#fff">' . $canton . '</g>'
-		. '</svg>';
-}
-
-/**
- * The two flags.
+ * The label names the language you would be switching *to*, so it reads as an
+ * action. On the Chinese page it keeps "English" in Latin script, which is what
+ * makes the way back findable by someone who cannot read the rest of the line.
  */
 function akw_the_language_switcher() {
-	$current = akw_current_language();
+	$target = akw_is_chinese() ? 'en' : 'cn';
+
+	$label = 'cn' === $target
+		? __( 'Switch to Chinese version', 'kungfu_2026' )
+		: __( 'Switch to English version', 'kungfu_2026' );
+
+	$languages = akw_languages();
 	?>
-	<nav class="lang-switch" aria-label="<?php esc_attr_e( 'Language', 'kungfu_2026' ); ?>">
-		<?php foreach ( akw_languages() as $key => $language ) : ?>
-			<a
-				class="lang-switch__link<?php echo $key === $current ? ' is-current' : ''; ?>"
-				href="<?php echo esc_url( akw_get_language_url( $key ) ); ?>"
-				hreflang="<?php echo esc_attr( $language['html'] ); ?>"
-				<?php echo $key === $current ? ' aria-current="true"' : ''; ?>
-			>
-				<?php
-				echo akw_get_flag_svg( $key ); // phpcs:ignore WordPress.Security.EscapeOutput -- Markup built above, no input.
-				?>
-				<span class="screen-reader-text"><?php echo esc_html( akw_get_language_label( $key ) ); ?></span>
-			</a>
-		<?php endforeach; ?>
-	</nav>
+	<p class="lang-switch">
+		<a
+			class="lang-switch__link"
+			href="<?php echo esc_url( akw_get_language_url( $target ) ); ?>"
+			hreflang="<?php echo esc_attr( $languages[ $target ]['html'] ); ?>"
+			rel="alternate"
+		><?php echo esc_html( $label ); ?></a>
+	</p>
 	<?php
 }
 
@@ -425,9 +354,8 @@ function akw_zh_strings() {
 		'%s chapters'                => '%s 章',
 		'Primary menu'               => '主菜单',
 		'Primary Menu'               => '主菜单',
-		'Language'                   => '语言',
-		'English'                    => 'English',
-		'Chinese'                    => '中文',
+		'Switch to English version'  => '切换到 English 版',
+		'Switch to Chinese version'  => '切换到中文版',
 	);
 }
 

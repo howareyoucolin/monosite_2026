@@ -27,14 +27,18 @@ function kungfu_2026_setup() {
 add_action( 'after_setup_theme', 'kungfu_2026_setup' );
 
 /**
- * The three faces the design is built on.
+ * The two faces the design is built on.
  *
- * UnifrakturMaguntia is the masthead, Coustard the menu, Poppins everything
- * else. Version is null because Google serves its own versioned URLs, and a
- * ?ver= query on top of that only breaks their caching.
+ * Coustard is the menu, Poppins everything else — including the masthead, which
+ * used to be set in UnifrakturMaguntia. That blackletter is gone: a wordmark
+ * only has to be read, and a long site name in gothic capitals is the one place
+ * it is hardest. Dropping it also drops a webfont request.
+ *
+ * Version is null because Google serves its own versioned URLs, and a ?ver=
+ * query on top of that only breaks their caching.
  */
 function kungfu_2026_fonts_url() {
-	return 'https://fonts.googleapis.com/css2?family=Coustard&family=Poppins:wght@400;500;600&family=UnifrakturMaguntia&display=swap';
+	return 'https://fonts.googleapis.com/css2?family=Coustard&family=Poppins:wght@400;500;600&display=swap';
 }
 
 /**

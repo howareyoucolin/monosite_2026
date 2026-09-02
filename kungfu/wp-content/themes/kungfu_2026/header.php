@@ -2,13 +2,15 @@
 /**
  * Page head, masthead and opening markup.
  *
- * The masthead is the same on every page — centred blackletter title, then the
- * menu in its own ruled bar, the way fk.369usa.com does it. Only the heading
- * level changes: h1 on the front page, a paragraph elsewhere, where the h1
- * belongs to the chapter.
+ * The masthead is the same on every page — the language switch on its own row,
+ * ranged right, then the site name below it ranged left, then the menu in its
+ * own ruled bar. Only the heading level changes: h1 on the front page, a
+ * paragraph elsewhere, where the h1 belongs to the chapter.
  *
- * The language flags sit at the top left, outside .masthead__inner, so that
- * they do not pull the centred title off centre.
+ * The switch is its own row rather than sharing one with the site name: on a
+ * phone a shared row put a tap target within a few pixels of the home link.
+ * It comes first in the markup too, so the reading and tab order match what is
+ * on the screen.
  *
  * @package kungfu_2026
  */
@@ -26,22 +28,24 @@
 <?php wp_body_open(); ?>
 
 <header class="masthead">
-	<?php akw_the_language_switcher(); ?>
-
 	<div class="masthead__inner">
-		<?php if ( is_front_page() ) : ?>
-			<h1 class="site-title">
-				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a>
-			</h1>
-		<?php else : ?>
-			<p class="site-title">
-				<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a>
-			</p>
-		<?php endif; ?>
+		<?php akw_the_language_switcher(); ?>
 
-		<?php if ( get_bloginfo( 'description' ) ) : ?>
-			<p class="site-tagline"><?php bloginfo( 'description' ); ?></p>
-		<?php endif; ?>
+		<div class="masthead__identity">
+			<?php if ( is_front_page() ) : ?>
+				<h1 class="site-title">
+					<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a>
+				</h1>
+			<?php else : ?>
+				<p class="site-title">
+					<a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a>
+				</p>
+			<?php endif; ?>
+
+			<?php if ( get_bloginfo( 'description' ) ) : ?>
+				<p class="site-tagline"><?php bloginfo( 'description' ); ?></p>
+			<?php endif; ?>
+		</div>
 	</div>
 
 	<?php if ( has_nav_menu( 'primary' ) ) : ?>

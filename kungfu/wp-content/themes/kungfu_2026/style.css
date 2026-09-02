@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Chapters are posts, arcs are tags, and chapters are numbered continuously across the whole run.
-Version: 2.0.0
+Version: 2.3.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -13,25 +13,38 @@ Text Domain: kungfu_2026
 */
 
 /*
- * Light only, on purpose. The palette, the blackletter masthead and the ruled
- * chapter table follow fk.369usa.com, so there is no dark variant to switch to:
- * a prefers-color-scheme block here would only produce a second, unintended
+ * Light only, on purpose. The palette and the ruled chapter table follow
+ * fk.369usa.com, so there is no dark variant to switch to: a
+ * prefers-color-scheme block here would only produce a second, unintended
  * design.
+ *
+ * Type scales with the viewport rather than stepping at breakpoints. clamp()
+ * means a phone gets comfortable sizes and a desktop gets a proper masthead
+ * without a stack of media queries drifting out of step with each other.
  */
 :root {
-	--ink: #333;
+	--ink: #2f3338;
 	--ink-strong: #1a2530;
-	--ink-soft: #555;
-	--ink-faint: #999;
-	--link: #141414;
+	--ink-soft: #5c6470;
+	--ink-faint: #8b929c;
+	--link: #1a2530;
 	--paper: #fff;
-	--rule: #ccc;
-	--rule-soft: #eee;
-	--shade: #f2f2f2;
+	--rule: #d9dce0;
+	--rule-soft: #ebedef;
+	--shade: #f7f8f9;
+	--accent: #8c2f22;
+
+	/* Page gutter and the two widths the layout uses. */
+	--gutter: clamp(1rem, 0.5rem + 2vw, 1.75rem);
 	--measure: 62rem;
+	--measure-text: 36rem;
+
 	--font-body: "Poppins", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-	--font-display: "UnifrakturMaguntia", "Old English Text MT", "Luminari", serif;
+	/* The masthead. Same family as the body, separated by weight and size
+	   rather than by a second personality. */
+	--font-display: "Poppins", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
 	--font-nav: "Coustard", Georgia, serif;
+	--font-han: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei";
 }
 
 *,
@@ -40,24 +53,47 @@ Text Domain: kungfu_2026
 	box-sizing: border-box;
 }
 
+html {
+	/* Stops iOS inflating text when the phone is turned sideways. */
+	-webkit-text-size-adjust: 100%;
+}
+
 body {
 	margin: 0;
 	background: var(--paper);
 	color: var(--ink);
 	font-family: var(--font-body);
-	font-size: 15px;
+	font-size: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
 	line-height: 1.7;
 	-webkit-font-smoothing: antialiased;
 }
 
+img,
+svg,
+video {
+	max-width: 100%;
+	height: auto;
+}
+
+/*
+ * No underlines anywhere, by preference: a link is marked by colour, and hover
+ * changes that colour. Keyboard users still get the focus ring below, which is
+ * the one affordance that is not colour.
+ */
 a {
 	color: var(--link);
-	text-underline-offset: 2px;
+	text-decoration: none;
 }
 
 a:hover,
 a:focus {
-	color: var(--ink-strong);
+	color: var(--accent);
+}
+
+/* One visible focus ring for everything, since the design has no other. */
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
 }
 
 h1,
@@ -65,7 +101,14 @@ h2,
 h3 {
 	color: var(--ink-strong);
 	font-weight: 600;
-	line-height: 1.4;
+	line-height: 1.3;
+	/* Progressive: keeps a two-line heading from leaving one word alone. */
+	text-wrap: balance;
+}
+
+::selection {
+	background: #f2e3d9;
+	color: var(--ink-strong);
 }
 
 /* Visible to a screen reader, not to the eye — WordPress' own convention. */
@@ -84,6 +127,7 @@ h3 {
 /* ---- Masthead ---- */
 
 .masthead {
+	position: relative;
 	border-bottom: 1px solid var(--rule-soft);
 	background: var(--paper);
 }
@@ -91,92 +135,62 @@ h3 {
 .masthead__inner {
 	max-width: var(--measure);
 	margin: 0 auto;
-	padding: 2.4rem 1.25rem 1.9rem;
-	text-align: center;
+	padding: clamp(0.7rem, 0.55rem + 0.6vw, 1rem) var(--gutter) clamp(1.1rem, 0.85rem + 1vw, 1.5rem);
 }
 
+/*
+ * A plain wordmark, ranged left: body weight, barely above body size. It reads
+ * as a label for the page rather than a banner across it, which is what leaves
+ * the chapter title below it as the largest thing on the page.
+ */
 .site-title {
 	margin: 0;
 	font-family: var(--font-display);
-	font-size: 28px;
+	font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
 	font-weight: 400;
-	line-height: 1.2;
+	line-height: 1.35;
+	letter-spacing: 0;
+	/* A long site name must fold rather than push the page sideways. */
+	overflow-wrap: break-word;
 }
 
 .site-title a {
 	color: var(--ink-strong);
-	text-decoration: none;
 }
 
 .site-tagline {
-	margin: 0.7rem 0 0;
+	margin: 0.45rem 0 0;
 	color: var(--ink-faint);
-	font-size: 0.75rem;
-	letter-spacing: 2px;
+	font-size: 0.72rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
 }
 
 /* ---- Language switcher ---- */
 
 /*
- * Anchored to the masthead's top left rather than sitting in the flow, so the
- * blackletter title stays optically centred on the page and not on whatever is
- * left over beside the flags.
+ * Its own row at the top of the masthead container, ranged right. The bottom
+ * margin is the point of the row: sharing a line with the site name put this
+ * tap target next to the home link, which is a misclick on a phone.
  */
-.masthead {
-	position: relative;
-}
-
 .lang-switch {
-	position: absolute;
-	top: 0.9rem;
-	left: 1.25rem;
-	display: flex;
-	gap: 0.4rem;
-	z-index: 1;
+	margin: 0 0 clamp(0.8rem, 0.6rem + 1vw, 1.15rem);
+	font-size: 0.78rem;
+	line-height: 1.4;
+	text-align: right;
 }
 
 .lang-switch__link {
-	display: block;
-	padding: 2px;
-	border: 1px solid transparent;
-	border-radius: 2px;
-	line-height: 0;
-	opacity: 0.45;
-	transition: opacity 120ms ease-out;
+	/* inline-block so the padding gives it a real tap target. */
+	display: inline-block;
+	padding: 0.2rem 0;
+	color: var(--ink-faint);
+	letter-spacing: 0.02em;
 }
 
 .lang-switch__link:hover,
 .lang-switch__link:focus-visible {
-	opacity: 1;
-}
-
-/* The flag you are reading in stays lit; the other one is the thing to click. */
-.lang-switch__link.is-current {
-	border-color: var(--rule);
-	opacity: 1;
-}
-
-.lang-switch__flag {
-	display: block;
-	width: 24px;
-	height: 16px;
-	border: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-/* ---- Chinese ---- */
-
-/*
- * The body face has no Han coverage, so a Chinese page would otherwise fall
- * back to whatever the OS picks, which is rarely the right one.
- */
-.lang-cn {
-	font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", var(--font-body);
-	line-height: 1.9;
-}
-
-.lang-cn .chapter-body {
-	font-size: 1.02rem;
-	line-height: 2;
+	color: var(--accent);
 }
 
 /* ---- Navigation ---- */
@@ -188,7 +202,7 @@ h3 {
 .site-nav__inner {
 	max-width: var(--measure);
 	margin: 0 auto;
-	padding: 0 1.25rem;
+	padding: 0 var(--gutter);
 }
 
 .site-nav__list {
@@ -202,12 +216,11 @@ h3 {
 
 .site-nav__list a {
 	display: block;
-	padding: 0.7rem 1rem;
-	color: var(--ink);
+	padding: 0.85rem 1rem;
+	color: var(--ink-soft);
 	font-family: var(--font-nav);
-	font-size: 13px;
-	letter-spacing: 0.75px;
-	text-decoration: none;
+	font-size: 0.875rem;
+	letter-spacing: 0.04em;
 }
 
 .site-nav__list a:hover,
@@ -220,7 +233,7 @@ h3 {
 .site {
 	max-width: var(--measure);
 	margin: 0 auto;
-	padding: 3rem 1.25rem 4rem;
+	padding: clamp(2rem, 1.25rem + 3vw, 3.25rem) var(--gutter) clamp(3rem, 2rem + 4vw, 4.5rem);
 }
 
 .empty {
@@ -231,20 +244,21 @@ h3 {
 /* ---- Archive header ---- */
 
 .archive-head {
-	margin: 0 0 1.6rem;
+	margin: 0 0 clamp(1.5rem, 1rem + 2vw, 2.25rem);
 }
 
 .archive-title {
 	margin: 0;
-	font-size: 1.6rem;
-	line-height: 1.3;
-	letter-spacing: -0.01em;
+	font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+	line-height: 1.2;
+	letter-spacing: -0.015em;
 }
 
 .archive-meta {
-	margin: 0.45rem 0 0;
+	margin: 0.55rem 0 0;
 	color: var(--ink-faint);
-	font-size: 0.85rem;
+	font-size: 0.875rem;
+	letter-spacing: 0.02em;
 }
 
 .archive-meta a {
@@ -252,117 +266,281 @@ h3 {
 }
 
 .archive-desc {
-	margin: 0.7rem 0 0;
-	max-width: 40rem;
+	margin: 0.9rem 0 0;
+	max-width: var(--measure-text);
 	color: var(--ink-soft);
 }
 
 /* ---- Chapter table ---- */
 
+/*
+ * Ruled, not boxed. The old full grid drew a border on all four sides of every
+ * cell, which reads as a spreadsheet; a table of contents wants one horizontal
+ * rule per row and nothing else.
+ */
 .chapter-table {
 	width: 100%;
 	margin: 0;
 	border-collapse: collapse;
 }
 
-.chapter-table th,
-.chapter-table td {
-	padding: 0.7rem 0.9rem;
-	border: 1px solid var(--rule);
+.chapter-table thead th {
+	padding: 0 0.9rem 0.7rem;
+	border-bottom: 1px solid var(--rule);
+	color: var(--ink-faint);
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.14em;
 	text-align: left;
-	vertical-align: top;
+	text-transform: uppercase;
 }
 
-.chapter-table th {
+.chapter-table td {
+	padding: 0.85rem 0.9rem;
+	border-bottom: 1px solid var(--rule-soft);
+	text-align: left;
+	vertical-align: baseline;
+}
+
+.chapter-table tbody tr:hover {
 	background: var(--shade);
-	color: var(--ink-strong);
-	font-weight: 600;
 }
 
 .chapter-table__number {
-	width: 14%;
+	width: 4.5rem;
 	white-space: nowrap;
-	color: var(--ink-soft);
+	color: var(--ink-faint);
+	font-size: 0.9rem;
 	font-variant-numeric: tabular-nums;
 }
 
-.chapter-table__arc {
-	width: 24%;
-	color: var(--ink-soft);
-}
-
-.chapter-table a {
-	color: inherit;
-	text-decoration: none;
-}
-
-.chapter-table a:hover {
-	color: var(--ink-strong);
-	text-decoration: underline;
-}
-
-/* ---- Buttons ---- */
-
-.button {
-	display: inline-block;
-	padding: 0.45rem 1.1rem;
-	border: 1px solid var(--ink-strong);
-	background: var(--ink-strong);
-	color: var(--paper);
-	font-size: 0.85rem;
+.chapter-table__title {
 	font-weight: 500;
-	text-decoration: none;
 }
 
-.button:hover {
-	background: var(--paper);
+.chapter-table__title a {
 	color: var(--ink-strong);
 }
 
-.button--quiet {
-	border-color: var(--rule);
-	background: transparent;
-	color: var(--ink-soft);
+.chapter-table__title a:hover {
+	color: var(--accent);
 }
 
-.button--quiet:hover {
-	border-color: var(--ink-strong);
-	background: transparent;
+.chapter-table__arc {
+	width: 14.5rem;
+	color: var(--ink-soft);
+	font-size: 0.875rem;
+}
+
+.chapter-table__arc a {
+	color: inherit;
+}
+
+.chapter-table__arc a:hover {
+	color: var(--accent);
+}
+
+/*
+ * Narrow screens: three columns in 320px gives every title a two-word line, so
+ * the row becomes a small block instead — number and title on one line, arc
+ * underneath. Grid rather than display:block on the cells, because that keeps
+ * the number beside the title rather than above it.
+ */
+@media (max-width: 40rem) {
+	/*
+	 * The table has to stop being a table, not just its rows. Leaving
+	 * display:table on the element while the rows are grids means the table
+	 * still sizes itself to its widest cell, which pushes the whole page wider
+	 * than the phone and clips the masthead along with it.
+	 */
+	.chapter-table,
+	.chapter-table tbody {
+		display: block;
+		width: 100%;
+	}
+
+	.chapter-table thead {
+		/* The columns are labelled by position now, not by a header row. */
+		display: none;
+	}
+
+	.chapter-table tbody tr {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		column-gap: 0.75rem;
+		padding: 0.85rem 0;
+		border-bottom: 1px solid var(--rule-soft);
+	}
+
+	.chapter-table tbody tr:hover {
+		background: none;
+	}
+
+	.chapter-table td {
+		padding: 0;
+		border: 0;
+	}
+
+	.chapter-table__number {
+		width: auto;
+		min-width: 1.75rem;
+	}
+
+	.chapter-table__arc {
+		width: auto;
+		grid-column: 2;
+		margin-top: 0.25rem;
+		color: var(--ink-faint);
+		font-size: 0.8rem;
+	}
+}
+
+/* ---- One chapter ---- */
+
+.chapter__head {
+	max-width: var(--measure-text);
+	margin: 0 0 clamp(1.75rem, 1.25rem + 2vw, 2.5rem);
+	padding-bottom: 1.25rem;
+	border-bottom: 1px solid var(--rule-soft);
+}
+
+.chapter__label {
+	margin: 0 0 0.5rem;
+	color: var(--ink-faint);
+	font-size: 0.78rem;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.chapter__label a {
+	color: inherit;
+}
+
+.chapter__label a:hover {
+	color: var(--accent);
+}
+
+.chapter__title {
+	margin: 0;
+	font-size: clamp(1.6rem, 1.25rem + 1.8vw, 2.25rem);
+	line-height: 1.2;
+	letter-spacing: -0.015em;
 }
 
 /* ---- Chapter body ---- */
 
+/*
+ * The measure is the point of this block. Chapter text at the page's full
+ * 62rem would run to well over a hundred characters a line, which is where
+ * the eye starts losing its place on the way back.
+ */
 .chapter-body {
-	font-size: 1.06rem;
+	max-width: var(--measure-text);
+	font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.1875rem);
 	line-height: 1.85;
-	max-width: 38rem;
 }
 
-.chapter-body p {
-	margin: 0 0 1.2em;
+.chapter-body > * {
+	margin-top: 0;
+	margin-bottom: 1.2em;
 }
 
-@media (max-width: 34rem) {
-	.lang-switch {
-		top: 0.6rem;
-		left: 0.75rem;
-	}
+.chapter-body > *:last-child {
+	margin-bottom: 0;
+}
 
-	.masthead__inner {
-		padding-top: 3.2rem;
-	}
+.chapter-body h2,
+.chapter-body h3,
+.chapter-body h4 {
+	margin-top: 2em;
+	margin-bottom: 0.6em;
+	line-height: 1.3;
+}
 
-	.chapter-table th,
-	.chapter-table td {
-		padding: 0.6rem;
-	}
+.chapter-body h2 {
+	font-size: 1.35em;
+}
 
-	.chapter-table__number {
-		width: 18%;
-	}
+.chapter-body h3 {
+	font-size: 1.15em;
+}
 
-	.chapter-table__arc {
-		width: 28%;
-		font-size: 0.85rem;
+.chapter-body h4 {
+	font-size: 1em;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.chapter-body blockquote {
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 1.25rem;
+	border-left: 2px solid var(--rule);
+	color: var(--ink-soft);
+	font-style: italic;
+}
+
+.chapter-body ul,
+.chapter-body ol {
+	padding-left: 1.4rem;
+}
+
+.chapter-body li + li {
+	margin-top: 0.4em;
+}
+
+.chapter-body hr {
+	max-width: 6rem;
+	margin: 2.5em auto;
+	border: 0;
+	border-top: 1px solid var(--rule);
+}
+
+.chapter-body figure,
+.chapter-body img {
+	display: block;
+}
+
+/* A wide table in the body scrolls itself rather than the page. */
+.chapter-body .wp-block-table {
+	overflow-x: auto;
+}
+
+/* ---- Chinese ---- */
+
+/*
+ * The body face has no Han coverage, so a Chinese page would otherwise fall
+ * back to whatever the OS picks, which is rarely the right one. The extra
+ * leading is not decoration: Han glyphs fill their em box, so lines set at a
+ * Latin line-height sit visibly tighter.
+ */
+.lang-cn {
+	font-family: var(--font-han), var(--font-body);
+	line-height: 1.9;
+}
+
+.lang-cn .chapter-body {
+	line-height: 2.05;
+	/* Han runs shorter per character, so the same measure holds more of them. */
+	max-width: 32rem;
+}
+
+.lang-cn .chapter__title,
+.lang-cn .archive-title {
+	letter-spacing: 0;
+}
+
+.lang-cn .chapter__label,
+.lang-cn .site-tagline,
+.lang-cn .chapter-table thead th {
+	letter-spacing: 0.08em;
+}
+
+/* ---- Narrow screens ---- */
+
+@media (max-width: 40rem) {
+	.site-nav__list a {
+		padding: 0.8rem 0.75rem;
 	}
 }
