@@ -1,0 +1,63 @@
+/*
+ * The Chinese version meta box.
+ *
+ * Admin-only: enqueued on enqueue_block_editor_assets, never on the front end.
+ * The CJK stack matters here — the admin's default font renders simplified
+ * Chinese with whatever the OS falls back to, which is rarely the right face.
+ */
+
+.akw-zh {
+	--akw-zh-han: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ---- Title ---- */
+
+.akw-zh .akw-zh-title {
+	margin-bottom: 1rem;
+}
+
+.akw-zh .akw-zh-title input[type="text"] {
+	font-family: var(--akw-zh-han);
+	font-size: 20px;
+	line-height: 1.5;
+	padding: 0.4em 0.6em;
+}
+
+/* ---- Editor ---- */
+
+.akw-zh-toolbar {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 0.5rem;
+}
+
+/*
+ * The canvas has to look like a writing surface rather than a form field, or
+ * an empty one reads as broken. min-height keeps it clickable when the chapter
+ * has not been translated yet.
+ */
+.akw-zh-canvas {
+	min-height: 24rem;
+	padding: 1.5rem 1rem;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+	background: #fff;
+	font-family: var(--akw-zh-han);
+}
+
+.akw-zh-canvas:focus-within {
+	border-color: var(--wp-admin-theme-color, #3858e9);
+}
+
+/*
+ * Core's editor-styles-wrapper centres blocks on a theme-defined content width
+ * that this box does not have. Fall back to the box's own width.
+ */
+.akw-zh-canvas .wp-block {
+	max-width: none;
+}
+
+.akw-zh .components-spinner {
+	margin: 2rem auto;
+	display: block;
+}

@@ -77,6 +77,11 @@ add_filter( 'wp_resource_hints', 'kungfu_2026_resource_hints', 10, 2 );
 require_once get_theme_file_path( 'inc/content-model.php' );
 require_once get_theme_file_path( 'inc/template-tags.php' );
 
+/**
+ * The Chinese title and Chinese body a chapter carries alongside its own.
+ */
+require_once get_theme_file_path( 'inc/chinese-version.php' );
+
 if ( is_admin() ) {
 	require_once get_theme_file_path( 'inc/admin.php' );
 }
