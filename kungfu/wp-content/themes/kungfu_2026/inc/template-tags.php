@@ -316,6 +316,48 @@ function akw_get_chapter_index() {
 }
 
 /**
+ * The chapter a reader goes to next, or the one before.
+ *
+ * Walks the visible index rather than WordPress' own get_adjacent_post(),
+ * which orders by date within a taxonomy at best and knows nothing about arcs.
+ * Reading order here spans arcs, so the last chapter of arc 1 is followed by
+ * the first of arc 2.
+ *
+ * @param int|WP_Post|null $post   Chapter.
+ * @param int              $offset 1 for the next chapter, -1 for the previous.
+ * @return int|null Chapter ID, or null at either end of the run.
+ */
+function akw_get_adjacent_chapter( $post = null, $offset = 1 ) {
+	$post = get_post( $post );
+
+	if ( ! $post ) {
+		return null;
+	}
+
+	$index = akw_get_chapter_index();
+	$at    = array_search( (int) $post->ID, $index, true );
+
+	// A draft, or a chapter the visitor cannot read, is not in the index.
+	if ( false === $at ) {
+		return null;
+	}
+
+	$target = $at + (int) $offset;
+
+	return isset( $index[ $target ] ) ? (int) $index[ $target ] : null;
+}
+
+/**
+ * The next chapter in reading order.
+ *
+ * @param int|WP_Post|null $post Chapter.
+ * @return int|null Chapter ID, or null on the last chapter.
+ */
+function akw_get_next_chapter( $post = null ) {
+	return akw_get_adjacent_chapter( $post, 1 );
+}
+
+/**
  * The chapters of an arc that the current visitor may read, in reading order.
  *
  * @param WP_Term|int $arc Arc term or term ID.

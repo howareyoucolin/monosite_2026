@@ -91,6 +91,11 @@ require_once get_theme_file_path( 'inc/chinese-version.php' );
  */
 require_once get_theme_file_path( 'inc/language.php' );
 
+/**
+ * The letter count and copy button a chapter page carries.
+ */
+require_once get_theme_file_path( 'inc/chapter-tools.php' );
+
 if ( is_admin() ) {
 	require_once get_theme_file_path( 'inc/admin.php' );
 }

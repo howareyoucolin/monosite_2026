@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Chapters are posts, arcs are tags, and chapters are numbered continuously across the whole run.
-Version: 2.3.0
+Version: 2.11.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -33,6 +33,11 @@ Text Domain: kungfu_2026
 	--rule-soft: #ebedef;
 	--shade: #f7f8f9;
 	--accent: #8c2f22;
+	/* The copy button's green, taken from fk.369usa.com. It is the one colour
+	   in the design that is not from this theme's own palette. */
+	--go: #1c7430;
+	--go-dark: #155d27;
+	--go-darker: #0f4e1b;
 
 	/* Page gutter and the two widths the layout uses. */
 	--gutter: clamp(1rem, 0.5rem + 2vw, 1.75rem);
@@ -428,6 +433,100 @@ h3 {
 	letter-spacing: -0.015em;
 }
 
+/* ---- Chapter tools ---- */
+
+/*
+ * One row over the reading column, both ranged left where the prose starts.
+ * Same height, so the row reads as one strip rather than two unrelated
+ * objects.
+ *
+ * nowrap on purpose. A 28px button and the count come to well under half the
+ * narrowest phone, so letting them wrap would only ever produce a stacked row
+ * nobody asked for.
+ */
+.chapter-tools {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.6rem;
+	max-width: var(--measure-text);
+	margin: 0 0 1.75rem;
+}
+
+/* Button-shaped and flat: the outline says "label", not "press me". */
+.chapter-tools__count {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	margin: 0;
+	padding: 0 0.65rem;
+	/* Barely there: the outline is only to give the count the button's shape. */
+	border: 1px solid var(--rule-soft);
+	border-radius: 4px;
+	background: none;
+	color: var(--ink-faint);
+	font-size: 0.76rem;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+}
+
+/* Icon only, so the name lives in aria-label and title rather than in text. */
+.copy-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	/* Padding rather than a fixed width, so the icon sits in a bit of room. */
+	min-width: 28px;
+	height: 28px;
+	padding: 0 0.8rem;
+	border: 1px solid var(--go);
+	border-radius: 4px;
+	background: var(--go);
+	color: #fff;
+	cursor: pointer;
+	transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.copy-button__icon {
+	display: block;
+}
+
+/* The tick replaces the clipboard while .is-copied is on the button. */
+.copy-button__icon--done,
+.copy-button.is-copied .copy-button__icon--copy {
+	display: none;
+}
+
+.copy-button.is-copied .copy-button__icon--done {
+	display: block;
+}
+
+.copy-button:hover {
+	border-color: var(--go-darker);
+	background: var(--go-dark);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.copy-button.is-copied {
+	border-color: var(--go-darker);
+	background: var(--go-darker);
+}
+
+/* The live region: announced, never shown, since the button says it too. */
+.chapter-tools__status {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
 /* ---- Chapter body ---- */
 
 /*
@@ -505,6 +604,79 @@ h3 {
 /* A wide table in the body scrolls itself rather than the page. */
 .chapter-body .wp-block-table {
 	overflow-x: auto;
+}
+
+/* ---- Next chapter ---- */
+
+.chapter-next {
+	max-width: var(--measure-text);
+	margin: clamp(2.25rem, 1.75rem + 2vw, 3.25rem) 0 0;
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--rule-soft);
+}
+
+.chapter-next__link {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 0.3rem;
+}
+
+.chapter-next__label {
+	color: var(--ink-faint);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.chapter-next__title {
+	color: var(--ink-strong);
+	font-size: 1.05rem;
+	font-weight: 500;
+}
+
+/* Decorative, so it lives in CSS rather than in the translated markup. */
+.chapter-next__title::after {
+	content: " \2192";
+}
+
+.chapter-next__link:hover .chapter-next__title,
+.chapter-next__link:focus-visible .chapter-next__title {
+	color: var(--accent);
+}
+
+/* ---- Footer ---- */
+
+.site-footer {
+	border-top: 1px solid var(--rule-soft);
+}
+
+.site-footer__inner {
+	max-width: var(--measure);
+	margin: 0 auto;
+	padding: 1.4rem var(--gutter) 2.25rem;
+}
+
+.site-footer__copyright {
+	margin: 0;
+	color: var(--ink-faint);
+	font-size: 0.78rem;
+	letter-spacing: 0.02em;
+}
+
+/*
+ * Inherits size, weight and colour from the line around it: this is a credit,
+ * not a call to action. Hover is the only thing that marks it as a link, which
+ * is the same bargain the rest of the site's links make.
+ */
+.site-footer__link {
+	color: inherit;
+	font-weight: inherit;
+}
+
+.site-footer__link:hover,
+.site-footer__link:focus-visible {
+	color: var(--accent);
 }
 
 /* ---- Chinese ---- */

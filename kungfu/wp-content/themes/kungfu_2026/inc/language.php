@@ -356,6 +356,13 @@ function akw_zh_strings() {
 		'Primary Menu'               => '主菜单',
 		'Switch to English version'  => '切换到 English 版',
 		'Switch to Chinese version'  => '切换到中文版',
+		'Total letter count: %s'     => '总字数：%s',
+		'Copy Title + Content'       => '复制标题与正文',
+		'Copied!'                    => '已复制！',
+		'Chapter copied to clipboard' => '章节已复制到剪贴板',
+		'Copy failed'                => '复制失败',
+		'Next chapter'               => '下一章',
+		'&copy; %1$s, built by %2$s, all rights reserved.' => '&copy; %1$s，由 %2$s 制作，保留所有权利。',
 	);
 }
 
