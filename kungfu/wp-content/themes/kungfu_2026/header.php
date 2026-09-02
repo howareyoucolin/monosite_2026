@@ -7,6 +7,9 @@
  * level changes: h1 on the front page, a paragraph elsewhere, where the h1
  * belongs to the chapter.
  *
+ * The language flags sit at the top left, outside .masthead__inner, so that
+ * they do not pull the centred title off centre.
+ *
  * @package kungfu_2026
  */
 
@@ -23,6 +26,8 @@
 <?php wp_body_open(); ?>
 
 <header class="masthead">
+	<?php akw_the_language_switcher(); ?>
+
 	<div class="masthead__inner">
 		<?php if ( is_front_page() ) : ?>
 			<h1 class="site-title">

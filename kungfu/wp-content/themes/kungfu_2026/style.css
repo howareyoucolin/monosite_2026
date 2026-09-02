@@ -115,6 +115,70 @@ h3 {
 	letter-spacing: 2px;
 }
 
+/* ---- Language switcher ---- */
+
+/*
+ * Anchored to the masthead's top left rather than sitting in the flow, so the
+ * blackletter title stays optically centred on the page and not on whatever is
+ * left over beside the flags.
+ */
+.masthead {
+	position: relative;
+}
+
+.lang-switch {
+	position: absolute;
+	top: 0.9rem;
+	left: 1.25rem;
+	display: flex;
+	gap: 0.4rem;
+	z-index: 1;
+}
+
+.lang-switch__link {
+	display: block;
+	padding: 2px;
+	border: 1px solid transparent;
+	border-radius: 2px;
+	line-height: 0;
+	opacity: 0.45;
+	transition: opacity 120ms ease-out;
+}
+
+.lang-switch__link:hover,
+.lang-switch__link:focus-visible {
+	opacity: 1;
+}
+
+/* The flag you are reading in stays lit; the other one is the thing to click. */
+.lang-switch__link.is-current {
+	border-color: var(--rule);
+	opacity: 1;
+}
+
+.lang-switch__flag {
+	display: block;
+	width: 24px;
+	height: 16px;
+	border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* ---- Chinese ---- */
+
+/*
+ * The body face has no Han coverage, so a Chinese page would otherwise fall
+ * back to whatever the OS picks, which is rarely the right one.
+ */
+.lang-cn {
+	font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", var(--font-body);
+	line-height: 1.9;
+}
+
+.lang-cn .chapter-body {
+	font-size: 1.02rem;
+	line-height: 2;
+}
+
 /* ---- Navigation ---- */
 
 .site-nav {
@@ -279,6 +343,15 @@ h3 {
 }
 
 @media (max-width: 34rem) {
+	.lang-switch {
+		top: 0.6rem;
+		left: 0.75rem;
+	}
+
+	.masthead__inner {
+		padding-top: 3.2rem;
+	}
+
 	.chapter-table th,
 	.chapter-table td {
 		padding: 0.6rem;
