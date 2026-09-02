@@ -53,6 +53,16 @@ function kungfu_2026_scripts() {
 		array( 'kungfu-2026-fonts' ),
 		wp_get_theme()->get( 'Version' )
 	);
+
+	// Every page has the back-to-top button, so unlike the copy script this one
+	// is not conditional.
+	wp_enqueue_script(
+		'kungfu-2026-back-to-top',
+		get_theme_file_uri( 'js/back-to-top.js' ),
+		array(),
+		wp_get_theme()->get( 'Version' ),
+		true
+	);
 }
 add_action( 'wp_enqueue_scripts', 'kungfu_2026_scripts' );
 

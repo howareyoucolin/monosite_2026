@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Chapters are posts, arcs are tags, and chapters are numbered continuously across the whole run.
-Version: 2.11.0
+Version: 2.13.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -677,6 +677,57 @@ h3 {
 .site-footer__link:hover,
 .site-footer__link:focus-visible {
 	color: var(--accent);
+}
+
+/* ---- Back to top ---- */
+
+/*
+ * Neutral rather than the copy button's green: two coloured circles competing
+ * for attention would make neither of them read as the primary action. Sits in
+ * the page gutter so it lines up with the content's own margin.
+ */
+.to-top {
+	position: fixed;
+	right: var(--gutter);
+	bottom: var(--gutter);
+	z-index: 20;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border: 1px solid var(--rule);
+	border-radius: 50%;
+	background: var(--paper);
+	color: var(--ink-soft);
+	cursor: pointer;
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+	/*
+	 * visibility, not just opacity: a transparent button is still in the tab
+	 * order and still swallows taps in the corner.
+	 */
+	visibility: hidden;
+	opacity: 0;
+	transform: translateY(0.4rem);
+	transition: opacity 160ms ease-out, transform 160ms ease-out, visibility 160ms;
+}
+
+.to-top.is-visible {
+	visibility: visible;
+	opacity: 1;
+	transform: none;
+}
+
+.to-top:hover {
+	border-color: var(--ink-strong);
+	color: var(--ink-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.to-top {
+		transition: none;
+	}
 }
 
 /* ---- Chinese ---- */

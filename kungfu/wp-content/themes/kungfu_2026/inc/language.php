@@ -362,6 +362,7 @@ function akw_zh_strings() {
 		'Chapter copied to clipboard' => '章节已复制到剪贴板',
 		'Copy failed'                => '复制失败',
 		'Next chapter'               => '下一章',
+		'Back to top'                => '返回顶部',
 		'&copy; %1$s, built by %2$s, all rights reserved.' => '&copy; %1$s，由 %2$s 制作，保留所有权利。',
 	);
 }
