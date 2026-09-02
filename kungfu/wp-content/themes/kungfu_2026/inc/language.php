@@ -199,6 +199,101 @@ function akw_get_language_url( $lang ) {
 }
 
 /**
+ * Whether links on this page should carry the language in them.
+ *
+ * Only Chinese is ever marked. English is the bare URL, which is what makes a
+ * plain link shareable with an English reader: they arrive with no cookie and
+ * no parameter, and get English. Marking English too would mean every URL on
+ * the site carried a parameter for no gain.
+ *
+ * @return bool
+ */
+function akw_should_mark_language() {
+	if ( is_admin() || is_feed() || wp_doing_ajax() ) {
+		return false;
+	}
+
+	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		return false;
+	}
+
+	return akw_is_chinese();
+}
+
+/**
+ * Whether a URL belongs to this site.
+ *
+ * A menu can point anywhere, and appending our parameter to someone else's
+ * domain would be both useless and rude.
+ *
+ * @param string $url URL.
+ * @return bool
+ */
+function akw_is_internal_url( $url ) {
+	$host = wp_parse_url( $url, PHP_URL_HOST );
+
+	return ! $host || strtolower( $host ) === strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+}
+
+/**
+ * Put the current language into a link, when the current language is Chinese.
+ *
+ * This is what makes the address bar shareable: a reader following links
+ * through the Chinese version keeps ?lang=cn in the URL the whole way, so the
+ * link they copy hands the next person the same language they were reading.
+ *
+ * @param string $url URL.
+ * @return string
+ */
+function akw_localize_url( $url ) {
+	if ( ! is_string( $url ) || '' === $url || ! akw_should_mark_language() || ! akw_is_internal_url( $url ) ) {
+		return $url;
+	}
+
+	// A URL that already names a language means it, so leave it alone —
+	// otherwise this would rewrite the switcher's own way out.
+	$query = wp_parse_url( $url, PHP_URL_QUERY );
+
+	if ( $query ) {
+		$args = array();
+		parse_str( $query, $args );
+
+		if ( isset( $args[ AKW_LANG_PARAM ] ) ) {
+			return $url;
+		}
+	}
+
+	return add_query_arg( AKW_LANG_PARAM, akw_current_language(), $url );
+}
+add_filter( 'post_link', 'akw_localize_url' );
+add_filter( 'page_link', 'akw_localize_url' );
+add_filter( 'post_type_link', 'akw_localize_url' );
+add_filter( 'term_link', 'akw_localize_url' );
+
+/*
+ * The Chinese page has to be its own canonical. WordPress would otherwise point
+ * it at the bare permalink, which tells search engines and link unfurlers that
+ * the page a reader was sent is a duplicate of the English one — and a chat app
+ * following that canonical would show an English preview of a Chinese link.
+ */
+add_filter( 'get_canonical_url', 'akw_localize_url' );
+
+/**
+ * The same, for menu links.
+ *
+ * @param array $atts Link attributes.
+ * @return array
+ */
+function kungfu_2026_localize_menu_link( $atts ) {
+	if ( ! empty( $atts['href'] ) ) {
+		$atts['href'] = akw_localize_url( $atts['href'] );
+	}
+
+	return $atts;
+}
+add_filter( 'nav_menu_link_attributes', 'kungfu_2026_localize_menu_link' );
+
+/**
  * The one link out of the language you are reading in.
  *
  * A single line of text rather than a pair of flags: a flag stands for a
