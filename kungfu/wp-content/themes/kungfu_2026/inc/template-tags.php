@@ -257,10 +257,17 @@ function akw_get_chapter_number_label( $post = null ) {
 }
 
 /**
- * Human label for a chapter, e.g. "Arc 2, Chapter 47".
+ * Human label for a chapter, e.g. "Arc of Street Justice, Chapter 47".
  *
- * The chapter number is the run-wide one, which is the whole point: arc 2
- * chapter 1 reads as chapter 47, not chapter 1.
+ * The arc is named rather than numbered. Its position is still derived — see
+ * akw_get_arc_position(), which tag.php uses — but a name tells a reader which
+ * part of the story they are in, and "Arc 2" only tells them how to count.
+ *
+ * The name is printed bare, with no "Arc" in front of it: the tags carry that
+ * word themselves, and adding a second one gives "Arc Arc of Street Justice".
+ *
+ * The chapter number stays the run-wide one, which is the whole point: the
+ * first chapter of the second arc reads as chapter 47, not chapter 1.
  *
  * @param int|WP_Post|null $post Chapter.
  * @return string Empty for a draft; callers test for that.
@@ -274,7 +281,6 @@ function akw_get_chapter_label( $post = null ) {
 
 	$arc    = akw_get_arc( $post );
 	$number = akw_get_chapter_number( $post );
-	$arc_no = akw_get_arc_position( $arc );
 
 	// Still a draft: there is no number to show, and "Chapter 0" is worse than
 	// nothing.
@@ -282,9 +288,9 @@ function akw_get_chapter_label( $post = null ) {
 		return apply_filters( 'akw_chapter_label', '', $post, $arc, 0 );
 	}
 
-	if ( $arc_no ) {
-		/* translators: 1: arc number, 2: chapter number. */
-		$label = sprintf( __( 'Arc %1$d, Chapter %2$d', 'kungfu_2026' ), $arc_no, $number );
+	if ( $arc ) {
+		/* translators: 1: arc name, which already names itself an arc. 2: chapter number. */
+		$label = sprintf( __( '%1$s, Chapter %2$d', 'kungfu_2026' ), $arc->name, $number );
 	} else {
 		$label = akw_get_chapter_number_label( $post );
 	}

@@ -106,6 +106,11 @@ require_once get_theme_file_path( 'inc/language.php' );
  */
 require_once get_theme_file_path( 'inc/chapter-tools.php' );
 
+/**
+ * The comment thread under a chapter.
+ */
+require_once get_theme_file_path( 'inc/comments.php' );
+
 if ( is_admin() ) {
 	require_once get_theme_file_path( 'inc/admin.php' );
 }

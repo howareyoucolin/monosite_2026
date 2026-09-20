@@ -7,6 +7,10 @@
  * to apply to. Reading happens here, so this is what gets the reading measure
  * and the larger type.
  *
+ * The comment thread hangs off the bottom, from comments.php. Chapters have
+ * carried comment_status 'open' all along; what was missing was a theme that
+ * drew the thread, so replies had nowhere to go.
+ *
  * The content is rendered once into a variable rather than echoed by
  * the_content(), because the letter count has to be counted from the same
  * string that goes on the page. Rendering it twice would mean the count could
@@ -49,6 +53,19 @@ while ( have_posts() ) :
 
 		<?php akw_the_next_chapter_link(); ?>
 	</article>
+
+	<?php
+	/*
+	 * Outside the <article>: the thread is about the chapter, not part of it,
+	 * and keeping it out means the copy button's reading of the page — and the
+	 * letter count above — never pick up someone else's words.
+	 *
+	 * comments_template() draws nothing of its own when a chapter has no
+	 * comments and comments are closed on it, so this is safe on every chapter
+	 * rather than only the ones taking replies.
+	 */
+	comments_template();
+	?>
 	<?php
 endwhile;
 

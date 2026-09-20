@@ -265,6 +265,37 @@ function akw_localize_url( $url ) {
 
 	return add_query_arg( AKW_LANG_PARAM, akw_current_language(), $url );
 }
+/**
+ * Never let a trailing slash land inside the query string.
+ *
+ * akw_localize_url() puts ?lang=cn on a permalink; core then hands that
+ * permalink to user_trailingslashit() in places that build on one — the comment
+ * permalinks in get_comment_link() are the reason this exists. The slash it
+ * appends does not end the path, because the path already ended: it ends up
+ * inside the parameter, and lang=cn becomes lang=cn%2F. That no longer
+ * normalizes, so a reader following a shared comment link arrives with no
+ * cookie and gets English, which is the one thing a ?lang= URL is for.
+ *
+ * Written as a general rule rather than a patch on comment links: a slash after
+ * a query string is wrong wherever it appears, because it changes the value of
+ * whatever parameter it lands on.
+ *
+ * @param string $url URL core is about to hand back, already slashed.
+ * @return string
+ */
+function kungfu_2026_no_slash_in_query( $url ) {
+	if ( ! is_string( $url ) || false === strpos( $url, '?' ) ) {
+		return $url;
+	}
+
+	// The fragment is appended after this filter runs, but matching it too
+	// keeps the rule true if anything hands us a URL that already has one.
+	// Delimited with ~ rather than # so the # inside the class is not read as
+	// the end of the pattern.
+	return preg_replace( '~(\?[^#]*?)/(?=$|#)~', '$1', $url );
+}
+add_filter( 'user_trailingslashit', 'kungfu_2026_no_slash_in_query' );
+
 add_filter( 'post_link', 'akw_localize_url' );
 add_filter( 'page_link', 'akw_localize_url' );
 add_filter( 'post_type_link', 'akw_localize_url' );
@@ -429,8 +460,8 @@ add_filter( 'the_content', 'kungfu_2026_chapter_content_zh', 20 );
  * The theme's own strings, in Chinese.
  *
  * A .mo file would be the usual answer, but this theme has no build step and
- * would need one to compile it. There are a dozen strings; a lookup keyed on
- * the English source is honest about that and stays readable.
+ * would need one to compile it. There are a few dozen strings; a lookup keyed
+ * on the English source is honest about that and stays readable.
  *
  * @return array<string, string>
  */
@@ -443,7 +474,7 @@ function akw_zh_strings() {
 		'No chapters published yet.' => '尚未发布章节。',
 		'Nothing here yet.'          => '这里还没有内容。',
 		'Chapter %d'                 => '第 %d 章',
-		'Arc %1$d, Chapter %2$d'     => '第 %1$d 卷 第 %2$d 章',
+		'%1$s, Chapter %2$d'         => '%1$s 第 %2$d 章',
 		'Arc %1$s &middot; %2$s'     => '第 %1$s 卷 &middot; %2$s',
 		'%s chapter'                 => '%s 章',
 		'%s chapters'                => '%s 章',
@@ -458,6 +489,23 @@ function akw_zh_strings() {
 		'Copy failed'                => '复制失败',
 		'Next chapter'               => '下一章',
 		'Back to top'                => '返回顶部',
+		'%s comment'                 => '%s 条评论',
+		'Leave a comment'            => '发表评论',
+		'Reply to %s'                => '回复 %s',
+		'Cancel reply'               => '取消回复',
+		'Post comment'               => '发表评论',
+		'Reply'                      => '回复',
+		'Anonymous'                  => '匿名',
+		'Edit'                       => '编辑',
+		'Name'                       => '名字',
+		'Email'                      => '邮箱',
+		'Comment'                    => '评论',
+		'Your email address will not be published.' => '您的邮箱地址不会被公开。',
+		'Your comment is waiting to be approved.' => '您的评论正在等待审核。',
+		'Comments are closed.'       => '评论已关闭。',
+		'Comment navigation'         => '评论导航',
+		'Older comments'             => '较早的评论',
+		'Newer comments'             => '较新的评论',
 		'&copy; %1$s, built by %2$s, all rights reserved.' => '&copy; %1$s，由 %2$s 制作，保留所有权利。',
 	);
 }

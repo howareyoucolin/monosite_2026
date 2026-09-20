@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Chapters are posts, arcs are tags, and chapters are numbered continuously across the whole run.
-Version: 2.13.0
+Version: 2.18.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -645,6 +645,283 @@ h3 {
 	color: var(--accent);
 }
 
+/* ---- Comments ---- */
+
+/*
+ * Set to the reading measure, not the page, so the thread lines up under the
+ * chapter it belongs to instead of running out past both sides of it.
+ */
+.comments {
+	max-width: var(--measure-text);
+	margin: clamp(2.5rem, 2rem + 2vw, 3.75rem) 0 0;
+	padding-top: 1.75rem;
+	border-top: 1px solid var(--rule-soft);
+}
+
+/*
+ * Same small-caps label the rest of the chapter chrome uses, so the heading
+ * reads as a divider between the chapter and the replies rather than as
+ * another heading inside the story.
+ */
+.comments__title {
+	margin: 0 0 1.5rem;
+	color: var(--ink-faint);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.comments__list,
+.comments__list .children {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.comments__list > li + li {
+	margin-top: 1.5rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--rule-soft);
+}
+
+/*
+ * A reply is indented and hung off a rule rather than boxed: threading has to
+ * be legible at a glance, and on a phone a box inside a box inside a box runs
+ * out of width by the third level. The indent is small for the same reason —
+ * five levels of it still leave a readable line.
+ */
+.comments__list .children {
+	margin-top: 1.25rem;
+	padding-left: clamp(0.85rem, 0.5rem + 1.5vw, 1.5rem);
+	border-left: 1px solid var(--rule-soft);
+}
+
+.comments__list .children > li + li {
+	margin-top: 1.25rem;
+}
+
+.comment__body {
+	font-size: 0.95rem;
+}
+
+.comment__head {
+	margin-bottom: 0.5rem;
+}
+
+.comment__byline {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 0.6rem;
+}
+
+.comment__author {
+	color: var(--ink-strong);
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.comment__date {
+	color: var(--ink-faint);
+	font-size: 0.74rem;
+	letter-spacing: 0.02em;
+}
+
+/* The author's own copy of a comment nobody else can see yet. */
+.comment__pending {
+	margin: 0 0 0.5rem;
+	color: var(--accent);
+	font-size: 0.78rem;
+}
+
+.comment__text > * {
+	margin-top: 0;
+	margin-bottom: 0.8em;
+}
+
+.comment__text > *:last-child {
+	margin-bottom: 0;
+}
+
+.comment__text blockquote {
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 1rem;
+	border-left: 2px solid var(--rule);
+	color: var(--ink-soft);
+}
+
+/* Links inside someone else's text are marked, unlike the rest of the site:
+   here the surrounding words are also not ours, so colour alone is thin. */
+.comment__text a {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
+.comment__foot {
+	display: flex;
+	gap: 0.9rem;
+	margin-top: 0.6rem;
+}
+
+.comment__reply a,
+.comment__edit a {
+	color: var(--ink-faint);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.comment__reply a:hover,
+.comment__reply a:focus-visible,
+.comment__edit a:hover,
+.comment__edit a:focus-visible {
+	color: var(--accent);
+}
+
+/* Core's own markup for a pingback, which the walker draws rather than the
+   theme — styled to sit quietly under the real replies. */
+.comments__list .pingback p,
+.comments__list .trackback p {
+	margin: 0;
+	color: var(--ink-soft);
+	font-size: 0.85rem;
+}
+
+.comment-navigation {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 1.75rem;
+	font-size: 0.8rem;
+}
+
+.comments__closed {
+	margin: 1.75rem 0 0;
+	color: var(--ink-faint);
+	font-size: 0.8rem;
+}
+
+/* ---- Comment form ---- */
+
+.comment-respond {
+	margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+}
+
+/* Matches .comments__title: the form is the next section, not a subsection. */
+.comments__title--reply {
+	margin-bottom: 1.25rem;
+}
+
+/* Core puts the cancel link inside the heading, where uppercase small-caps
+   would swallow it. Set back to running text so it reads as the way out. */
+.comments__title--reply #cancel-comment-reply-link {
+	margin-left: 0.6rem;
+	color: var(--ink-faint);
+	font-size: 0.72rem;
+	font-weight: 400;
+	letter-spacing: 0.02em;
+	text-transform: none;
+}
+
+.comments__title--reply #cancel-comment-reply-link:hover,
+.comments__title--reply #cancel-comment-reply-link:focus-visible {
+	color: var(--accent);
+}
+
+.comment-form__field {
+	margin: 0 0 1.1rem;
+}
+
+.comment-form__field label {
+	display: block;
+	margin-bottom: 0.35rem;
+	color: var(--ink-soft);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.comment-form__required {
+	color: var(--accent);
+}
+
+.comment-form input[type="text"],
+.comment-form input[type="email"],
+.comment-form textarea {
+	/* Inherited, not inherited-by-default: a form control takes the system UI
+	   font unless it is told otherwise, which would put a second typeface on
+	   the page at the one point the reader is writing into it. */
+	font-family: inherit;
+	font-size: 1rem;
+	width: 100%;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid var(--rule);
+	border-radius: 4px;
+	background: var(--paper);
+	color: var(--ink);
+	line-height: 1.6;
+	transition: border-color 0.15s ease-in-out;
+}
+
+.comment-form textarea {
+	display: block;
+	min-height: 9rem;
+	resize: vertical;
+}
+
+.comment-form input[type="text"]:focus,
+.comment-form input[type="email"]:focus,
+.comment-form textarea:focus {
+	border-color: var(--ink-soft);
+}
+
+.comment-form__hint {
+	display: block;
+	margin-top: 0.3rem;
+	color: var(--ink-faint);
+	font-size: 0.74rem;
+}
+
+/*
+ * Ink rather than the copy button's green. The green is on loan from
+ * fk.369usa.com for that one control; a second green button would make the
+ * page look like it has two primary actions.
+ */
+.comment-form__submit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 38px;
+	padding: 0 1.4rem;
+	border: 1px solid var(--ink-strong);
+	border-radius: 4px;
+	background: var(--ink-strong);
+	color: var(--paper);
+	font-family: inherit;
+	font-size: 0.8rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.comment-form__submit:hover {
+	border-color: var(--accent);
+	background: var(--accent);
+}
+
+/* The "logged in as …" line core writes when an author is signed in. */
+.comment-form .logged-in-as {
+	margin: 0 0 1.1rem;
+	color: var(--ink-faint);
+	font-size: 0.8rem;
+}
+
 /* ---- Footer ---- */
 
 .site-footer {
@@ -756,8 +1033,19 @@ h3 {
 
 .lang-cn .chapter__label,
 .lang-cn .site-tagline,
-.lang-cn .chapter-table thead th {
+.lang-cn .chapter-table thead th,
+.lang-cn .comments__title,
+.lang-cn .comment-form__field label {
 	letter-spacing: 0.08em;
+}
+
+/* Uppercasing has no meaning in Han script, and the tracking that makes a
+   Latin small-caps label readable only pulls these apart. */
+.lang-cn .comment__reply a,
+.lang-cn .comment__edit a,
+.lang-cn .comment-form__submit {
+	letter-spacing: 0.04em;
+	text-transform: none;
 }
 
 /* ---- Narrow screens ---- */
