@@ -43,6 +43,15 @@
 	// Header toolbar: 6.6+ first, then the older edit-post markup.
 	var TOOLBAR_SELECTORS = [ '.editor-header__toolbar', '.edit-post-header-toolbar' ];
 
+	// Below this the header has no room: its toolbar shrinks to the inserter
+	// and list view, and core clips anything past that. The buttons get a strip
+	// of their own under the header instead. 782px is core's own breakpoint for
+	// the full header.
+	var NARROW = window.matchMedia ? window.matchMedia( '(max-width: 781px)' ) : null;
+
+	// The header's wrapper, which the strip goes at the end of.
+	var HEADER_REGION = '.interface-interface-skeleton__header';
+
 	// Longer than this and it is a sentence that happens to start with
 	// "Section 3:", not a title.
 	var MAX_TITLE = 150;
@@ -380,7 +389,6 @@
 					onClick: run,
 					label: __( 'Turn "Section N: Title" lines into level-3 headings and remove bold outside headings', 'kungfu_2026' ),
 					showTooltip: true,
-					style: { marginLeft: '8px' },
 				},
 				__( 'Format sections', 'kungfu_2026' )
 			),
@@ -393,7 +401,6 @@
 					onClick: clearContent,
 					label: __( 'Remove every block from the content, without saving', 'kungfu_2026' ),
 					showTooltip: true,
-					style: { marginLeft: '8px' },
 				},
 				__( 'Clear content', 'kungfu_2026' )
 			)
@@ -401,43 +408,79 @@
 	}
 
 	/**
-	 * Put the buttons into the header toolbar if they are not there already.
+	 * Put the buttons where they fit, if they are not there already: in the
+	 * header toolbar on a wide screen, in a strip under the header on a phone.
+	 *
+	 * Moving the host node keeps its React root, so switching between the two
+	 * (rotating a tablet) does not remount the buttons.
 	 */
 	function attach() {
-		if ( document.getElementById( HOST_ID ) ) {
-			return;
-		}
-
 		var toolbar = null;
 
 		for ( var i = 0; i < TOOLBAR_SELECTORS.length && ! toolbar; i++ ) {
 			toolbar = document.querySelector( TOOLBAR_SELECTORS[ i ] );
 		}
 
-		if ( ! toolbar ) {
+		var narrow = !! ( NARROW && NARROW.matches );
+		var target = ( narrow && document.querySelector( HEADER_REGION ) ) || toolbar;
+
+		if ( ! target ) {
 			return;
 		}
 
-		var host = document.createElement( 'div' );
+		var host = document.getElementById( HOST_ID );
 
-		host.id = HOST_ID;
-		host.style.display = 'flex';
-		host.style.alignItems = 'center';
-		toolbar.appendChild( host );
-
-		if ( wp.element.createRoot ) {
-			wp.element.createRoot( host ).render( el( Buttons ) );
-		} else {
-			wp.element.render( el( Buttons ), host );
+		if ( host && host.parentNode === target ) {
+			return;
 		}
+
+		if ( ! host ) {
+			host = document.createElement( 'div' );
+			host.id = HOST_ID;
+
+			if ( wp.element.createRoot ) {
+				wp.element.createRoot( host ).render( el( Buttons ) );
+			} else {
+				wp.element.render( el( Buttons ), host );
+			}
+		}
+
+		host.className = target === toolbar ? 'akw-editor-tools' : 'akw-editor-tools akw-editor-tools--strip';
+		target.appendChild( host );
 	}
 
 	wp.domReady( function () {
 		attach();
 
-		// The header mounts after the editor boots and can be replaced later
-		// (distraction-free mode, a changed viewport), taking the button with it.
+		// The header mounts after the editor boots and can be re-rendered later
+		// (distraction-free mode, closing the welcome guide on a phone), taking
+		// the buttons with it. A store change does not always follow the DOM
+		// change, so watch both; attach() returns early when nothing moved.
 		wp.data.subscribe( attach );
+
+		if ( window.MutationObserver ) {
+			var queued = false;
+
+			new window.MutationObserver( function () {
+				if ( queued ) {
+					return;
+				}
+
+				queued = true;
+				window.requestAnimationFrame( function () {
+					queued = false;
+					attach();
+				} );
+			} ).observe( document.body, { childList: true, subtree: true } );
+		}
 		wp.data.subscribe( releaseAutosave );
+
+		if ( NARROW ) {
+			if ( NARROW.addEventListener ) {
+				NARROW.addEventListener( 'change', attach );
+			} else {
+				NARROW.addListener( attach );
+			}
+		}
 	} );
 } )( window.wp );

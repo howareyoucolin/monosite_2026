@@ -1,0 +1,24 @@
+/*
+ * Where the editor's Format sections and Clear content buttons sit.
+ *
+ * Admin-only: enqueued on enqueue_block_editor_assets, never on the front end.
+ */
+
+.akw-editor-tools {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: 8px;
+}
+
+/*
+ * Phones and narrow tablets: a strip of its own under the header, because the
+ * header's toolbar is clipped to the inserter and list view at this width.
+ */
+.akw-editor-tools--strip {
+	justify-content: flex-end;
+	margin-left: 0;
+	padding: 8px 16px;
+	background: #fff;
+	border-bottom: 1px solid #e0e0e0;
+}

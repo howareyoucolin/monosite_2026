@@ -40,5 +40,12 @@ function kungfu_2026_format_sections_assets() {
 	);
 
 	wp_set_script_translations( 'kungfu-2026-format-sections', 'kungfu_2026' );
+
+	wp_enqueue_style(
+		'kungfu-2026-format-sections',
+		get_theme_file_uri( 'css/format-sections.css' ),
+		array(),
+		wp_get_theme()->get( 'Version' )
+	);
 }
 add_action( 'enqueue_block_editor_assets', 'kungfu_2026_format_sections_assets' );
