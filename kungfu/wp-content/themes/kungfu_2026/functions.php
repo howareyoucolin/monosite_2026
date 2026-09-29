@@ -113,4 +113,7 @@ require_once get_theme_file_path( 'inc/comments.php' );
 
 if ( is_admin() ) {
 	require_once get_theme_file_path( 'inc/admin.php' );
+
+	// The "Format sections" button in the chapter editor.
+	require_once get_theme_file_path( 'inc/format-sections.php' );
 }
