@@ -86,6 +86,36 @@ function kungfu_2026_resource_hints( $urls, $relation_type ) {
 add_filter( 'wp_resource_hints', 'kungfu_2026_resource_hints', 10, 2 );
 
 /**
+ * Make browsers re-check a page before reusing it.
+ *
+ * The host adds "Cache-Control: max-age=600" to every page it serves to a
+ * logged-out visitor. A phone that opened the site before signing in then kept
+ * showing that logged-out copy — no admin bar — for ten minutes after, because
+ * mobile Safari reuses it without asking and does not honour "Vary: Cookie".
+ *
+ * "no-cache" still lets the browser store the page (the back button stays
+ * instant); it only has to confirm with the server first. The Expires date in
+ * the past matters as much as the header: mod_expires leaves a response alone
+ * once it already carries an Expires, which is what keeps the host from adding
+ * its ten minutes back. Signed-in requests already get WordPress's own
+ * no-cache headers, so those are left as they are.
+ *
+ * @param array $headers Response headers.
+ * @return array
+ */
+function kungfu_2026_revalidate_pages( $headers ) {
+	if ( is_user_logged_in() ) {
+		return $headers;
+	}
+
+	$headers['Cache-Control'] = 'no-cache';
+	$headers['Expires']       = 'Wed, 11 Jan 1984 05:00:00 GMT';
+
+	return $headers;
+}
+add_filter( 'wp_headers', 'kungfu_2026_revalidate_pages' );
+
+/**
  * Chapter/arc content model.
  */
 require_once get_theme_file_path( 'inc/content-model.php' );
