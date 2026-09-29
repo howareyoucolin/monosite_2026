@@ -1,12 +1,15 @@
 <?php
 /**
- * A "Format sections" button in the block editor's top toolbar.
+ * "Format sections" and "Clear content" buttons in the block editor's top toolbar.
  *
  * Chapters arrive pasted, with their section titles as ordinary paragraphs —
  * "Section 1: The Gate", "**Section 2 - Rain**", sometimes run into the first
  * line of the body. The button turns each of those into the one shape the
  * theme styles: <h3 class="wp-block-heading">Section 1: The Gate</h3>.
  * The same click strips bold from everything that is not a heading.
+ *
+ * A "Clear content" button beside it empties the body for the next paste. It
+ * never saves, and it pauses autosave until the post has content again.
  *
  * All of it happens in the editor (js/format-sections.js), as ordinary block
  * edits: nothing is saved until the post is, and one undo reverts it.
@@ -19,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Load the button on the chapter editor.
+ * Load the buttons on the chapter editor.
  */
 function kungfu_2026_format_sections_assets() {
 	$screen = get_current_screen();

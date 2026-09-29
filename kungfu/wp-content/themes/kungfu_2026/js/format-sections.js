@@ -19,6 +19,9 @@
  * nested blocks included, so body text reads at the theme's normal weight.
  * Headings (h1–h6) keep whatever bold they have.
  *
+ * Beside it, "Clear content" empties the post for the next paste, without
+ * saving and with autosave held off until something is pasted.
+ *
  * Buildless like the rest of the theme's editor code, so written against the
  * wp.* globals. The button is placed into the header toolbar by hand because
  * the post editor has no slot there; it re-attaches if the header re-renders.
@@ -288,23 +291,117 @@
 		);
 	}
 
-	function FormatButton() {
+	// Held on core/editor while a cleared post is empty.
+	var AUTOSAVE_LOCK = 'akw-clear-content';
+
+	var autosaveLocked = false;
+
+	/**
+	 * Empty the post, ready for the next paste.
+	 *
+	 * An ordinary block removal, so it only changes the editor: nothing reaches
+	 * the database until Save or Update is pressed, and Undo brings it all
+	 * back. What it does hold off is autosave — on a draft, WordPress autosaves
+	 * into the post itself, which would write the empty content without anyone
+	 * pressing anything. The lock is lifted by releaseAutosave() once the post
+	 * has something in it again.
+	 *
+	 * Only the body is cleared. The title, tags and the Chinese version box
+	 * stay as they are.
+	 */
+	function clearContent() {
+		var store = wp.data.select( 'core/block-editor' );
+		var ids = store.getBlocks().map( function ( block ) {
+			return block.clientId;
+		} );
+
+		if ( ! ids.length ) {
+			return;
+		}
+
+		var postEditor = wp.data.dispatch( 'core/editor' );
+
+		if ( postEditor && postEditor.lockPostAutosaving ) {
+			postEditor.lockPostAutosaving( AUTOSAVE_LOCK );
+			autosaveLocked = true;
+		}
+
+		wp.data.dispatch( 'core/block-editor' ).removeBlocks( ids, false );
+
+		var notices = wp.data.dispatch( 'core/notices' );
+
+		if ( notices ) {
+			notices.createNotice( 'info', __( 'Content cleared. Not saved — autosave is paused until you paste.', 'kungfu_2026' ), {
+				type: 'snackbar',
+				id: 'akw-format-sections',
+				isDismissible: true,
+				actions: [
+					{
+						label: __( 'Undo', 'kungfu_2026' ),
+						onClick: function () {
+							wp.data.dispatch( 'core/editor' ).undo();
+						},
+					},
+				],
+			} );
+		}
+	}
+
+	/**
+	 * Lift the autosave lock once the post holds real content again.
+	 *
+	 * The empty paragraph the editor drops in when you click into a blank post
+	 * does not count, or autosave would resume one click before the paste.
+	 */
+	function releaseAutosave() {
+		if ( ! autosaveLocked ) {
+			return;
+		}
+
+		var blocks = wp.data.select( 'core/block-editor' ).getBlocks();
+
+		if ( ! blocks.length || ( 1 === blocks.length && wp.blocks.isUnmodifiedDefaultBlock( blocks[ 0 ] ) ) ) {
+			return;
+		}
+
+		autosaveLocked = false;
+		wp.data.dispatch( 'core/editor' ).unlockPostAutosaving( AUTOSAVE_LOCK );
+	}
+
+	function Buttons() {
 		return el(
-			wp.components.Button,
-			{
-				variant: 'secondary',
-				size: 'compact',
-				onClick: run,
-				label: __( 'Turn "Section N: Title" lines into level-3 headings and remove bold outside headings', 'kungfu_2026' ),
-				showTooltip: true,
-				style: { marginLeft: '8px' },
-			},
-			__( 'Format sections', 'kungfu_2026' )
+			wp.element.Fragment,
+			null,
+			el(
+				wp.components.Button,
+				{
+					variant: 'secondary',
+					size: 'compact',
+					onClick: run,
+					label: __( 'Turn "Section N: Title" lines into level-3 headings and remove bold outside headings', 'kungfu_2026' ),
+					showTooltip: true,
+					style: { marginLeft: '8px' },
+				},
+				__( 'Format sections', 'kungfu_2026' )
+			),
+			el(
+				wp.components.Button,
+				{
+					variant: 'secondary',
+					size: 'compact',
+					isDestructive: true,
+					onClick: clearContent,
+					label: __( 'Remove every block from the content, without saving', 'kungfu_2026' ),
+					showTooltip: true,
+					style: { marginLeft: '8px' },
+				},
+				__( 'Clear content', 'kungfu_2026' )
+			)
 		);
 	}
 
 	/**
-	 * Put the button into the header toolbar if it is not there already.
+	 * Put the buttons into the header toolbar if they are not there already.
 	 */
 	function attach() {
 		if ( document.getElementById( HOST_ID ) ) {
@@ -329,9 +426,9 @@
 		toolbar.appendChild( host );
 
 		if ( wp.element.createRoot ) {
-			wp.element.createRoot( host ).render( el( FormatButton ) );
+			wp.element.createRoot( host ).render( el( Buttons ) );
 		} else {
-			wp.element.render( el( FormatButton ), host );
+			wp.element.render( el( Buttons ), host );
 		}
 	}
 
@@ -341,5 +438,6 @@
 		// The header mounts after the editor boots and can be replaced later
 		// (distraction-free mode, a changed viewport), taking the button with it.
 		wp.data.subscribe( attach );
+		wp.data.subscribe( releaseAutosave );
 	} );
 } )( window.wp );
