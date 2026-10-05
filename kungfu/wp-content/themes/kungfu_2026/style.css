@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Chapters are posts, arcs are tags, and chapters are numbered continuously across the whole run.
-Version: 2.21.0
+Version: 2.22.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -423,6 +423,25 @@ h3 {
 }
 
 .chapter__label a:hover {
+	color: var(--accent);
+}
+
+/*
+ * The way to the former version of a remastered chapter, or back from it.
+ * Floated to the right of the label line so it costs no height, and set
+ * smaller and fainter than the label: it is for the few who want it.
+ */
+.chapter__version {
+	float: right;
+	margin-left: 1rem;
+	color: var(--ink-faint);
+	font-size: 0.72rem;
+	line-height: 1.6;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.chapter__version:hover {
 	color: var(--accent);
 }
 

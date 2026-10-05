@@ -127,6 +127,11 @@ require_once get_theme_file_path( 'inc/template-tags.php' );
 require_once get_theme_file_path( 'inc/chinese-version.php' );
 
 /**
+ * The body a chapter had before it was remastered.
+ */
+require_once get_theme_file_path( 'inc/former-version.php' );
+
+/**
  * Which of the two a visitor is reading.
  */
 require_once get_theme_file_path( 'inc/language.php' );

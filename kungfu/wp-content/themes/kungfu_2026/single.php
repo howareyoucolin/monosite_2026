@@ -17,6 +17,11 @@
  * disagree with what the reader can see — and would run every block through
  * do_blocks() a second time for nothing.
  *
+ * With ?version=previous on a remastered chapter, the body is the former one
+ * instead — see inc/former-version.php. So is a chapter whose body was
+ * emptied for a remaster that has not been written yet. The count and the
+ * copy button follow it, since both read whatever body is on the page.
+ *
  * @package kungfu_2026
  */
 
@@ -27,11 +32,13 @@ while ( have_posts() ) :
 
 	$akw_label   = akw_get_chapter_label();
 	$akw_arc     = akw_get_arc();
-	$akw_content = apply_filters( 'the_content', get_the_content() );
+	$akw_content = akw_is_former_view() || akw_is_awaiting_remaster() ? akw_get_former_content() : apply_filters( 'the_content', get_the_content() );
 	$akw_letters = akw_count_letters( $akw_content );
 	?>
 	<article <?php post_class( 'chapter' ); ?>>
 		<header class="chapter__head">
+			<?php akw_the_version_link(); ?>
+
 			<?php if ( $akw_label ) : ?>
 				<p class="chapter__label">
 					<?php if ( $akw_arc ) : ?>
