@@ -15,9 +15,8 @@
  * A paragraph that starts with a title and carries on after a <br> is split:
  * the title becomes the heading and the rest stays a paragraph below it.
  *
- * The same click then removes bold from everything that is not a heading,
- * nested blocks included, so body text reads at the theme's normal weight.
- * Headings (h1–h6) keep whatever bold they have.
+ * The same click then removes bold from everything, nested blocks included,
+ * so body text reads at the theme's normal weight. Italics are preserved.
  *
  * Beside it, "Clear content" empties the post for the next paste, without
  * saving and with autosave held off until something is pasted.
@@ -63,6 +62,10 @@
 		'i'
 	);
 
+	// <strong>/<b>, opening or closing. Not <br> or <blockquote>: the name has
+	// to end right after the b.
+	var BOLD = /<\/?(?:strong|b)(?:\s[^>]*)?>/gi;
+
 	/**
 	 * A RichText value as an HTML string, whichever form the block holds it in.
 	 *
@@ -84,15 +87,120 @@
 	/**
 	 * The normalized heading text for an HTML fragment, if it is a title.
 	 *
-	 * Inline markup is dropped — a heading is styled by the theme, so bold or
-	 * italics carried over from the paste would only fight it. Entities are
-	 * kept as they are, since the result goes back in as HTML.
+	 * Bold is dropped, but inline italics in the section title are preserved.
+	 * Entities are kept as they are, since the result goes back in as HTML.
 	 *
 	 * @param {string} html Fragment.
 	 * @return {string|null} "Section N: Title", or null.
 	 */
+	function stripBold( html ) {
+		var out = html.replace( BOLD, '' );
+
+		BOLD.lastIndex = 0;
+
+		return out;
+	}
+
+	function textPosition( root, offset ) {
+		var walker = document.createTreeWalker( root, NodeFilter.SHOW_TEXT );
+		var seen = 0;
+		var node;
+
+		while ( ( node = walker.nextNode() ) ) {
+			if ( seen + node.nodeValue.length >= offset ) {
+				return { node: node, offset: offset - seen };
+			}
+
+			seen += node.nodeValue.length;
+		}
+
+		return null;
+	}
+
+	function deleteTextBefore( root, offset ) {
+		var position = textPosition( root, offset );
+		var range;
+
+		if ( ! position ) {
+			return;
+		}
+
+		range = document.createRange();
+		range.setStart( root, 0 );
+		range.setEnd( position.node, position.offset );
+		range.deleteContents();
+	}
+
+	function deleteTextAfter( root, offset ) {
+		var position = textPosition( root, offset );
+		var range;
+
+		if ( ! position ) {
+			return;
+		}
+
+		range = document.createRange();
+		range.setStart( position.node, position.offset );
+		range.setEnd( root, root.childNodes.length );
+		range.deleteContents();
+	}
+
+	function trimTitleHtml( root ) {
+		var text = root.textContent || '';
+		var start = /^[\s\u00a0]+/.exec( text );
+		var end;
+
+		if ( start ) {
+			deleteTextBefore( root, start[ 0 ].length );
+			text = root.textContent || '';
+		}
+
+		end = text.length;
+
+		while ( end > 0 && /[\s\u00a0]/.test( text.charAt( end - 1 ) ) ) {
+			end--;
+		}
+
+		if ( '**' === text.slice( end - 2, end ) || '__' === text.slice( end - 2, end ) ) {
+			end -= 2;
+
+			while ( end > 0 && /[\s\u00a0]/.test( text.charAt( end - 1 ) ) ) {
+				end--;
+			}
+		}
+
+		if ( end < text.length ) {
+			deleteTextAfter( root, end );
+		}
+	}
+
+	function titleHtmlFrom( html, fallback ) {
+		var root = document.createElement( 'div' );
+		var rawText;
+		var marker;
+		var match;
+
+		root.innerHTML = stripBold( html );
+		rawText = ( root.textContent || '' ).replace( /\u00a0/g, ' ' );
+		marker = new RegExp(
+			'^(?:#{1,6}\\s*)?(?:\\*\\*|__)?\\s*section\\s+(?:' + NUMBER + ')\\s*(?:[:：.\\-–—)]\\s*)?',
+			'i'
+		);
+		match = marker.exec( rawText );
+
+		if ( ! match ) {
+			return fallback;
+		}
+
+		deleteTextBefore( root, match[ 0 ].length );
+		trimTitleHtml( root );
+
+		return root.innerHTML || fallback;
+	}
+
 	function titleFrom( html ) {
-		var text = html
+		var plainHtml = stripBold( html );
+		var text = plainHtml
 			.replace( /<[^>]*>/g, '' )
 			.replace( /&nbsp;| /g, ' ' )
 			.replace( /\s+/g, ' ' )
@@ -116,7 +224,7 @@
 			return null;
 		}
 
-		return title ? 'Section ' + number + ': ' + title : 'Section ' + number;
+		return title ? 'Section ' + number + ': ' + titleHtmlFrom( plainHtml, title ) : 'Section ' + number;
 	}
 
 	/**
@@ -174,12 +282,8 @@
 		return out;
 	}
 
-	// <strong>/<b>, opening or closing. Not <br> or <blockquote>: the name has
-	// to end right after the b.
-	var BOLD = /<\/?(?:strong|b)(?:\s[^>]*)?>/gi;
-
 	/**
-	 * Unbold one block and everything nested in it, headings excepted.
+	 * Unbold one block and everything nested in it.
 	 *
 	 * Covers both kinds of bold a paste leaves: <strong>/<b> inside any rich
 	 * text attribute (paragraphs, list items, quotes, captions…, found through
@@ -196,10 +300,6 @@
 			changed += unbold( inner );
 		} );
 
-		if ( 'core/heading' === block.name ) {
-			return changed;
-		}
-
 		var type = wp.blocks.getBlockType( block.name );
 		var definitions = ( type && type.attributes ) || {};
 		var next = {};
@@ -215,11 +315,10 @@
 			var html = toHtml( block.attributes[ key ] );
 
 			if ( html && BOLD.test( html ) ) {
-				next[ key ] = html.replace( BOLD, '' );
+				next[ key ] = stripBold( html );
 				dirty = true;
 			}
 
-			BOLD.lastIndex = 0;
 		} );
 
 		var style = block.attributes.style;
@@ -243,8 +342,8 @@
 	/**
 	 * Reformat the post, and say how it went.
 	 *
-	 * Titles first, so a bolded title becomes a heading (unbolded by
-	 * titleFrom()) before the unbolding pass would have left it a plain line.
+	 * Titles first, so a bolded title becomes a heading before the unbolding
+	 * pass would have left it a plain line.
 	 */
 	function run() {
 		var editor = wp.data.dispatch( 'core/block-editor' );
@@ -387,7 +486,7 @@
 					variant: 'secondary',
 					size: 'compact',
 					onClick: run,
-					label: __( 'Turn "Section N: Title" lines into level-3 headings and remove bold outside headings', 'kungfu_2026' ),
+					label: __( 'Turn "Section N: Title" lines into level-3 headings and remove bold while preserving italics', 'kungfu_2026' ),
 					showTooltip: true,
 				},
 				__( 'Format sections', 'kungfu_2026' )

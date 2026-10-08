@@ -6,7 +6,7 @@
  * "Section 1: The Gate", "**Section 2 - Rain**", sometimes run into the first
  * line of the body. The button turns each of those into the one shape the
  * theme styles: <h3 class="wp-block-heading">Section 1: The Gate</h3>.
- * The same click strips bold from everything that is not a heading.
+ * The same click strips bold while preserving italics.
  *
  * A "Clear content" button beside it empties the body for the next paste. It
  * never saves, and it pauses autosave until the post has content again.
