@@ -16,6 +16,7 @@
 	</div> */ ?>
 	
 	<div id="footer">
+		<p><a class="dy-footer__language" href="http://www.flushing-acupuncture.com/" lang="en" hreflang="en" target="_blank" rel="noopener noreferrer"><span class="dy-footer__flag" aria-hidden="true">🇺🇸</span> English website</a></p>
 				<!-- <p>友情连接：<a target="_blank" href="//wangzubeauty.com">望族美容</a></p> -->
 				<p> &copy; 2010 - <?php echo date('Y');?> , <a href="http://www.deyutcm.com">纽约中医</a> 张德超 369 <a target="_blank" href="//www.369usa.com">纽约网站设计</a> 设计与制作并及广告推广</p>
 

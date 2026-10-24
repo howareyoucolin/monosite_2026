@@ -19,7 +19,15 @@
 	<div class="row">
 
 	<div class="col-md-6" style="margin-bottom:25px;">
-	<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.0914895186825!2d-73.82989188428657!3d40.76001244261317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c26011acc173f5%3A0xde4b310ad27b8f3d!2s136-68%20Roosevelt%20Ave%2C%20Flushing%2C%20NY%2011354!5e0!3m2!1sen!2sus!4v1568636039245!5m2!1sen!2sus" width="100%" height="370" frameborder="0" style="border:0" allowfullscreen></iframe>
+	<div class="dy-map-media">
+        <div class="dy-map-preview" role="status" data-embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.0914895186825!2d-73.82989188428657!3d40.76001244261317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c26011acc173f5%3A0xde4b310ad27b8f3d!2s136-68%20Roosevelt%20Ave%2C%20Flushing%2C%20NY%2011354!5e0!3m2!1sen!2sus!4v1568636039245!5m2!1sen!2sus" data-title="136-68 Roosevelt Ave. #4D, Flushing NY 11354">
+            <svg class="dy-map-pin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span class="dy-map-label">地图加载中…</span>
+            <span class="dy-map-address">136-68 Roosevelt Ave. #4D, Flushing NY 11354</span>
+
+        </div>
+    </div>
+    <a class="dy-map-external" href="https://www.google.com/maps/search/?api=1&amp;query=136-68+Roosevelt+Ave.+%234D%2C+Flushing+NY+11354" target="_blank" rel="noopener noreferrer">在 Google 地图打开 ↗<span class="screen-reader-text">（新标签页）</span></a><br>
 	136-68 Roosevelt Ave. #4D, Flushing NY 11354
 
 	<a href="tel:718-888-0255" target="_blank">718-888-0255</a>
@@ -28,7 +36,15 @@
 
 	<div class="col-md-6" style="margin-bottom:25px;">
 
-	<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2965913365374!2d-73.82740968469967!3d40.75550097932717!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c26013908d354b%3A0x7524fdd113efdbd8!2s139-15+Franklin+Ave%2C+Flushing%2C+NY+11355!5e0!3m2!1sen!2sus!4v1477845903109" width="100%" height="370" frameborder="0" style="border:0" allowfullscreen></iframe>
+	<div class="dy-map-media">
+        <div class="dy-map-preview" role="status" data-embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2965913365374!2d-73.82740968469967!3d40.75550097932717!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c26013908d354b%3A0x7524fdd113efdbd8!2s139-15+Franklin+Ave%2C+Flushing%2C+NY+11355!5e0!3m2!1sen!2sus!4v1477845903109" data-title="139-15 Franklin Ave. Flushing NY 11355">
+            <svg class="dy-map-pin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span class="dy-map-label">地图加载中…</span>
+            <span class="dy-map-address">139-15 Franklin Ave. Flushing NY 11355</span>
+
+        </div>
+    </div>
+    <a class="dy-map-external" href="https://www.google.com/maps/search/?api=1&amp;query=139-15+Franklin+Ave.+Flushing+NY+11355" target="_blank" rel="noopener noreferrer">在 Google 地图打开 ↗<span class="screen-reader-text">（新标签页）</span></a><br>
 
 	139-15 Franklin Ave. Flushing, NY 11355
 
@@ -40,7 +56,15 @@
 
 	<div class="col-md-6" style="margin-bottom:25px;">
 
-	<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2501804422595!2d-73.83287268469965!3d40.75652187932716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c2600d8c2af5df%3A0xd8f545334300f746!2s133-16+41st+Rd%2C+Flushing%2C+NY+11355!5e0!3m2!1sen!2sus!4v1477846225964" width="100%" height="370" frameborder="0" style="border:0" allowfullscreen></iframe>
+	<div class="dy-map-media">
+        <div class="dy-map-preview" role="status" data-embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2501804422595!2d-73.83287268469965!3d40.75652187932716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c2600d8c2af5df%3A0xd8f545334300f746!2s133-16+41st+Rd%2C+Flushing%2C+NY+11355!5e0!3m2!1sen!2sus!4v1477846225964" data-title="133-16 41st Road, Flushing NY 11355">
+            <svg class="dy-map-pin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span class="dy-map-label">地图加载中…</span>
+            <span class="dy-map-address">133-16 41st Road, Flushing NY 11355</span>
+
+        </div>
+    </div>
+    <a class="dy-map-external" href="https://www.google.com/maps/search/?api=1&amp;query=133-16+41st+Road%2C+Flushing+NY+11355" target="_blank" rel="noopener noreferrer">在 Google 地图打开 ↗<span class="screen-reader-text">（新标签页）</span></a><br>
 
 	133-16 41st Road. Flushing NY 11355
 
@@ -50,7 +74,15 @@
 
 	<div class="col-md-6" style="margin-bottom:25px;">
 
-	<iframe src="https://maps.google.com/maps?q=421%207th%20Ave%2C%20New%20York%2C%20NY%2010001&t=&z=16&ie=UTF8&iwloc=&output=embed" width="100%" height="370" frameborder="0" style="border:0" allowfullscreen></iframe>
+	<div class="dy-map-media">
+        <div class="dy-map-preview" role="status" data-embed="https://maps.google.com/maps?q=421%207th%20Ave%2C%20New%20York%2C%20NY%2010001&amp;t=&amp;z=16&amp;ie=UTF8&amp;iwloc=&amp;output=embed" data-title="421 7th Ave Suite 310, New York NY 10001">
+            <svg class="dy-map-pin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span class="dy-map-label">地图加载中…</span>
+            <span class="dy-map-address">421 7th Ave Suite 310, New York NY 10001</span>
+
+        </div>
+    </div>
+    <a class="dy-map-external" href="https://www.google.com/maps/search/?api=1&amp;query=421+7th+Ave+Suite+310%2C+New+York+NY+10001" target="_blank" rel="noopener noreferrer">在 Google 地图打开 ↗<span class="screen-reader-text">（新标签页）</span></a><br>
 
 	421 7th Ave Suite 310, New York, NY 10001<br>
 	（美德森广场斜对面，33街）<br>
@@ -75,4 +107,5 @@
 </div>
 
 
+<script src="<?php echo esc_url( get_template_directory_uri() . '/js/map-previews.js?v=20261024-2' ); ?>" defer></script>
 <?php get_footer();?>

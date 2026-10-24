@@ -1,0 +1,286 @@
+.dy-appointment {
+	padding: 12px 0 48px;
+	color: #3e3027;
+	font-family: var(--dy-cjk);
+	text-align: left;
+}
+.dy-appointment__intro {
+	max-width: 1100px;
+	margin: 0 auto 28px;
+}
+.dy-appointment__intro h2 {
+	margin: 0 0 10px;
+	font-family: var(--dy-cjk);
+	font-size: 32px;
+	font-weight: 500;
+	color: #70432d;
+}
+.dy-appointment__intro p {
+	color: #756655;
+}
+.dy-appointment__card {
+	display: grid;
+	grid-template-columns: 1.3fr 1fr;
+	max-width: 1100px;
+	margin: 0 auto;
+	border: 1px solid #e4d8c5;
+	border-top: 3px solid #bc9859;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #fffdf8;
+}
+.dy-appointment__schedule,
+.dy-appointment__details {
+	min-width: 0;
+	padding: 30px;
+}
+.dy-appointment__schedule {
+	background: #f9f4e9;
+	border-right: 1px solid #e4d8c5;
+}
+.dy-appointment__card h3 {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 0 0 10px;
+	font-family: var(--dy-cjk);
+	font-size: 22px;
+	font-weight: 500;
+	line-height: 1.5;
+}
+.dy-appointment__step {
+	color: #a08351;
+	font-family: Georgia, serif;
+	font-size: 25px;
+}
+#main-content .dy-appointment__hint {
+	margin-bottom: 24px;
+	color: #756655;
+	font-size: 16px;
+}
+.dy-appointment__schedule h4 {
+	margin: 24px 0 12px;
+	font-size: 18px;
+	font-weight: 500;
+}
+.dy-appointment .timepicker {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+}
+.dy-time-slot {
+	min-height: 46px;
+	padding: 8px 4px;
+	border: 1px solid #daceba;
+	border-radius: 5px;
+	background: #fffdf8;
+	color: #5c4938;
+	font-family: inherit;
+	font-size: 16px;
+	line-height: 1.5;
+	cursor: pointer;
+}
+.dy-time-slot:hover {
+	border-color: #842f25;
+	background: #f4e6d7;
+}
+.dy-time-slot.is-selected {
+	border-color: #842f25;
+	background: #842f25;
+	color: #fff5e4;
+}
+.dy-appointment__field {
+	margin-bottom: 22px;
+}
+.dy-appointment__field label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 18px;
+	font-weight: 400;
+}
+.dy-appointment__field label > span:not(.dy-appointment__optional) {
+	color: #842f25;
+}
+.dy-appointment__optional {
+	margin-left: 6px;
+	color: #756655;
+	font-size: 14px;
+}
+.dy-appointment .form-control {
+	width: 100%;
+	min-height: 50px;
+	padding: 12px 14px;
+	border: 1px solid #daceba;
+	border-radius: 5px;
+	background: #fff;
+	color: #3e3027;
+	font-family: inherit;
+	font-size: 18px;
+	line-height: 1.5;
+	box-shadow: none;
+}
+.dy-appointment .form-control::placeholder {
+	color: #887b6c;
+	font-size: 16px;
+}
+.dy-appointment .form-control:focus {
+	border-color: #a08351;
+	outline: 2px solid #e8d9bb;
+	outline-offset: 1px;
+	box-shadow: none;
+}
+.dy-appointment textarea.form-control {
+	height: auto;
+	resize: vertical;
+}
+.dy-appointment__submit {
+	width: 100%;
+	min-height: 50px;
+	padding: 12px 20px;
+	border: 0;
+	border-radius: 5px;
+	background: #842f25;
+	color: #fff5e4;
+	font-family: var(--dy-cjk);
+	font-size: 18px;
+	font-weight: 400;
+	line-height: 1.5;
+	letter-spacing: .08em;
+	cursor: pointer;
+}
+.dy-appointment__submit:hover {
+	background: #9c3b2e;
+}
+.dy-appointment__submit:disabled {
+	opacity: .6;
+	cursor: wait;
+}
+.dy-time-slot:focus-visible,
+.dy-appointment__submit:focus-visible {
+	outline: 3px solid #a08351;
+	outline-offset: 3px;
+}
+#main-content .dy-appointment__help {
+	margin: 16px 0 0;
+	text-align: center;
+	font-size: 16px;
+	color: #756655;
+}
+.dy-appointment__help a {
+	color: #842f25;
+	white-space: nowrap;
+}
+.dy-appointment__error {
+	margin-bottom: 20px;
+	padding: 12px 16px;
+	border-left: 3px solid #842f25;
+	border-radius: 3px;
+	background: #f9eae5;
+	color: #842f25;
+	font-size: 16px;
+}
+/* Override the stock jQuery UI palette and fixed two-month width. */
+.dy-appointment .ui-datepicker {
+	width: 100% !important;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #3e3027;
+	font-family: inherit;
+	font-size: 16px;
+}
+.dy-appointment .ui-datepicker-header {
+	padding: 8px 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: #5c4938;
+	font-weight: 500;
+}
+.dy-appointment .ui-datepicker-title {
+	font-size: 16px;
+}
+.dy-appointment .ui-datepicker-group table {
+	width: 96%;
+}
+.dy-appointment .ui-datepicker table,
+.dy-appointment .ui-datepicker th,
+.dy-appointment .ui-datepicker td {
+	border: 0;
+}
+.dy-appointment .ui-datepicker select.ui-datepicker-month {
+	width: auto;
+	margin-left: 6px;
+	padding: 3px 8px;
+	border: 1px solid #daceba;
+	border-radius: 4px;
+	background: #fffdf8;
+	font: inherit;
+	color: #5c4938;
+}
+.dy-appointment .ui-datepicker th {
+	padding: 10px 0;
+	font-size: 13px;
+	font-weight: 400;
+	color: #756655;
+}
+.dy-appointment .ui-datepicker td {
+	padding: 2px;
+}
+.dy-appointment .ui-datepicker td a,
+.dy-appointment .ui-datepicker td span {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 36px;
+	padding: 4px 0;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	background: transparent;
+	color: #3e3027;
+	text-align: center;
+	font-size: 16px;
+}
+.dy-appointment .ui-datepicker td .ui-state-hover {
+	border-color: #daceba;
+	background: #eee3d0;
+}
+.dy-appointment .ui-datepicker td .ui-state-highlight {
+	border-color: #b99a62;
+}
+.dy-appointment .ui-datepicker td .ui-state-active {
+	border-color: #842f25;
+	background: #842f25;
+	color: #fff5e4;
+}
+.dy-appointment .ui-datepicker-prev,
+.dy-appointment .ui-datepicker-next {
+	top: 9px;
+	cursor: pointer;
+}
+@media (max-width: 991px) {
+	.dy-appointment__card {
+		grid-template-columns: minmax(0, 1fr);
+		max-width: 740px;
+	}
+	.dy-appointment__intro {
+		max-width: 740px;
+	}
+	.dy-appointment__schedule {
+		border-right: 0;
+		border-bottom: 1px solid #e4d8c5;
+	}
+}
+@media (max-width: 600px) {
+	.dy-appointment__schedule,
+	.dy-appointment__details {
+		padding: 22px 18px;
+	}
+	.dy-appointment .timepicker {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.dy-appointment .ui-datepicker td a,
+	.dy-appointment .ui-datepicker td span {
+		min-height: 40px;
+	}
+}

@@ -16,12 +16,13 @@ function isMobile()
 
 	<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 	<?php wp_head(); ?>
-	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/style.css?v=202406">
+	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/style.css?v=20261024-6">
 	<?php if (isMobile()) { ?>
 		<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/mobile.css?v=202406">
 	<?php } ?>
 	<!-- Loaded last so it can restyle the header without touching the rules above. -->
-	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/header.css?v=202608">
+	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/header.css?v=20261024-22">
+	<script src="<?php echo esc_url( get_template_directory_uri() . '/js/mobile-header.js?v=20261024-1' ); ?>" defer></script>
 	<style>
 		body:not(.custom-background-image):before,
 		body:not(.custom-background-image):after {
@@ -35,12 +36,6 @@ function isMobile()
 	<header class="dy-masthead">
 		<div class="container dy-masthead__inner">
 
-			<div class="dy-masthead__address">
-				<svg class="dy-masthead__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-					<path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-				</svg>
-				<span>136-68 Roosevelt Ave. #4D, Flushing NY 11354</span>
-			</div>
 
 			<h1 class="dy-brand">
 				<a class="dy-brand__link" href="<?php echo get_site_url(); ?>">
@@ -55,11 +50,15 @@ function isMobile()
 
 			<div class="dy-masthead__phone">
 				<a class="dy-masthead__phone-link" href="tel:7188880255">
-					<svg class="dy-masthead__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-						<path d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+					<svg class="dy-masthead__call-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+						<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.79a2 2 0 0 1-.45 2.11L8.09 9.89a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.83.58 2.79.7A2 2 0 0 1 22 16.92z" />
 					</svg>
-					<span>718-888-0255</span>
+					<span class="dy-masthead__call-copy"><span class="dy-masthead__call-label">电话咨询</span><span>718-888-0255</span></span>
 				</a>
+				<address class="dy-masthead__address">
+					<span>136-68 Roosevelt Ave. #4D,</span>
+					<span>Flushing NY 11354</span>
+				</address>
 			</div>
 
 		</div>
@@ -67,7 +66,20 @@ function isMobile()
 	<?php $FullUrl = "//" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>
 	<div id="nav-wrap">
 		<nav class="container" aria-label="主导航">
-			<ul class="row">
+			<div class="dy-mobile-toolbar">
+				<div class="dy-mobile-toolbar__start">
+					<button class="dy-mobile-menu" type="button" aria-expanded="false" aria-controls="dy-navigation-list">
+						<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+						<span>菜单</span>
+					</button>
+					<a class="dy-mobile-location" aria-label="查看法拉盛诊所地址" href="<?php echo esc_url( get_site_url() . '/contact/' ); ?>">
+						<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+						法拉盛
+					</a>
+				</div>
+				<a class="dy-mobile-appointment" href="<?php echo esc_url( get_site_url() . '/appointment/' ); ?>">网上预约 <span aria-hidden="true">↗</span></a>
+			</div>
+			<ul class="row" id="dy-navigation-list">
 				<li class="<?php if (is_front_page())
 					echo 'active'; ?> col-md-1 col-sm-1 col-xs-12"><a
 						<?php if (is_front_page())
@@ -96,7 +108,6 @@ function isMobile()
 						<?php if (is_page('appointment'))
 							echo 'aria-current="page"'; ?>
 						href="<?php echo get_site_url(); ?>/appointment">网上预约</a></li>
-				<li class="col-md-1 col-sm-1 col-xs-12"><a target="_blank" href="http://www.flushing-acupuncture.com/">English</a></li>
 				<li class="col-md-1 col-sm-1 col-xs-12"><a target="_blank" href="https://blog.deyutcm.com/">博客</a></li>
 			</ul>
 		</nav>
@@ -115,12 +126,20 @@ function isMobile()
 
 			<span class="dy-banner__divider"></span>
 
-			<a class="tell" href="tel:7188880255"><button class="btn btn-primary" type="button">
-				<svg class="dy-banner__cta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-					<path d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+			<a class="tell tell--style-i" href="tel:7188880255">
+				<svg class="dy-banner__cta-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.79a2 2 0 0 1-.45 2.11L8.09 9.89a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.83.58 2.79.7A2 2 0 0 1 22 16.92z" />
 				</svg>
-				718 - 888 - 0255
-			</button></a>
+				<span class="dy-banner__cta-copy">
+					<span class="dy-banner__cta-label">电话咨询 · 预约</span>
+					<span class="dy-banner__cta-number">718-888-0255</span>
+				</span>
+				<span class="dy-banner__cta-prompt">致电咨询</span>
+				<span class="dy-banner__cta-brush-label">預約諮詢<span class="screen-reader-text">：718-888-0255</span></span>
+				<svg class="dy-banner__cta-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M4 12h15m-6-6 6 6-6 6" />
+				</svg>
+			</a>
 
 		</div>
 

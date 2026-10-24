@@ -1,4 +1,7 @@
-<?php get_header();?>
+<?php
+require_once get_template_directory() . '/inc/video-previews.php';
+get_header();
+?>
 <div class="crumbbread">
 	<div class="container">
 	德誉堂 >> <a href="<?php echo get_site_url();?>">首页</a> >> 视频节目
@@ -23,37 +26,52 @@
 				
 				<div class="h30"></div>
 				
-				<div class="video_lists row">
-					<?php
-					$c = 0;
-					$type = 'videos';
-					$args=array(
-					  'post_type' => $type,
-					  'post_status' => 'publish',
-					  'posts_per_page' => -1,
-					  'caller_get_posts'=> 1
-					);
-					$my_query = null;
-					$my_query = new WP_Query($args);
-					if( $my_query->have_posts() ) {
-					  while ($my_query->have_posts()) : $my_query->the_post(); $c++;?>
-						<div class="col-md-2 vunit">
-						<?php the_content();?>
-						<?php the_title(); ?>
-						</div>
-						<?php echo '<div class="';?>
-						<?php if($c%6==0) echo 'h30 ';?>
-						<?php if($c%2==0) echo 'm30';?>
-						<?php echo '"></div>';?>	
-						<?php
-					  endwhile;
-					}
-					wp_reset_query();  
-					?>
-				</div>
+                <p>点击视频即可播放，或在 YouTube 中观看。</p>
+                <div class="dy-video-grid">
+                    <?php
+                    $videos_query = new WP_Query( array(
+                        'post_type' => 'videos',
+                        'post_status' => 'publish',
+                        'posts_per_page' => -1,
+                        'ignore_sticky_posts' => true,
+                        'no_found_rows' => true,
+                    ) );
+                    while ( $videos_query->have_posts() ) :
+                        $videos_query->the_post();
+                        $previews = dy_video_previews( get_post_field( 'post_content', get_the_ID() ) );
+                        foreach ( $previews as $index => $video ) :
+                            $title = get_the_title();
+                            if ( count( $previews ) > 1 ) {
+                                $title .= '（' . ( $index + 1 ) . '）';
+                            }
+                            $watch_url = 'https://www.youtube.com/watch?v=' . $video['id'];
+                            $embed_url = 'https://www.youtube-nocookie.com/embed/' . $video['id'];
+                            if ( $video['start'] ) {
+                                $watch_url = add_query_arg( 't', $video['start'], $watch_url );
+                                $embed_url = add_query_arg( 'start', $video['start'], $embed_url );
+                            }
+                            ?>
+                            <article class="dy-video-card">
+                                <div class="dy-video-media">
+                                    <a class="dy-video-preview" href="<?php echo esc_url( $watch_url ); ?>" target="_blank" rel="noopener noreferrer"
+                                       data-embed="<?php echo esc_url( $embed_url ); ?>" data-title="<?php echo esc_attr( $title ); ?>"
+                                       aria-label="<?php echo esc_attr( '播放：' . $title ); ?>">
+                                        <img src="<?php echo esc_url( 'https://i.ytimg.com/vi/' . $video['id'] . '/hqdefault.jpg' ); ?>" alt="" width="480" height="360" loading="lazy" decoding="async">
+                                        <span class="dy-video-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></svg></span>
+                                    </a>
+                                </div>
+                                <h3><?php echo esc_html( $title ); ?></h3>
+                                <a class="dy-video-external" href="<?php echo esc_url( $watch_url ); ?>" target="_blank" rel="noopener noreferrer">在 YouTube 观看 ↗<span class="screen-reader-text">（新标签页）</span></a>
+                            </article>
+                        <?php endforeach;
+                    endwhile;
+                    wp_reset_postdata();
+                    ?>
+                </div>
 	
 	</div>
 </div>
 
 
+<script src="<?php echo esc_url( get_template_directory_uri() . '/js/video-previews.js?v=20261024-1' ); ?>" defer></script>
 <?php get_footer();?>

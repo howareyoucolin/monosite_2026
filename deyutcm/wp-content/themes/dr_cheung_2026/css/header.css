@@ -8,6 +8,15 @@
  * images/med_top.png script that now lines the heading.
  */
 
+/* Locally hosted calligraphy, subset to the two hero slogans. */
+@font-face {
+	font-family: 'DY Hero Calligraphy';
+	src: url('../fonts/hero-calligraphy.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
 :root {
 	--dy-gold: #c79810;
 	--dy-gold-light: #eac559;
@@ -76,9 +85,7 @@
 	transform: scaleX(-1);
 }
 
-/* Address on the left, brand centred, phone on the right. The two side items
-   share the leftover space equally, which is what keeps the brand on the middle
-   of the page rather than the middle of what is left over. */
+/* Brand on the left, phone and location stacked on the right. */
 .dy-masthead__inner {
 	/* The script is densest through the middle of the sheet, which is exactly
 	   where the text sits. This washes a calm band across that middle while
@@ -91,23 +98,59 @@
 	gap: 20px;
 	padding: 16px 15px 18px;
 }
-.dy-masthead__address {
-	display: flex;
-	flex: 1 1 0;
-	align-items: center;
-	gap: 8px;
-	min-width: 0;
-	font-size: 13px;
-	line-height: 1.4;
+/* Bootstrap's clearfix pseudo-elements otherwise become extra flex items. */
+.dy-masthead__inner::before,
+.dy-masthead__inner::after {
+	content: none;
+	display: none;
+}
+.dy-masthead__address,
+.dy-masthead__phone-link {
+	margin: 0;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: normal;
+	font-style: normal;
+	letter-spacing: normal;
+	line-height: 1.5;
 	color: #6b5424;
-	/* A hairline of paper under the text keeps it off the strokes behind it. */
+	text-align: right;
+	overflow-wrap: anywhere;
 	text-shadow: 0 1px 0 rgba(255, 253, 246, 0.9);
+}
+.dy-masthead__address span {
+	display: block;
 }
 .dy-masthead__phone {
 	display: flex;
-	flex: 1 1 0;
-	justify-content: flex-end;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 8px;
 	min-width: 0;
+}
+.dy-footer__language {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 28px;
+	color: var(--dy-brown);
+	font-family: var(--dy-cjk);
+	font-size: 13px;
+	line-height: 1.4;
+	text-decoration: none;
+}
+.dy-footer__flag {
+	font-size: 20px;
+	line-height: 1;
+}
+.dy-footer__language:hover,
+.dy-footer__language:focus {
+	color: var(--dy-gold-deep);
+	text-decoration: underline;
+}
+.dy-footer__language:focus-visible {
+	outline: 2px solid var(--dy-gold-deep);
+	outline-offset: 3px;
 }
 .dy-masthead__icon {
 	flex: 0 0 auto;
@@ -118,54 +161,76 @@
 .dy-masthead__phone-link {
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	padding: 7px 17px;
-	border: 1px solid rgba(199, 152, 16, 0.55);
-	border-radius: 999px;
-	background: linear-gradient(180deg, #fffdf6 0%, #f8ebca 100%);
-	color: #6b4a05;
+	justify-content: center;
+	gap: 9px;
+	min-height: 36px;
+	padding: 7px 13px;
+	border: 0;
+	border-radius: 2px;
+	box-shadow: none;
+	background: #842f25;
+	color: #fff5e4;
+	font-family: Arial, sans-serif;
 	font-size: 16px;
-	font-weight: bold;
-	letter-spacing: 0.02em;
+	font-weight: 400;
+	letter-spacing: 0.025em;
+	line-height: 1.25;
 	text-decoration: none;
+	text-shadow: none;
 	white-space: nowrap;
-	box-shadow: 0 1px 3px rgba(120, 86, 20, 0.18);
-	transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+	transition: background-color 0.18s ease;
+}
+.dy-masthead__call-icon {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.7;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
 .dy-masthead__phone-link:hover,
 .dy-masthead__phone-link:focus {
-	border-color: var(--dy-gold);
-	background: linear-gradient(180deg, #fffef9 0%, #f2dfae 100%);
-	color: #4a3403;
+	background: #9c3b2e;
+	color: #fff5e4;
 	text-decoration: none;
-	transform: translateY(-1px);
-	box-shadow: 0 4px 10px rgba(120, 86, 20, 0.22);
+}
+.dy-masthead__phone-link:active {
+	background: #6b261e;
 }
 .dy-masthead__phone-link:focus-visible {
 	outline: 2px solid var(--dy-gold);
 	outline-offset: 3px;
 }
-.dy-masthead__phone-link .dy-masthead__icon {
-	fill: currentColor;
-	opacity: 0.8;
+
+.dy-masthead__call-copy {
+    display: flex;
+    flex-direction: column;
+}
+.dy-masthead__call-label,
+.dy-mobile-toolbar {
+    display: none;
 }
 
 /* ------------------------------------------------------------------ brand */
 
 .dy-masthead .dy-brand {
 	display: flex;
-	flex: 0 1 auto;
+	flex: 0 0 auto;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 	gap: 20px;
 	margin: 0;
 	padding: 0;
-	text-align: center;
+	text-align: left;
 }
 .dy-masthead .dy-brand__link {
-	display: flex;
-	align-items: center;
-	gap: 20px;
+	display: grid;
+	grid-template-columns: auto 44px;
+	grid-template-rows: auto auto;
+	align-items: start;
+	gap: 10px 12px;
 	color: inherit;
 	text-decoration: none;
 }
@@ -179,8 +244,12 @@
 	border-radius: 4px;
 }
 .dy-masthead .dy-brand__mark {
-	height: 62px;
-	width: auto;
+	grid-column: 2;
+	grid-row: 1;
+	align-self: start;
+	margin-top: -8px;
+	height: 44px;
+	width: 44px;
 	filter: drop-shadow(0 2px 4px rgba(74, 52, 3, 0.28));
 	transition: transform 0.4s ease;
 }
@@ -188,12 +257,11 @@
 	transform: rotate(8deg);
 }
 .dy-masthead .dy-brand__text {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 6px;
+	display: contents;
 }
 .dy-masthead .dy-brand__name {
+	grid-column: 1;
+	grid-row: 1;
 	display: block;
 	font-family: var(--dy-cjk);
 	font-size: 42px;
@@ -209,6 +277,8 @@
 	color: var(--dy-gold-deep); /* fallback where background-clip is unsupported */
 }
 .dy-masthead .dy-brand__tagline {
+	grid-column: 1 / -1;
+	grid-row: 2;
 	display: block;
 	font-family: var(--dy-cjk);
 	font-size: 12px;
@@ -222,7 +292,7 @@
 	white-space: nowrap;
 }
 .dy-masthead .dy-brand__rule {
-	display: block;
+	display: none;
 	width: 100%;
 	max-width: 190px;
 	height: 1px;
@@ -380,9 +450,9 @@
 }
 .dy-banner .slogan {
 	margin: 0;
-	font-family: var(--dy-cjk);
+	font-family: 'DY Hero Calligraphy', 'Kaiti SC', 'KaiTi', serif;
 	font-size: 46px;
-	font-weight: bold;
+	font-weight: 400;
 	line-height: 1.3;
 	letter-spacing: 0.2em;
 	text-indent: 0.2em;
@@ -396,48 +466,387 @@
 	border: 0;
 	background: linear-gradient(90deg, transparent, rgba(255, 226, 160, 0.85), transparent);
 }
+/* Style B: ivory consultation card. Retained for the final design selection. */
 .dy-banner .tell {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20px;
+	min-height: 76px;
+	padding: 14px 28px;
+	border: 0;
+	border-radius: 4px;
+	background: #fff5e4;
+	color: #842f25;
+	font-family: Arial, sans-serif;
+	font-size: 21px;
+	font-weight: 500;
+	line-height: 1.4;
+	letter-spacing: 0.04em;
 	text-decoration: none;
+	text-shadow: none;
+	box-shadow: none;
+	white-space: nowrap;
+	transition: background-color 0.18s ease, color 0.18s ease;
 }
 .dy-banner .tell:hover,
 .dy-banner .tell:focus {
+	background: #ffe8c4;
+	color: #68241c;
 	text-decoration: none;
 }
-.dy-banner .tell button {
-	display: inline-flex;
-	align-items: center;
-	gap: 9px;
-	padding: 11px 30px;
-	border: 0;
-	border-radius: 999px;
-	background: linear-gradient(180deg, var(--dy-gold-light) 0%, var(--dy-gold) 60%, #ac830b 100%);
-	color: #2b1f04;
-	font-size: 22px;
-	font-weight: bold;
-	letter-spacing: 0.04em;
-	text-shadow: 0 1px 0 rgba(255, 250, 235, 0.4);
-	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 252, 240, 0.5);
-	transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+.dy-banner .tell:active {
+	background: #f5dbb3;
 }
-.dy-banner .tell:hover button,
-.dy-banner .tell:focus button {
-	transform: translateY(-2px);
-	filter: brightness(1.06);
-	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 252, 240, 0.6);
-}
-.dy-banner .tell:active button {
-	transform: translateY(0);
-}
-.dy-banner .tell:focus-visible button {
+.dy-banner .tell:focus-visible {
 	outline: 3px solid var(--dy-gold-pale);
 	outline-offset: 3px;
 }
 .dy-banner__cta-icon {
+	box-sizing: content-box;
+	width: 22px;
+	height: 22px;
+	padding-right: 20px;
+	border-right: 1px solid rgba(132, 47, 37, 0.2);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	flex-shrink: 0;
+}
+.dy-banner__cta-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	text-align: left;
+}
+.dy-banner__cta-label {
+	font-family: var(--dy-cjk);
+	font-size: 11px;
+	line-height: 1.5;
+	letter-spacing: 0.16em;
+}
+.dy-banner__cta-number {
+	font-size: 23px;
+	line-height: 1.25;
+	letter-spacing: 0.035em;
+	font-variant-numeric: tabular-nums;
+}
+.dy-banner__cta-arrow {
+	display: none;
+}
+.dy-banner__cta-prompt {
+	display: none;
+}
+.dy-banner__cta-brush-label {
+	display: none;
+}
+
+/* Style C: a compact, flat burgundy action with a fine gold edge.
+   Remove tell--style-c from the link to return to Style B. */
+.dy-banner .tell.tell--style-c {
+	gap: 14px;
+	min-height: 58px;
+	padding: 14px 22px;
+	border: 1px solid #c6a46b;
+	border-radius: 2px;
+	background: #742d2b;
+	color: #fff4df;
+}
+.dy-banner .tell--style-c .dy-banner__cta-icon {
 	width: 19px;
 	height: 19px;
-	fill: currentColor;
-	opacity: 0.85;
+	padding: 0;
+	border: 0;
+	color: #e2c08c;
+}
+.dy-banner .tell--style-c .dy-banner__cta-label {
+	display: none;
+}
+.dy-banner .tell--style-c .dy-banner__cta-number {
+	font-size: 22px;
+	letter-spacing: 0.06em;
+}
+.dy-banner .tell--style-c .dy-banner__cta-arrow {
+	display: block;
+	width: 18px;
+	height: 18px;
+	margin-left: 8px;
+	fill: none;
+	stroke: #e2c08c;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	flex-shrink: 0;
+}
+.dy-banner .tell.tell--style-c:hover,
+.dy-banner .tell.tell--style-c:focus {
+	background: #8a3833;
+	color: #fff4df;
+}
+.dy-banner .tell.tell--style-c:active {
+	background: #612522;
+}
+@media (max-width: 767px) {
+	.dy-banner .tell.tell--style-c {
+		min-height: 52px;
+		padding: 12px 18px;
+		gap: 12px;
+	}
+	.dy-banner .tell--style-c .dy-banner__cta-number {
+		font-size: 20px;
+	}
+}
+
+/* Style D: an airy ivory outline over the photograph.
+   Switch the link modifier to tell--style-c for C, or remove it for B. */
+.dy-banner .tell.tell--style-d {
+	gap: 18px;
+	min-height: 64px;
+	padding: 15px 30px;
+	border: 1px solid rgba(255, 245, 224, 0.8);
+	border-radius: 0;
+	background: rgba(28, 18, 4, 0.2);
+	color: #fff5e0;
+}
+.dy-banner .tell--style-d .dy-banner__cta-icon {
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	stroke-width: 1.4;
+}
+.dy-banner .tell--style-d .dy-banner__cta-label {
+	display: none;
+}
+.dy-banner .tell--style-d .dy-banner__cta-number {
+	font-size: 23px;
+	font-weight: 400;
+	letter-spacing: 0.1em;
+}
+.dy-banner .tell.tell--style-d:hover,
+.dy-banner .tell.tell--style-d:focus {
+	background: #fff5e0;
+	color: #682d25;
+}
+.dy-banner .tell.tell--style-d:active {
+	background: #f1dfc0;
+	color: #682d25;
+}
+@media (max-width: 767px) {
+	.dy-banner .tell.tell--style-d {
+		min-height: 56px;
+		padding: 13px 24px;
+		gap: 14px;
+	}
+	.dy-banner .tell--style-d .dy-banner__cta-number {
+		font-size: 20px;
+	}
+}
+
+/* Style E: a flat muted-gold action with an inline consultation label.
+   B uses the base class; C and D remain available through their modifiers. */
+.dy-banner .tell.tell--style-e {
+	gap: 12px;
+	min-height: 60px;
+	padding: 15px 24px;
+	border: 0;
+	border-radius: 6px;
+	background: #e5c487;
+	color: #39291b;
+}
+.dy-banner .tell--style-e .dy-banner__cta-icon {
+	width: 19px;
+	height: 19px;
+	padding: 0;
+	border: 0;
+}
+.dy-banner .tell--style-e .dy-banner__cta-label {
+	display: none;
+}
+.dy-banner .tell--style-e .dy-banner__cta-number {
+	font-size: 22px;
+	font-weight: 500;
+	letter-spacing: 0.025em;
+}
+.dy-banner .tell--style-e .dy-banner__cta-prompt {
+	display: block;
+	margin-left: 6px;
+	padding-left: 18px;
+	border-left: 1px solid rgba(57, 41, 27, 0.25);
+	font-family: var(--dy-cjk);
+	font-size: 12px;
+	line-height: 22px;
+	letter-spacing: 0.08em;
+}
+.dy-banner .tell.tell--style-e:hover,
+.dy-banner .tell.tell--style-e:focus {
+	background: #f1d6a4;
+	color: #39291b;
+}
+.dy-banner .tell.tell--style-e:active {
+	background: #d6b273;
+	color: #39291b;
+}
+@media (max-width: 767px) {
+	.dy-banner .tell.tell--style-e {
+		min-height: 54px;
+		padding: 13px 16px;
+		gap: 10px;
+	}
+	.dy-banner .tell--style-e .dy-banner__cta-number {
+		font-size: 19px;
+	}
+	.dy-banner .tell--style-e .dy-banner__cta-prompt {
+		margin-left: 2px;
+		padding-left: 12px;
+		font-size: 11px;
+	}
+}
+
+/* Style G: flat jade with ivory lettering and a quiet, rounded silhouette.
+   Earlier styles remain available through their existing modifiers. */
+.dy-banner .tell.tell--style-g {
+	gap: 14px;
+	min-height: 60px;
+	padding: 15px 30px;
+	border: 0;
+	border-radius: 999px;
+	background: #28594d;
+	color: #fff5e4;
+}
+.dy-banner .tell--style-g .dy-banner__cta-icon {
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	stroke-width: 1.6;
+}
+.dy-banner .tell--style-g .dy-banner__cta-label {
+	display: none;
+}
+.dy-banner .tell--style-g .dy-banner__cta-number {
+	font-size: 23px;
+	font-weight: 500;
+	letter-spacing: 0.045em;
+}
+.dy-banner .tell.tell--style-g:hover,
+.dy-banner .tell.tell--style-g:focus {
+	background: #346e5f;
+	color: #fff5e4;
+}
+.dy-banner .tell.tell--style-g:active {
+	background: #20493f;
+	color: #fff5e4;
+}
+@media (max-width: 767px) {
+	.dy-banner .tell.tell--style-g {
+		min-height: 54px;
+		padding: 13px 26px;
+		gap: 12px;
+	}
+	.dy-banner .tell--style-g .dy-banner__cta-number {
+		font-size: 21px;
+	}
+}
+
+/* Style H: an ivory rectangle with a narrow seal-red accent. */
+.dy-banner .tell.tell--style-h {
+	gap: 16px;
+	min-height: 60px;
+	padding: 15px 28px 15px 24px;
+	border: 0;
+	border-left: 4px solid #a33d30;
+	border-radius: 0;
+	background: #fff7e9;
+	color: #422f24;
+}
+.dy-banner .tell--style-h .dy-banner__cta-icon {
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	color: #a33d30;
+}
+.dy-banner .tell--style-h .dy-banner__cta-label {
+	display: none;
+}
+.dy-banner .tell--style-h .dy-banner__cta-number {
+	font-size: 23px;
+	font-weight: 500;
+	letter-spacing: 0.055em;
+}
+.dy-banner .tell.tell--style-h:hover,
+.dy-banner .tell.tell--style-h:focus {
+	background: #f3e3c9;
+	color: #422f24;
+}
+.dy-banner .tell.tell--style-h:active {
+	background: #e9d6b6;
+	color: #422f24;
+}
+@media (max-width: 767px) {
+	.dy-banner .tell.tell--style-h {
+		min-height: 54px;
+		padding: 13px 24px 13px 20px;
+		gap: 14px;
+	}
+	.dy-banner .tell--style-h .dy-banner__cta-number {
+		font-size: 21px;
+	}
+}
+
+/* Style I: ivory brushstroke with Style B's two-line consultation text. */
+.dy-banner .tell.tell--style-i {
+	width: 380px;
+	max-width: 100%;
+	min-height: 114px;
+	padding: 20px 36px 26px;
+	border: 0;
+	border-radius: 0;
+	background: transparent url('../images/cta-brush.svg') center / 100% 100% no-repeat;
+	color: #704b3e;
+	transition: color 0.18s ease;
+}
+.dy-banner .tell--style-i .dy-banner__cta-icon {
+	display: none;
+}
+.dy-banner .tell--style-i .dy-banner__cta-copy {
+	align-items: center;
+	gap: 4px;
+	text-align: center;
+}
+.dy-banner .tell--style-i .dy-banner__cta-label {
+	font-size: 12px;
+	letter-spacing: 0.16em;
+}
+.dy-banner .tell--style-i .dy-banner__cta-number {
+	font-family: 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
+	font-size: 34px;
+	font-weight: 900;
+	letter-spacing: 0.025em;
+	color: #512d23;
+	-webkit-text-stroke: 0.35px currentColor;
+}
+.dy-banner .tell.tell--style-i:hover,
+.dy-banner .tell.tell--style-i:focus {
+	background-color: transparent;
+	color: #a13d2d;
+}
+.dy-banner .tell.tell--style-i:active {
+	background-color: transparent;
+	color: #622e23;
+}
+@media (max-width: 767px) {
+	.dy-banner .tell.tell--style-i {
+		width: 310px;
+		min-height: 96px;
+		padding: 16px 26px 22px;
+	}
+	.dy-banner .tell--style-i .dy-banner__cta-number {
+		font-size: 28px;
+	}
 }
 
 /* ------------------------------------------------------------ responsive */
@@ -455,87 +864,248 @@
 }
 
 @media (max-width: 767px) {
-	/* Three across does not fit, so it wraps to two rows: contact details stay
-	   at the very top of the page, brand underneath. */
-	.dy-masthead__inner {
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 9px 14px;
-		padding: 10px 12px 13px;
-	}
-	.dy-masthead__address {
-		order: 1;
-		flex: 0 1 auto;
-		justify-content: center;
-		font-size: 12px;
-		text-align: center;
-	}
-	.dy-masthead__phone {
-		order: 2;
-		flex: 0 0 auto;
-		justify-content: center;
-	}
-	.dy-masthead__phone-link {
-		padding: 5px 13px;
-		font-size: 15px;
-	}
-	.dy-masthead .dy-brand {
-		order: 3;
-		flex: 0 0 100%;
-	}
-	.dy-masthead .dy-brand,
-	.dy-masthead .dy-brand__link {
-		gap: 13px;
-	}
-	.dy-masthead .dy-brand__mark {
-		height: 46px;
-	}
-	.dy-masthead .dy-brand__name {
-		font-size: 28px;
-		letter-spacing: 0.12em;
-	}
-	.dy-masthead .dy-brand__tagline {
-		font-size: 10px;
-		letter-spacing: 0.26em;
-		text-indent: 0.26em;
-	}
-
-	/* Seven stacked full-width bars is a lot of scrolling before the page even
-	   starts, so the nav becomes one swipeable row instead. */
-	#nav-wrap nav ul {
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
-		scroll-snap-type: x proximity;
-		scrollbar-width: none;
-	}
-	#nav-wrap nav ul::-webkit-scrollbar {
-		height: 0;
-	}
-	#nav-wrap nav ul li {
-		flex: 0 0 auto;
-		scroll-snap-align: start;
-	}
-	/* Items slide under this, so the row reads as "there is more to the right"
-	   rather than as a list that happens to end at the screen edge. */
-	#nav-wrap::after {
-		content: "";
-		position: absolute;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		width: 30px;
-		pointer-events: none;
-		background: linear-gradient(90deg, rgba(143, 106, 9, 0), rgba(109, 80, 5, 0.92));
-	}
-	#nav-wrap {
-		position: sticky;
-		overflow: hidden;
-	}
-	#nav-wrap nav ul li a {
-		min-height: 44px;
-		padding: 0 15px;
-		font-size: 15px;
-	}
+    .dy-masthead {
+        border-top-width: 2px;
+        background: #fff9ee;
+        box-shadow: none;
+    }
+    .dy-masthead::before {
+        opacity: 0.18;
+    }
+    .dy-masthead::after {
+        opacity: 0.08;
+    }
+    .dy-masthead__inner {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        padding: 20px 16px;
+        background: none;
+    }
+    .dy-masthead__address {
+        display: none;
+    }
+    .dy-masthead__phone-link {
+        min-height: 48px;
+        padding: 8px 12px;
+        gap: 8px;
+        border-radius: 4px;
+        font-size: 13px;
+        text-align: left;
+    }
+    .dy-masthead__call-copy {
+        gap: 4px;
+    }
+    .dy-masthead__call-label {
+        display: block;
+        font-family: var(--dy-cjk);
+        font-size: 11px;
+        letter-spacing: .12em;
+        color: #ead0b8;
+    }
+    .dy-masthead .dy-brand__link {
+        grid-template-columns: 34px auto;
+        gap: 7px 9px;
+        align-items: center;
+    }
+    .dy-masthead .dy-brand__mark {
+        grid-column: 1;
+        grid-row: 1 / 3;
+        align-self: center;
+        width: 34px;
+        height: 34px;
+        margin: 0;
+        filter: none;
+    }
+    .dy-masthead .dy-brand__name {
+        grid-column: 2;
+        grid-row: 1;
+        font-size: clamp(25px, 7.4vw, 30px);
+        letter-spacing: .08em;
+        background: none;
+        -webkit-text-fill-color: #77551a;
+        color: #77551a;
+    }
+    .dy-masthead .dy-brand__tagline {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: 10px;
+        letter-spacing: .04em;
+        text-indent: 0;
+    }
+    #nav-wrap {
+        position: sticky;
+        overflow: visible;
+        background: #fffaf1;
+        border-top: 1px solid #ede1cc;
+        border-bottom: 1px solid #dfd0b6;
+        box-shadow: none;
+    }
+    #nav-wrap::after {
+        content: none;
+    }
+    #nav-wrap nav {
+        width: 100%;
+        padding: 0 16px;
+    }
+    .dy-mobile-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 64px;
+        font-family: var(--dy-cjk);
+    }
+    .dy-mobile-toolbar__start {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .dy-mobile-menu {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 6px 0;
+        border: 0;
+        background: transparent;
+        color: #4a3528;
+        font: inherit;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    #nav-wrap.is-enhanced .dy-mobile-menu {
+        display: inline-flex;
+    }
+    .dy-mobile-menu svg,
+    .dy-mobile-location svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .dy-mobile-location {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-height: 44px;
+        padding-left: 12px;
+        border-left: 1px solid #dfd0b6;
+        color: #776345;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .dy-mobile-location svg {
+        width: 15px;
+        height: 15px;
+    }
+    .dy-mobile-appointment {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        background: #e8cc97;
+        color: #49321d;
+        font-size: 16px;
+        white-space: nowrap;
+    }
+    .dy-mobile-appointment:hover,
+    .dy-mobile-appointment:focus {
+        background: #debd7d;
+        color: #49321d;
+        text-decoration: none;
+    }
+    .dy-mobile-menu:hover,
+    .dy-mobile-menu:focus,
+    .dy-mobile-menu:active,
+    .dy-mobile-location:hover,
+    .dy-mobile-location:focus {
+        color: #842f25;
+        text-decoration: none;
+    }
+    .dy-mobile-menu:hover,
+    .dy-mobile-menu:focus,
+    .dy-mobile-menu:active {
+        background: transparent;
+    }
+    .dy-mobile-menu:focus-visible,
+    .dy-mobile-location:focus-visible,
+    .dy-mobile-appointment:focus-visible {
+        outline: 2px solid #842f25;
+        outline-offset: 3px;
+    }
+    #nav-wrap nav ul {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        padding: 8px 16px 16px;
+        background: #fffaf1;
+    }
+    #nav-wrap nav ul::before,
+    #nav-wrap nav ul::after {
+        content: none;
+    }
+    #nav-wrap.is-enhanced nav ul {
+        display: none;
+    }
+    #nav-wrap.is-enhanced.is-open nav ul {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        display: grid;
+        max-height: calc(100dvh - 80px);
+        overflow-y: auto;
+        border-bottom: 1px solid #dfd0b6;
+        box-shadow: 0 12px 20px rgba(60, 36, 12, .12);
+    }
+    #nav-wrap nav ul li,
+    #nav-wrap nav ul li.dy-nav-cta {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    #nav-wrap nav ul li a {
+        min-height: 52px;
+        padding: 12px 8px;
+        border-radius: 4px;
+        font-size: 17px;
+        font-weight: 400;
+        color: #59412c;
+        text-shadow: none;
+    }
+    #nav-wrap nav ul li.active,
+    #nav-wrap nav ul li.dy-nav-cta.active {
+        background: #f1e4d0;
+        border-radius: 4px;
+        box-shadow: none;
+    }
+    #nav-wrap nav ul li.active a,
+    #nav-wrap nav ul li.dy-nav-cta a,
+    #nav-wrap nav ul li.dy-nav-cta.active a {
+        color: #842f25;
+        text-shadow: none;
+    }
+    #nav-wrap nav ul li.active a::after {
+        content: none;
+    }
+    #nav-wrap nav ul li a:hover,
+    #nav-wrap nav ul li a:focus,
+    #nav-wrap nav ul li.active a:hover,
+    #nav-wrap nav ul li.active a:focus,
+    #nav-wrap nav ul li.dy-nav-cta a:hover,
+    #nav-wrap nav ul li.dy-nav-cta a:focus {
+        background: #f1e4d0;
+        color: #842f25;
+    }
 
 	#banner.dy-banner {
 		height: 220px;
@@ -548,9 +1118,16 @@
 		letter-spacing: 0.14em;
 		text-indent: 0.14em;
 	}
-	.dy-banner .tell button {
-		padding: 9px 22px;
-		font-size: 18px;
+	.dy-banner .tell {
+		min-height: 68px;
+		padding: 12px 22px;
+		gap: 16px;
+	}
+	.dy-banner__cta-icon {
+		padding-right: 16px;
+	}
+	.dy-banner__cta-number {
+		font-size: 21px;
 	}
 }
 
@@ -558,11 +1135,10 @@
 	.dy-masthead__phone-link,
 	.dy-masthead .dy-brand__mark,
 	#nav-wrap nav ul li a,
-	.dy-banner .tell button {
+	.dy-banner .tell {
 		transition: none;
 	}
-	.dy-masthead .dy-brand__link:hover .dy-brand__mark,
-	.dy-banner .tell:hover button {
+	.dy-masthead .dy-brand__link:hover .dy-brand__mark {
 		transform: none;
 	}
 }
