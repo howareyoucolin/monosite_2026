@@ -21,5 +21,6 @@
 				<p> &copy; 2010 - <?php echo date('Y');?> , <a href="http://www.deyutcm.com">纽约中医</a> 张德超 369 <a target="_blank" href="//www.369usa.com">纽约网站设计</a> 设计与制作并及广告推广</p>
 
 	</div>
+	<?php wp_footer(); ?>
 </body>
-</html> 
+</html>

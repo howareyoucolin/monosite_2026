@@ -22,7 +22,7 @@ function isMobile()
 		<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/mobile.css?v=202406">
 	<?php } ?>
 	<!-- Loaded last so it can restyle the header without touching the rules above. -->
-	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/header.css?v=20261024-23">
+	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/header.css?v=20261024-24">
 	<script src="<?php echo esc_url( get_template_directory_uri() . '/js/mobile-header.js?v=20261024-1' ); ?>" defer></script>
 	<style>
 		body:not(.custom-background-image):before,
@@ -32,7 +32,8 @@ function isMobile()
 	</style>
 </head>
 
-<body style="background: #FFF;">
+<body <?php body_class(); ?> style="background: #FFF;">
+	<?php wp_body_open(); ?>
 	<a class="skip-link screen-reader-text" href="#main-content">跳到主要内容</a>
 	<header class="dy-masthead">
 		<div class="container dy-masthead__inner">

@@ -317,6 +317,20 @@
 	height: auto;
 	font-size: 1em;
 }
+body.admin-bar #nav-wrap {
+	top: 32px;
+}
+@media (max-width: 782px) {
+	body.admin-bar #nav-wrap {
+		top: 46px;
+	}
+}
+/* WordPress's toolbar scrolls with the document on narrow phones. */
+@media (max-width: 600px) {
+	body.admin-bar #nav-wrap {
+		top: 0;
+	}
+}
 #nav-wrap nav ul {
 	display: flex;
 	flex-wrap: nowrap;
