@@ -34,7 +34,7 @@
 			<div class="col-md-4">
 				<div class="unit">
 					<h2>张德超中医师</h2>
-					<img src="<?php echo get_template_directory_uri(); ?>/images/bro1.jpg" />
+					<img src="<?php echo get_template_directory_uri(); ?>/images/bro1.jpg" width="600" height="300" loading="lazy" decoding="async" />
 					<div class="h15"></div>
 					<p>张德超，湖北中医药大学针灸硕士毕业。师从中国针灸名家丶全国教材主编孙国杰教授。
 						张德超出身于国医世家，幼承庭训，技承岐黄，家学渊源。其父张思楠为中国第一代针灸感应电疗机发明人，曾获中华人民共和国卫生部嘉奖。「虎父无犬子」，张德超自幼习文弄武，精通音律，善良而又富有灵性，随父上武当山，进神农架采药出诊，故对认药炮制疗疾，无一不精。长大后，再经过医学院一番专业训练，成为一名良医，行医足迹遍及中国丶澳门丶巴西丶美国等。在来自世界各地的患者中，创下了不少治愈疑难杂症的传奇。他独创的“中医立体疗法”非常符合现代纽约人的快节奏生活，“即内外同治，上下合治，内外结合，身心兼顾”，针药并用，立杆见效.
@@ -45,7 +45,7 @@
 			<div class="col-md-4">
 				<div class="unit">
 					<h2>张伟超中医师</h2>
-					<img src="<?php echo get_template_directory_uri(); ?>/images/bro2.jpg" />
+					<img src="<?php echo get_template_directory_uri(); ?>/images/bro2.jpg" width="600" height="300" loading="lazy" decoding="async" />
 					<div class="h15"></div>
 					<p>张伟超医师为美国ＮＧＨ注册催眠师，主理纽约德誉堂。
 
@@ -61,7 +61,7 @@
 			<div class="col-md-4">
 				<div class="unit">
 					<h2>张宗明中医师</h2>
-					<img src="<?php echo get_template_directory_uri(); ?>/images/bro3.jpg" />
+					<img src="<?php echo get_template_directory_uri(); ?>/images/bro3.jpg" width="600" height="567" loading="lazy" decoding="async" />
 					<div class="h15"></div>
 					<p>张宗明，湖北中医药大学中医学硕士。纽约州注册执照针灸师，纽约州工伤保险注册针灸师。出身于国医世家，师从中国针灸名家、医学泰斗--全国教材主编孙国杰教授，和湖北名医王振华教授。承艺二十多年来，刻苦钻研，潜心揣摩，继承发扬家学国学。尤擅各类痛症、妇科、男科、不孕不育、失眠、忧郁、内分泌、脾胃、呼吸道疾病以及各类顽疾。医术精湛且以细心、关心、爱心深受患者欢迎。
 					</p>

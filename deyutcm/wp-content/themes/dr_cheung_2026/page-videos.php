@@ -73,5 +73,5 @@ get_header();
 </div>
 
 
-<script src="<?php echo esc_url( get_template_directory_uri() . '/js/video-previews.js?v=20261024-1' ); ?>" defer></script>
+<script src="<?php echo esc_url( get_template_directory_uri() . '/js/video-previews.js?v=20261024-2' ); ?>" defer></script>
 <?php get_footer();?>

@@ -17,7 +17,7 @@
 					<h2>德誉堂 - 纽约中医老店</h2>
 					<p>张德超，湖北中医药大学针灸硕士毕业。师从中国针灸名家丶全国教材主编孙国杰教授。</p>
 					<p>张德超出身于国医世家，幼承庭训，技承岐黄，家学渊源。其父张思楠为中国第一代针灸感应电疗机发明人，曾获中华人民共和国卫生部嘉奖。「虎父无犬子」，张德超自幼习文弄武，精通音律，善良而又富有灵性，随父上武当山，进神农架采药出诊，故对认药炮制疗疾，无一不精。长大后，再经过医学院一番专业训练，成为一名良医，行医足迹遍及中国丶澳门丶巴西丶美国等。在来自世界各地的患者中，创下了不少治愈疑难杂症的传奇。在美国，他用针灸和独家秘制的“龙凤膏”，让47岁的不孕顽症白人妇女生下健康宝宝。</p>
-					<p><img src="<?php echo get_template_directory_uri();?>/images/newyork-people-love-deyutcm.jpeg" /></p>
+					<p><img src="<?php echo get_template_directory_uri();?>/images/newyork-people-love-deyutcm.jpeg" width="1440" height="1080" loading="lazy" decoding="async" /></p>
 					<p>德誉堂致力于中医的研究与临床应用，深得纽约民众的好评。</p>
 				</div>
 				<div class="h30"></div>
@@ -28,7 +28,7 @@
 				<div class="h30"></div>
 				<div class="unit">
 					<h2>病人好评(视频)</h2>
-					<iframe width="100%" height="450" src="https://www.youtube.com/embed/mFPdj1Sko2s" title="德誉堂纽约中医老店 - 妙手仁心" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+					<?php get_template_part( 'template-parts/video-preview', null, array( 'id' => 'mFPdj1Sko2s', 'title' => '德誉堂纽约中医老店 - 妙手仁心' ) ); ?>
 				</div>
 				<div class="h30"></div>
 			</div>
@@ -38,7 +38,7 @@
 					<h2 style="margin-bottom:0;padding-bottom:0;">视频 - 神针中医张德超</h2>
 				</div>
 				
-					<iframe style="border:1px solid #F5F5F5;" src="https://www.youtube.com/embed/lGyKY4Cmi04" width="100%" height="320" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
+					<?php get_template_part( 'template-parts/video-preview', null, array( 'id' => 'lGyKY4Cmi04', 'title' => '神针中医张德超' ) ); ?>
 
 					想了解更多关于张德超医生的视频，请<a href="https://www.youtube.com/channel/UCv0bVJxIwkQVaPn087EfQ9w">点击这儿</a>.
 <!-- 
@@ -56,9 +56,9 @@
 					<h2 style="margin-bottom:0;padding-bottom:0;">视频 - 最新视频</h2>
 				</div>
 
-				<iframe style="border:1px solid #F5F5F5;" src="https://www.youtube.com/embed/_gJnKczUJec" width="100%" height="320" frameborder="0" title="德誉堂最新视频" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+				<?php get_template_part( 'template-parts/video-preview', null, array( 'id' => '_gJnKczUJec', 'title' => '德誉堂最新视频' ) ); ?>
 				<div class="h30"></div>
-				<iframe style="border:1px solid #F5F5F5;" src="https://www.youtube.com/embed/kpmMsIw7hv0" width="100%" height="320" frameborder="0" title="德誉堂最新视频" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+				<?php get_template_part( 'template-parts/video-preview', null, array( 'id' => 'kpmMsIw7hv0', 'title' => '德誉堂最新视频' ) ); ?>
 					
 				<!-- 	<div class="unit" style="margin-bottom:15px;padding-bottom:0;">
 						<h2 style="margin-bottom:0;padding-bottom:0;">视频最新更新</h2>
@@ -101,11 +101,20 @@
 			<div class="unit">
 				<h2>病人好评</h2>
 				<div class="row">
+					<div class="col-md-12 dy-testimonial-featured-wrap">
+						<article class="inner dy-testimonial-featured">
+							<h3>病人，双胞胎妈妈</h3>
+							<img class="dy-testimonial-featured__photo" src="<?php echo esc_url( get_template_directory_uri() . '/images/testimonials/twin-baby-review.jpg' ); ?>" alt="患者分享的双胞胎女儿照片" width="256" height="306" loading="lazy" decoding="async">
+							<p>张医师您好！真的非常感谢您的龙凤膏，帮助我顺利怀孕，并平安生下两位健康可爱的双胞胎女儿。</p>
+							<p>一路走来，心中满是感恩，您的妙手回春与医术精湛，让我们全家都深深敬佩。今天特地把两个宝宝的照片发给您看看，和您分享这份来之不易的幸福与喜悦。</p>
+							<p>再次衷心感谢您！❤️❤️😊😊😊🙏🙏🙏</p>
+						</article>
+					</div>
 					<div class="col-md-6" style="margin-bottom:30px;">
 						<div class="inner"><h3>病人，乙肝调理</h3><p>能在国外遇到一位既精研医术又恪守医德的良医，是难得的缘分。我从9年前开始看他，乙肝指数一直很高，三亿多病毒数量，这几年间阶段都在服用他熬的药膏，病毒数量也从几亿降到几千万再到现在103，我的家庭医生都不能相信这是真实的数字。</p><p>我自己也是做养生行业的，我知道张医生用的药材都是顶尖的药材，很多其他药行或者中医都不舍得用。这几年他真的成了我生命中很重要的存在，无论大小病痛、腰伤，还是睡眠问题、头痛病毒，我都去找他，第一个想到的是张医生。</p><p>这绝对不是广告，是我真实经历，我真的真心感谢他。他以前对我说，我一定会把你医好的。🙏 我感恩，希望张医生健康并造福更多像我们这样被病痛折磨的病人，我也将我许多客户推介给张医生，希望能帮到他们。</p></div>
 					</div>
 					<div class="col-md-6" style="margin-bottom:30px;">
-						<div class="inner"><h3>病人，肝硬化</h3><p><img style="height:300px;margin:10px; float: right;" src="<?php echo get_template_directory_uri();?>/images/testimonials/001.jpeg" />感谢张德超中医师治好了我的肝硬化。刚刚拍了一个片，结果出来说只看到有一个胆息肉，肝回声很好！！
+						<div class="inner dy-testimonial-scan"><h3>病人，肝硬化</h3><img class="dy-testimonial-scan__photo" width="544" height="778" loading="lazy" decoding="async" src="<?php echo get_template_directory_uri();?>/images/testimonials/001.jpeg" /><p>感谢张德超中医师治好了我的肝硬化。刚刚拍了一个片，结果出来说只看到有一个胆息肉，肝回声很好！！
 							</p></div>
 					</div>
 					<div class="clearfix visible-md-block visible-lg-block"></div>
@@ -134,4 +143,5 @@
 </div>
 
 
+<script src="<?php echo esc_url( get_template_directory_uri() . '/js/video-previews.js?v=20261024-2' ); ?>" defer></script>
 <?php get_footer();?>

@@ -1,7 +1,7 @@
 /* Load a single YouTube player only after a visitor selects a preview. */
 (function () {
 	'use strict';
-	var grid = document.querySelector('.dy-video-grid');
+	var grid = document.getElementById('main-content');
 	if (!grid) return;
 	var active = null;
 	grid.addEventListener('click', function (event) {

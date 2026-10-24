@@ -11,17 +11,18 @@ function isMobile()
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="format-detection" content="telephone=no">
+	<link rel="preload" as="image" href="<?php echo esc_url( get_template_directory_uri() . '/images/bann.jpg' ); ?>" fetchpriority="high">
 	<!--Load bootstrap library and JQuery-->
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 
 	<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 	<?php wp_head(); ?>
-	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/style.css?v=20261024-6">
+	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/style.css?v=20261024-11">
 	<?php if (isMobile()) { ?>
 		<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/mobile.css?v=202406">
 	<?php } ?>
 	<!-- Loaded last so it can restyle the header without touching the rules above. -->
-	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/header.css?v=20261024-22">
+	<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/header.css?v=20261024-23">
 	<script src="<?php echo esc_url( get_template_directory_uri() . '/js/mobile-header.js?v=20261024-1' ); ?>" defer></script>
 	<style>
 		body:not(.custom-background-image):before,
@@ -39,7 +40,7 @@ function isMobile()
 
 			<h1 class="dy-brand">
 				<a class="dy-brand__link" href="<?php echo get_site_url(); ?>">
-					<img class="dy-brand__mark" src="<?php echo get_template_directory_uri(); ?>/images/top.png" alt="" />
+					<img class="dy-brand__mark" src="<?php echo get_template_directory_uri(); ?>/images/top.png" alt="" width="60" height="60" loading="eager" decoding="async" />
 					<span class="dy-brand__text">
 						<span class="dy-brand__name">德誉堂</span>
 						<span class="dy-brand__rule"></span>
@@ -114,7 +115,8 @@ function isMobile()
 	</div>
 	<div class="clear"></div>
 
-	<div id="banner" class="dy-banner" style="background-image: url(<?php echo get_template_directory_uri(); ?>/images/bann.jpg);">
+	<div id="banner" class="dy-banner">
+        <img class="dy-banner__image" src="<?php echo esc_url( get_template_directory_uri() . '/images/bann.jpg' ); ?>" alt="" width="640" height="175" loading="eager" fetchpriority="high" decoding="async">
 
 		<div class="dy-banner__scrim">
 

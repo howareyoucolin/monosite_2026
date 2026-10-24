@@ -396,3 +396,4 @@ function twentysixteen_widget_tag_cloud_args( $args ) {
 add_filter( 'widget_tag_cloud_args', 'twentysixteen_widget_tag_cloud_args' );
 
 require_once get_template_directory() . '/function-appointment.php';
+require_once get_template_directory() . '/inc/image-loading.php';
