@@ -1,18 +1,16 @@
 <?php
-/** Minimal starter template, also used for the home page. */
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
-?><!doctype html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo( 'charset' ); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php wp_head(); ?>
-</head>
-<body <?php body_class(); ?>>
-<?php wp_body_open(); ?>
-<main><h1>HELLO WORLD</h1></main>
-<?php wp_footer(); ?>
-</body>
-</html>
+/** Standard content fallback; the landing page lives in front-page.php. */
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+get_header();
+?>
+<main id="main" class="content-page section-inner">
+<?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
+    <article <?php post_class(); ?>>
+        <h1><?php if ( is_singular() ) : the_title(); else : ?><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a><?php endif; ?></h1>
+        <div class="entry-content"><?php the_content(); ?></div>
+    </article>
+<?php endwhile; the_posts_navigation(); else : ?>
+    <h1>Take a moment.</h1><p>There’s nothing here yet. <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Visit our home page.</a></p>
+<?php endif; ?>
+</main>
+<?php get_footer(); ?>
