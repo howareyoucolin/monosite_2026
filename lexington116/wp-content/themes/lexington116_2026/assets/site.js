@@ -40,6 +40,20 @@
     )
       dialog.close();
   });
+  // Move the same controls on mobile, preserving their desktop position.
+  const heroActions = document.querySelector('.hero-actions');
+  const heroInner = document.querySelector('.hero-inner');
+  if (heroActions && heroInner) {
+    const originalParent = heroActions.parentNode;
+    const originalNextSibling = heroActions.nextSibling;
+    const mobileHero = window.matchMedia('(max-width: 800px)');
+    const positionHeroActions = () => {
+      if (mobileHero.matches) heroInner.prepend(heroActions);
+      else originalParent.insertBefore(heroActions, originalNextSibling);
+    };
+    positionHeroActions();
+    mobileHero.addEventListener('change', positionHeroActions);
+  }
   const video = document.querySelector('.hero-video');
   const videoToggle = document.querySelector('.video-toggle');
   if (video && videoToggle) {
@@ -51,7 +65,10 @@
     };
     video.addEventListener('play', updateVideoButton);
     video.addEventListener('pause', updateVideoButton);
-    const playVideo = () => video.play().catch(updateVideoButton);
+    const playVideo = () => {
+      video.preload = 'auto';
+      return video.play().catch(updateVideoButton);
+    };
     videoToggle.addEventListener('click', () => {
       if (video.paused) playVideo();
       else video.pause();

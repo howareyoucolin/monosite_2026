@@ -37,3 +37,13 @@ is extracted from the clip for the loading and paused fallback.
 
 The earlier generated pink-uniform video and its prompt remain in `assets/`
 as unused alternatives.
+
+### Video loading
+
+The active clip uses H.264 / yuv420p, retains the original 592 × 512 resolution
+and 6.04-second duration, and removes audio and the embedded cover-art stream.
+Fast-start MP4 metadata is placed before video data. The optimized file is about
+369 KiB (down from 939 KiB). The poster is preloaded at high priority. Video
+buffering starts automatically unless reduced motion is requested; the manual
+play control still works. The video URL is versioned when the file changes.
+The original supplied video remains on the Desktop.

@@ -14,6 +14,13 @@ add_action( 'wp_enqueue_scripts', function () {
     wp_enqueue_script( 'lexington116', get_theme_file_uri( '/assets/site.js' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/site.js' ), true );
 } );
 
+// Prioritize the hero poster so the frame appears while the video buffers.
+add_action( 'wp_head', function () {
+    if ( is_front_page() ) {
+        printf( '<link rel="preload" as="image" href="%s" fetchpriority="high">' . "\n", esc_url( get_theme_file_uri( '/assets/massage-poster.jpg' ) ) );
+    }
+}, 2 );
+
 /** Use a configured booking URL, or show the honest coming-soon/contact dialog. */
 function lexington116_booking_link( $label, $class ) {
     $url = get_theme_mod( 'lexington116_booking_url', '' );

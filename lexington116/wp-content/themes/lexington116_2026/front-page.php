@@ -24,9 +24,9 @@ get_header();
                 <div class="hero-actions">
                     <?php lexington116_booking_link( 'Book an appointment', 'button' ); ?>
                     <?php if ( $phone ) : ?>
-                        <a class="button button-outline" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>">Call now · <?php echo esc_html( $phone ); ?></a>
+                        <a class="button button-outline" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>">Call <?php echo esc_html( $phone ); ?></a>
                     <?php else : ?>
-                        <button type="button" class="button button-outline" data-open-booking>Call now · (XXX) XXX-XXXX</button>
+                        <button type="button" class="button button-outline" data-open-booking>Call XXX-XXX-XXXX</button>
                     <?php endif; ?>
                 </div>
                 <div class="hero-note"><span class="note-line" aria-hidden="true"></span><p>Leave the world outside.<br><span>A softer touch. A deeper escape.</span></p></div>
@@ -35,7 +35,7 @@ get_header();
                 <div class="arch-outline" aria-hidden="true"></div>
                 <figure class="hero-photo">
                         <video class="hero-video" width="592" height="512" muted loop playsinline preload="metadata" poster="<?php echo esc_url( get_theme_file_uri( '/assets/massage-poster.jpg' ) ); ?>" aria-label="Spa massage video">
-                            <source src="<?php echo esc_url( get_theme_file_uri( '/assets/massage.mp4' ) ); ?>" type="video/mp4">
+                            <source src="<?php echo esc_url( add_query_arg( 'v', filemtime( get_theme_file_path( '/assets/massage.mp4' ) ), get_theme_file_uri( '/assets/massage.mp4' ) ) ); ?>" type="video/mp4">
                         </video>
                         <button type="button" class="video-toggle" hidden>Play video</button>
                     <figcaption>Charming. Attentive. Professional.</figcaption>
