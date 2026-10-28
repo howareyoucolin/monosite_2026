@@ -28,10 +28,12 @@ the 620px maximum width and adapt to smaller screens. Shape B is the default.
 Choose either in **Appearance → Customize → Lexington116 · Hero design**.
 Preview without saving using `/?hero_shape=a` or `/?hero_shape=b`.
 
-## Pink uniform video
+## Hero video
 
-The fictional adult therapist still (`assets/spa-pink-poster.jpg`) was generated
-with the built-in image tool; the final prompt is `assets/spa-pink-loop-prompt.txt`.
-`assets/spa-pink-loop.mp4` is a three-second silent camera-motion loop made from
-that still, not independently animated massage action.
-The loop has a pause/play button and starts paused for reduced-motion preferences.
+The active video is `assets/massage.mp4`, copied from the user's Desktop.
+The supplied clip is approximately six seconds long. It loops silently, with
+pause/play controls and reduced-motion support. `assets/massage-poster.jpg`
+is extracted from the clip for the loading and paused fallback.
+
+The earlier generated pink-uniform video and its prompt remain in `assets/`
+as unused alternatives.

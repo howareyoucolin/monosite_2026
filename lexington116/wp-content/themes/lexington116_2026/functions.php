@@ -9,7 +9,7 @@ add_action( 'after_setup_theme', function () {
 } );
 
 add_action( 'wp_enqueue_scripts', function () {
-    wp_enqueue_style( 'lexington116-fonts', get_theme_file_uri( '/assets/fonts.css' ), array(), '1.1.0' );
+    wp_enqueue_style( 'lexington116-fonts', get_theme_file_uri( '/assets/fonts.css' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/fonts.css' ) );
     wp_enqueue_style( 'lexington116', get_stylesheet_uri(), array( 'lexington116-fonts' ), (string) filemtime( get_stylesheet_directory() . '/style.css' ) );
     wp_enqueue_script( 'lexington116', get_theme_file_uri( '/assets/site.js' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/site.js' ), true );
 } );

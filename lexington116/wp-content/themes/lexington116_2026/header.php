@@ -22,9 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
         </button>
         <nav id="primary-navigation" class="primary-navigation" aria-label="Main navigation">
             <a href="<?php echo esc_url( home_url( '/#home' ) ); ?>">Home</a>
-            <a href="<?php echo esc_url( home_url( '/#approach' ) ); ?>">Our approach</a>
+            <a href="<?php echo esc_url( home_url( '/#approach' ) ); ?>">About Lumi</a>
             <a href="<?php echo esc_url( home_url( '/#visit' ) ); ?>">Visit us</a>
-            <?php lexington116_booking_link( 'Book a visit', 'button button-small' ); ?>
+            <?php lexington116_booking_link( 'Book an appointment', 'button button-small' ); ?>
         </nav>
     </div>
 </header>

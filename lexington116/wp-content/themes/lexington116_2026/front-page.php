@@ -11,40 +11,45 @@ if ( isset( $_GET['hero_shape'] ) && is_string( $_GET['hero_shape'] ) ) {
     }
 }
 $hero_shape = in_array( $hero_shape, array( 'a', 'b' ), true ) ? $hero_shape : 'b';
+$phone = get_theme_mod( 'lexington116_phone', '' );
 get_header();
 ?>
 <main id="main">
     <section class="hero" id="home" aria-labelledby="hero-title">
         <div class="hero-inner">
             <div class="hero-copy">
-                <p class="eyebrow hero-eyebrow"><span aria-hidden="true"></span> A little time for yourself</p>
-                <h1 id="hero-title">Let the day go.<br>Come back to <em>you.</em></h1>
-                <p class="hero-description">Step away from the rush. Discover a moment of calm at 116 Lexington Massage, where your time is yours to slow down, unwind, and simply be.</p>
+                <p class="eyebrow hero-eyebrow"><span aria-hidden="true"></span> Asian massage · Unwind your senses</p>
+                <h1 id="hero-title">Book your next<br><em>massage.</em></h1>
+                <p class="hero-description">Relax and unwind with a massage at Lumi Massage. Call to check availability or book an appointment for your next session.</p>
                 <div class="hero-actions">
-                    <?php lexington116_booking_link( 'Book your escape', 'button' ); ?>
-                    <a class="button button-outline" href="#approach">Discover our approach <span aria-hidden="true">↗</span></a>
+                    <?php lexington116_booking_link( 'Book an appointment', 'button' ); ?>
+                    <?php if ( $phone ) : ?>
+                        <a class="button button-outline" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>">Call now · <?php echo esc_html( $phone ); ?></a>
+                    <?php else : ?>
+                        <button type="button" class="button button-outline" data-open-booking>Call now · (XXX) XXX-XXXX</button>
+                    <?php endif; ?>
                 </div>
-                <div class="hero-note"><span class="note-line" aria-hidden="true"></span><p>A slower pace.<br><span>A little more room to breathe.</span></p></div>
+                <div class="hero-note"><span class="note-line" aria-hidden="true"></span><p>Leave the world outside.<br><span>A softer touch. A deeper escape.</span></p></div>
             </div>
             <div class="hero-art shape-<?php echo esc_attr( $hero_shape ); ?>">
                 <div class="arch-outline" aria-hidden="true"></div>
                 <figure class="hero-photo">
-                        <video class="hero-video" width="800" height="1000" muted loop playsinline preload="metadata" poster="<?php echo esc_url( get_theme_file_uri( '/assets/spa-pink-poster.jpg' ) ); ?>" aria-label="Illustrative spa portrait of an adult massage therapist in a pink uniform, with gentle camera motion">
-                            <source src="<?php echo esc_url( get_theme_file_uri( '/assets/spa-pink-loop.mp4' ) ); ?>" type="video/mp4">
+                        <video class="hero-video" width="592" height="512" muted loop playsinline preload="metadata" poster="<?php echo esc_url( get_theme_file_uri( '/assets/massage-poster.jpg' ) ); ?>" aria-label="Spa massage video">
+                            <source src="<?php echo esc_url( get_theme_file_uri( '/assets/massage.mp4' ) ); ?>" type="video/mp4">
                         </video>
                         <button type="button" class="video-toggle" hidden>Play video</button>
-                    <figcaption>Pause. Breathe. Begin again.</figcaption>
+                    <figcaption>Charming. Attentive. Professional.</figcaption>
                 </figure>
-                <div class="floating-note"><span class="flower" aria-hidden="true">✳</span><div><span class="floating-label">A moment of calm</span><span class="floating-title">Made for you.</span></div></div>
+                <div class="floating-note"><span class="flower" aria-hidden="true">✳</span><div><span class="floating-label">The art of Asian massage</span><span class="floating-title">A touch of escape.</span></div></div>
             </div>
         </div>
     </section>
-    <div class="calm-strip" aria-label="Pause, unwind, reconnect">
-        <span>Pause</span><i aria-hidden="true">✧</i><span>Unwind</span><i aria-hidden="true">✧</i><span>Reconnect</span><i aria-hidden="true">✧</i><span>Feel like yourself</span>
+    <div class="calm-strip" aria-label="Massage, relaxation, appointments">
+        <span>Massage</span><i aria-hidden="true">✧</i><span>Relaxation</span><i aria-hidden="true">✧</i><span>Appointments</span><i aria-hidden="true">✧</i><span>Lumi Massage</span>
     </div>
     <section class="approach section-inner" id="approach" aria-labelledby="approach-title">
-        <div><p class="eyebrow">The Lexington approach</p><h2 id="approach-title">Less rush.<br><em>More presence.</em></h2></div>
-        <div class="approach-copy"><p>We believe taking time for yourself should feel natural. A quiet pause, a welcoming atmosphere, and space to leave the day behind.</p><p>Whether you’re making room for a little rest or building a new ritual, start with a moment that belongs to you.</p></div>
+        <div><p class="eyebrow">Massage at Lumi</p><h2 id="approach-title">Make time for<br><em>your massage.</em></h2></div>
+        <div class="approach-copy"><p>Looking for a massage? Visit Lumi Massage for a relaxing session in a welcoming spa setting.</p><p>Contact us to ask about appointments and availability. Book your next session and make time to relax.</p></div>
     </section>
 </main>
 <?php get_footer(); ?>
