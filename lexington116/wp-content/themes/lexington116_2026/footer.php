@@ -1,8 +1,8 @@
 <?php
 /** Shared footer and booking information. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-$phone   = get_theme_mod( 'lexington116_phone', '' );
-$address = get_theme_mod( 'lexington116_address', '' );
+$phone   = is_page( 'menu' ) ? '' : lexington116_contact_detail( 'phone' );
+$address = is_page( 'menu' ) ? '' : lexington116_contact_detail( 'address' );
 ?>
 <footer class="site-footer" id="visit">
     <div class="footer-inner">

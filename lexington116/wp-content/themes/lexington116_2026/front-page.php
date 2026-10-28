@@ -11,7 +11,7 @@ if ( isset( $_GET['hero_shape'] ) && is_string( $_GET['hero_shape'] ) ) {
     }
 }
 $hero_shape = in_array( $hero_shape, array( 'a', 'b' ), true ) ? $hero_shape : 'b';
-$phone = get_theme_mod( 'lexington116_phone', '' );
+$phone = lexington116_contact_detail( 'phone' );
 get_header();
 ?>
 <main id="main">
@@ -23,11 +23,7 @@ get_header();
                 <p class="hero-description">Relax and unwind with a massage at Lumi Massage. Call to check availability or book an appointment for your next session.</p>
                 <div class="hero-actions">
                     <?php lexington116_booking_link( 'Book an appointment', 'button' ); ?>
-                    <?php if ( $phone ) : ?>
-                        <a class="button button-outline" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>">Call <?php echo esc_html( $phone ); ?></a>
-                    <?php else : ?>
-                        <button type="button" class="button button-outline" data-open-booking>Call XXX-XXX-XXXX</button>
-                    <?php endif; ?>
+                    <a class="button button-outline" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>">Call <?php echo esc_html( $phone ); ?></a>
                 </div>
                 <div class="hero-note"><span class="note-line" aria-hidden="true"></span><p>Leave the world outside.<br><span>A softer touch. A deeper escape.</span></p></div>
             </div>

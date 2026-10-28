@@ -54,6 +54,18 @@
     positionHeroActions();
     mobileHero.addEventListener('change', positionHeroActions);
   }
+  document.querySelectorAll('.contact-map').forEach((container) => {
+    const frame = container.querySelector('iframe[data-src]');
+    const placeholder = container.querySelector('.map-placeholder');
+    if (!frame) return;
+    frame.addEventListener('load', () => {
+      if (frame.getAttribute('src') !== frame.dataset.src) return;
+      container.classList.add('is-loaded');
+      container.setAttribute('aria-busy', 'false');
+      if (placeholder) placeholder.hidden = true;
+    });
+    frame.src = frame.dataset.src;
+  });
   const video = document.querySelector('.hero-video');
   const videoToggle = document.querySelector('.video-toggle');
   if (video && videoToggle) {

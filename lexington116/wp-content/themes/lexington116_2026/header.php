@@ -21,9 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
             <span>Menu</span><span class="menu-lines" aria-hidden="true"></span>
         </button>
         <nav id="primary-navigation" class="primary-navigation" aria-label="Main navigation">
-            <a href="<?php echo esc_url( home_url( '/#home' ) ); ?>">Home</a>
-            <a href="<?php echo esc_url( home_url( '/#approach' ) ); ?>">About Lumi</a>
-            <a href="<?php echo esc_url( home_url( '/#visit' ) ); ?>">Visit us</a>
+            <a href="<?php echo esc_url( home_url( '/' ) ); ?>"<?php if ( is_front_page() ) { echo ' aria-current="page"'; } ?>>Home</a>
+            <a href="<?php echo esc_url( lexington116_page_url( 'about-lumi' ) ); ?>"<?php if ( is_page( 'about-lumi' ) ) { echo ' aria-current="page"'; } ?>>About Lumi</a>
+            <a href="<?php echo esc_url( lexington116_page_url( 'menu' ) ); ?>"<?php if ( is_page( 'menu' ) ) { echo ' aria-current="page"'; } ?>>Menu</a>
+            <a href="<?php echo esc_url( lexington116_page_url( 'contact-us' ) ); ?>"<?php if ( is_page( 'contact-us' ) ) { echo ' aria-current="page"'; } ?>>Contact us</a>
             <?php lexington116_booking_link( 'Book an appointment', 'button button-small' ); ?>
         </nav>
     </div>
