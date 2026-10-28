@@ -6,7 +6,7 @@ $address = get_theme_mod( 'lexington116_address', '' );
 ?>
 <footer class="site-footer" id="visit">
     <div class="footer-inner">
-        <div><span class="footer-name">Lumi Massage</span><p>Call or book your next massage appointment.</p></div>
+        <div><span class="footer-name">Lumi Massage</span><p>&copy; <?php echo esc_html( wp_date( 'Y' ) ); ?>, designed and built by <a href="https://369usa.com/">369usa</a>.</p></div>
         <div class="visit-details">
             <?php if ( $address ) : ?><p><?php echo esc_html( $address ); ?></p><?php endif; ?>
             <?php if ( $phone ) : ?><a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a><?php endif; ?>

@@ -48,8 +48,8 @@ get_header();
         <span>Massage</span><i aria-hidden="true">✧</i><span>Relaxation</span><i aria-hidden="true">✧</i><span>Appointments</span><i aria-hidden="true">✧</i><span>Lumi Massage</span>
     </div>
     <section class="approach section-inner" id="approach" aria-labelledby="approach-title">
-        <div><p class="eyebrow">Massage at Lumi</p><h2 id="approach-title">Make time for<br><em>your massage.</em></h2></div>
-        <div class="approach-copy"><p>Looking for a massage? Visit Lumi Massage for a relaxing session in a welcoming spa setting.</p><p>Contact us to ask about appointments and availability. Book your next session and make time to relax.</p></div>
+        <div><p class="eyebrow">Why choose Lumi Massage</p><h2 id="approach-title">Attentive care.<br><em>A welcoming escape.</em></h2></div>
+        <div class="approach-copy"><p>Enjoy a warm welcome, a softly lit spa atmosphere, and attentive service that puts your comfort first. At Lumi Massage, you can settle in, unwind, and enjoy your massage at your own pace.</p><p>Massage offers a welcome break from a busy day: a chance to ease everyday tension, relax tired muscles, and enjoy a little time for yourself. Leave the rush outside and settle into a slower rhythm.</p></div>
     </section>
 </main>
 <?php get_footer(); ?>
