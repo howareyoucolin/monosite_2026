@@ -66,6 +66,7 @@
     });
     frame.src = frame.dataset.src;
   });
+  if (document.querySelector('[data-booking-unavailable]')) dialog?.showModal();
   const video = document.querySelector('.hero-video');
   const videoToggle = document.querySelector('.video-toggle');
   if (video && videoToggle) {

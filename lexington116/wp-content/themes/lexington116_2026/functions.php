@@ -1,6 +1,7 @@
 <?php
 /** Theme setup, assets, and optional booking/contact settings. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
+require_once get_theme_file_path( '/inc/booking.php' );
 
 add_action( 'after_setup_theme', function () {
     add_theme_support( 'title-tag' );
@@ -12,6 +13,10 @@ add_action( 'wp_enqueue_scripts', function () {
     wp_enqueue_style( 'lexington116-fonts', get_theme_file_uri( '/assets/fonts.css' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/fonts.css' ) );
     wp_enqueue_style( 'lexington116', get_stylesheet_uri(), array( 'lexington116-fonts' ), (string) filemtime( get_stylesheet_directory() . '/style.css' ) );
     wp_enqueue_script( 'lexington116', get_theme_file_uri( '/assets/site.js' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/site.js' ), true );
+    if ( is_page( 'booking' ) && lexington116_booking_preview_enabled() ) {
+        wp_enqueue_style( 'lumi-booking', get_theme_file_uri( '/assets/booking.css' ), array( 'lexington116' ), (string) filemtime( get_theme_file_path( '/assets/booking.css' ) ) );
+        wp_enqueue_script( 'lumi-booking', get_theme_file_uri( '/assets/booking.js' ), array( 'jquery', 'jquery-ui-datepicker' ), (string) filemtime( get_theme_file_path( '/assets/booking.js' ) ), true );
+    }
 } );
 
 // Prioritize the hero poster so the frame appears while the video buffers.
@@ -34,11 +39,10 @@ function lexington116_contact_detail( $key ) {
     return get_theme_mod( 'lexington116_' . $key, '' ) ?: $defaults[ $key ];
 }
 
-/** Use a configured booking URL, or show the honest coming-soon/contact dialog. */
+/** Only ff=1 enables the booking page; public visitors keep the modal. */
 function lexington116_booking_link( $label, $class ) {
-    $url = get_theme_mod( 'lexington116_booking_url', '' );
-    if ( $url ) {
-        printf( '<a class="%s" href="%s">%s</a>', esc_attr( $class ), esc_url( $url ), esc_html( $label ) );
+    if ( lexington116_booking_preview_enabled() ) {
+        printf( '<a class="%s" href="%s">%s</a>', esc_attr( $class ), esc_url( lexington116_page_url( 'booking' ) ), esc_html( $label ) );
     } else {
         printf( '<button type="button" class="%s" data-open-booking>%s</button>', esc_attr( $class ), esc_html( $label ) );
     }
@@ -60,23 +64,22 @@ add_action( 'customize_register', function ( $customizer ) {
     ) );
     $customizer->add_section( 'lexington116_contact', array( 'title' => 'Lexington116 · Booking & contact' ) );
     foreach ( array(
-        'booking_url' => array( 'Booking website URL', 'url', 'esc_url_raw' ),
-        'phone'       => array( 'Contact phone', 'text', 'sanitize_text_field' ),
+                'phone'       => array( 'Contact phone', 'text', 'sanitize_text_field' ),
         'address'     => array( 'Visit address', 'text', 'sanitize_text_field' ),
         'hours'       => array( 'Business hours', 'text', 'sanitize_text_field' ),
     ) as $key => $field ) {
         $setting = 'lexington116_' . $key;
-        $customizer->add_setting( $setting, array( 'default' => 'booking_url' === $key ? '' : lexington116_contact_detail( $key ), 'sanitize_callback' => $field[2] ) );
+        $customizer->add_setting( $setting, array( 'default' => lexington116_contact_detail( $key ), 'sanitize_callback' => $field[2] ) );
         $customizer->add_control( $setting, array( 'label' => $field[0], 'type' => $field[1], 'section' => 'lexington116_contact' ) );
     }
 } );
 
 /** Create missing navigation pages once, keeping existing page content intact. */
 function lexington116_ensure_site_pages() {
-    if ( '2' === get_option( 'lexington116_pages_version' ) ) {
+    if ( '4' === get_option( 'lexington116_pages_version' ) ) {
         return;
     }
-    foreach ( array( 'about-lumi' => 'About Lumi', 'menu' => 'Massage Menu', 'visit-us' => 'Visit Us', 'contact-us' => 'Contact Us' ) as $slug => $title ) {
+    foreach ( array( 'about-lumi' => 'About Lumi', 'menu' => 'Massage Menu', 'visit-us' => 'Visit Us', 'contact-us' => 'Contact Us', 'booking' => 'Book an Appointment' ) as $slug => $title ) {
         if ( ! get_page_by_path( $slug, OBJECT, 'page' ) ) {
             $result = wp_insert_post( array(
                 'post_type' => 'page',
@@ -90,7 +93,7 @@ function lexington116_ensure_site_pages() {
             }
         }
     }
-    update_option( 'lexington116_pages_version', '2' );
+    update_option( 'lexington116_pages_version', '4' );
 }
 add_action( 'after_switch_theme', 'lexington116_ensure_site_pages' );
 // Existing installations pick up the pages after the next administrator visit.
@@ -102,5 +105,5 @@ add_action( 'admin_init', function () {
 
 function lexington116_page_url( $slug ) {
     $page = get_page_by_path( $slug, OBJECT, 'page' );
-    return $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
+    return lexington116_preview_url( $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' ) );
 }

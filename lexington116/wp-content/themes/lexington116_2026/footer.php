@@ -17,11 +17,11 @@ $address = is_page( 'menu' ) ? '' : lexington116_contact_detail( 'address' );
 <dialog class="booking-dialog" id="booking-dialog" aria-labelledby="booking-title">
     <button type="button" class="dialog-close" aria-label="Close booking information">×</button>
     <p class="eyebrow">Lumi Massage</p>
-    <h2 id="booking-title">Book your<br><em>massage.</em></h2>
+    <h2 id="booking-title">Online booking<br><em>is coming soon.</em></h2>
     <?php if ( $phone ) : ?>
-        <p>Call us to check availability and book your massage.</p><a class="button" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a>
+        <p>Online booking is under construction. Please call us to check availability and book your massage.</p><a class="button" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( $phone ); ?></a>
     <?php else : ?>
-        <p>Online booking is coming soon.<br>Please check back for massage appointments and contact details.</p>
+        <p>Online booking is under construction.<br>Please check back for massage appointments and contact details.</p>
     <?php endif; ?>
     <?php if ( $address ) : ?><p class="dialog-address"><?php echo esc_html( $address ); ?></p><?php endif; ?>
 </dialog>

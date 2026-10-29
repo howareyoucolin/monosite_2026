@@ -72,3 +72,51 @@ Old Visit Us links remain supported but are not in the navigation.
 `assets/about-pink-room.jpg` is an illustrative, AI-generated image of a modest
 pink-lit massage room, created with the built-in image tool. It is not a photograph
 of the actual premises. Exact prompt: `assets/about-room-prompt.txt`.
+
+## Booking preview (`ff=1`)
+
+Booking follows deyutcm's two-step date/time + contact-details layout, adapted
+into this theme in English, using Lumi's hours and prices. No deyutcm endpoint,
+database, or file is changed or used for submissions.
+
+- Add `?ff=1` to the home URL to enable booking links; the flag follows navigation.
+- The booking page and its POST handler both require the exact query flag `ff=1`.
+- No flag, `ff=0`, or other values keep the under-construction booking modal.
+- Requests are saved privately under **Appointment requests** in Lumi wp-admin,
+  visible to administrators. In production, an email is sent to
+  `howareyoucolin@gmail.com` and a staff SMS is sent through Textbelt when
+  configured. No calendar slot is reserved.
+- The form states that the team must confirm availability. Dates are tomorrow
+  through 28 days ahead in New York time; sessions must end by 9:30 pm.
+- Duration choices are 20, 30, and 60 minutes. Available starts use half-hour steps.
+- Submission uses WordPress nonces, a honeypot, and server-side field validation.
+- Theme activation or the next administrator visit creates the Booking page.
+
+This query flag is a preview switch, not password protection. Preview and booking
+responses send no-cache headers; configure any hosting/CDN cache to honor them.
+
+### Textbelt staff notifications
+
+The booking handler sends a staff notification only after the appointment request
+has been saved. Add the following to the production `wp-config.php`, above the
+`That's all, stop editing` line:
+
+```php
+define( 'LUMI_TEXTBELT_API_KEY', 'replace-with-a-new-textbelt-key' );
+define( 'LUMI_TEXTBELT_NOTIFY_PHONE', 'replace-with-the-staff-mobile-number' );
+```
+
+Do not put the API key in the theme or commit it to Git. Rotate the key that was
+previously exposed. SMS failures do not discard the appointment; the result is
+shown on that request in **Appointment requests** in wp-admin.
+
+Booking email uses WordPress `wp_mail()` and defaults to
+`howareyoucolin@gmail.com`. It can be overridden in production with:
+
+```php
+define( 'LUMI_BOOKING_EMAIL', 'another-address@example.com' );
+```
+
+Email and SMS are disabled automatically on localhost, even if credentials are
+present. Local appointment requests are still saved and show the notifications as
+skipped in wp-admin.
