@@ -19,7 +19,7 @@ no npm dependencies to install.
 
 - Site: http://localhost:8400
 - WordPress admin: http://localhost:8400/wp-admin
-- Default local login: `admin` / `lexington116-local-only`
+- Default local login: `admin` / `admin`
 - phpMyAdmin: http://localhost:8402 (automatically signs into the local database)
 - Database: `127.0.0.1:8401`, database/user/password all `lexington116`
 
@@ -37,6 +37,8 @@ ports bind to loopback. The new ports let this site run alongside `deyutcm`.
 | `npm run logs` | Follow WordPress logs |
 | `npm run wp -- <args>` | Run WP-CLI against this local site |
 | `npm run setup` | Install if needed and activate the custom theme |
+| `npm run seed:local` | Seed local pages, homepage, and pretty permalinks |
+| `npm run seed:prod` | Seed production over SSH using `deploy.config.json` |
 | `npm run deploy:dry` | Preview theme deployment once configured |
 | `npm run deploy` | Preview changes and ask before uploading themes |
 | `npm run reset` | Delete local database/core volumes; run setup to reinstall |
@@ -86,4 +88,24 @@ npm run deploy
 Missing connection settings stop the script before it connects. Remote-only
 files are kept unless `--delete` is explicitly passed. Use `./deploy.sh --help`
 for all options, including `--config` to select a different configuration file.
-No deployment target is configured yet.
+No deployment target is committed to the repository; local configuration stays
+in the gitignored `../deploy.config.json`.
+
+## Site seeder
+
+The idempotent seeder activates the Lexington theme, creates or republishes Home,
+About Lumi, Massage Menu, Contact Us, Book an Appointment, and the legacy Visit
+Us page, sets Home as the static front page, and changes permalinks to
+`/%postname%/`. Existing page content is never overwritten, and rerunning the
+command does not duplicate pages.
+
+```sh
+npm run seed:local
+npm run seed:prod
+```
+
+Standard argument forms are also available as `npm run seed -- --local` and
+`npm run seed -- --prod`. A bare `npm run seed` prints these choices and exits
+without changing either site. The production command uses the Lexington entry in
+`../deploy.config.json`, connects over SSH, and requires the deployed theme plus
+WP-CLI on the server.

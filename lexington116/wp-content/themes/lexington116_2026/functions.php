@@ -2,6 +2,7 @@
 /** Theme setup, assets, and optional booking/contact settings. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 require_once get_theme_file_path( '/inc/booking.php' );
+require_once get_theme_file_path( '/inc/seed.php' );
 
 add_action( 'after_setup_theme', function () {
     add_theme_support( 'title-tag' );

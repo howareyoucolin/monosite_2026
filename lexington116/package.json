@@ -4,6 +4,9 @@
   "description": "Local WordPress for Lexington116 with a standalone custom theme",
   "scripts": {
     "setup": "./setup.sh",
+    "seed": "node scripts/seed.cjs",
+    "seed:local": "node scripts/seed.cjs --local",
+    "seed:prod": "node scripts/seed.cjs --prod",
     "dev": "docker compose up --build --remove-orphans",
     "start": "docker compose up -d --build --remove-orphans",
     "stop": "docker compose down --remove-orphans",
