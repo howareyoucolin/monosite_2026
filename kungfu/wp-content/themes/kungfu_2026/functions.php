@@ -146,6 +146,11 @@ require_once get_theme_file_path( 'inc/chapter-tools.php' );
  */
 require_once get_theme_file_path( 'inc/comments.php' );
 
+/**
+ * Authenticated, production-ready MCP endpoint for creating draft posts.
+ */
+require_once get_theme_file_path( 'inc/mcp-server.php' );
+
 if ( is_admin() ) {
 	require_once get_theme_file_path( 'inc/admin.php' );
 
