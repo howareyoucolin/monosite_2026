@@ -1,10 +1,10 @@
 /**
- * "Format sections": turn pasted section titles into level-3 headings.
+ * "Format sections": turn pasted section titles into level-2 headings.
  *
  * Every top-level paragraph or heading whose whole text reads as a section
- * title becomes <h3 class="wp-block-heading">Section N: Title</h3>. Core adds
+ * title becomes <h2 class="wp-block-heading">Section N: Title</h2>. Core adds
  * the wp-block-heading class itself when a heading block saves, so the block
- * only needs level 3 and the normalized text.
+ * only needs level 2 and the normalized text.
  *
  * Recognised, case-insensitively, with or without markdown debris left by the
  * paste (leading #s, surrounding ** or __):
@@ -249,11 +249,11 @@
 		if ( parts.length < 2 ) {
 			var whole = titleFrom( html );
 
-			if ( ! whole || ( 'core/heading' === name && 3 === block.attributes.level && html === whole ) ) {
+			if ( ! whole || ( 'core/heading' === name && 2 === ( block.attributes.level || 2 ) && html === whole ) ) {
 				return null;
 			}
 
-			return [ wp.blocks.createBlock( 'core/heading', { level: 3, content: whole } ) ];
+			return [ wp.blocks.createBlock( 'core/heading', { level: 2, content: whole } ) ];
 		}
 
 		// "Section 1: Title<br>First line of the body…"
@@ -268,7 +268,7 @@
 		}
 
 		var rest = parts.slice( 1 ).join( '<br>' ).replace( /^(?:\s|&nbsp;)+/, '' );
-		var out = [ wp.blocks.createBlock( 'core/heading', { level: 3, content: title } ) ];
+		var out = [ wp.blocks.createBlock( 'core/heading', { level: 2, content: title } ) ];
 
 		if ( rest ) {
 			out.push(
@@ -486,7 +486,7 @@
 					variant: 'secondary',
 					size: 'compact',
 					onClick: run,
-					label: __( 'Turn "Section N: Title" lines into level-3 headings and remove bold while preserving italics', 'kungfu_2026' ),
+					label: __( 'Turn "Section N: Title" lines into level-2 headings and remove bold while preserving italics', 'kungfu_2026' ),
 					showTooltip: true,
 				},
 				__( 'Format sections', 'kungfu_2026' )

@@ -30,6 +30,11 @@ get_header();
 while ( have_posts() ) :
 	the_post();
 
+	if ( akw_is_revision_compare_view() ) {
+		get_template_part( 'template-parts/chapter', 'compare' );
+		continue;
+	}
+
 	$akw_label   = akw_get_chapter_label();
 	$akw_arc     = akw_get_arc();
 	$akw_content = akw_is_former_view() || akw_is_awaiting_remaster() ? akw_get_former_content() : apply_filters( 'the_content', get_the_content() );
@@ -37,7 +42,12 @@ while ( have_posts() ) :
 	?>
 	<article <?php post_class( 'chapter' ); ?>>
 		<header class="chapter__head">
-			<?php akw_the_version_link(); ?>
+			<?php if ( ( akw_has_former_version() && ! akw_is_awaiting_remaster() ) || akw_can_compare_revision() ) : ?>
+				<div class="chapter__head-top">
+					<?php akw_the_version_link(); ?>
+					<?php akw_the_revision_compare_link(); ?>
+				</div>
+			<?php endif; ?>
 
 			<?php if ( $akw_label ) : ?>
 				<p class="chapter__label">

@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 const KUNGFU_MCP_PROTOCOL_VERSION = '2025-06-18';
 const KUNGFU_MCP_TOOL_NAME        = 'add_post';
+const KUNGFU_MCP_READ_TOOL_NAME   = 'get_post_for_editing';
 const KUNGFU_MCP_UPDATE_TOOL_NAME = 'update_post';
 const KUNGFU_MCP_TOKEN_OPTION     = 'kungfu_mcp_test_token';
 const KUNGFU_MCP_OWNER_OPTION     = 'kungfu_mcp_test_owner';
@@ -218,7 +219,7 @@ function kungfu_2026_mcp_tools() {
 	return array(
 		array(
 			'name'        => KUNGFU_MCP_TOOL_NAME,
-			'description' => 'Create a new draft WordPress post with a plain title and short plain-text content.',
+			'description' => 'Create and immediately publish a new WordPress post with a plain title and short plain-text content. Use this only when the user wants the post publicly visible now.',
 			'inputSchema' => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -239,10 +240,38 @@ function kungfu_2026_mcp_tools() {
 				'additionalProperties' => false,
 			),
 			'annotations' => array(
-				'title'           => 'Add a draft post',
+				'title'           => 'Add and publish a post',
 				'readOnlyHint'    => false,
-				'destructiveHint' => false,
+				'destructiveHint' => true,
 				'idempotentHint'  => false,
+				'openWorldHint'   => true,
+			),
+			'securitySchemes' => array(
+				array(
+					'type' => 'noauth',
+				),
+			),
+		),
+		array(
+			'name'        => KUNGFU_MCP_READ_TOOL_NAME,
+			'description' => 'Read a WordPress post before editing it. Returns its title, status, tags, content revision fingerprint, and raw content grouped into numbered sections and numbered lines. Call this before update_post when the user refers to a section or line.',
+			'inputSchema' => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'post_id' => array(
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'description' => 'The WordPress post ID to inspect.',
+					),
+				),
+				'required'             => array( 'post_id' ),
+				'additionalProperties' => false,
+			),
+			'annotations' => array(
+				'title'           => 'Read a post for editing',
+				'readOnlyHint'    => true,
+				'destructiveHint' => false,
+				'idempotentHint'  => true,
 				'openWorldHint'   => false,
 			),
 			'securitySchemes' => array(
@@ -253,7 +282,7 @@ function kungfu_2026_mcp_tools() {
 		),
 		array(
 			'name'        => KUNGFU_MCP_UPDATE_TOOL_NAME,
-			'description' => 'Update an existing WordPress post title, plain-text content, or tags without changing its publication status. Use this when the user asks to revise a post by ID.',
+			'description' => 'Update an existing WordPress post title, WordPress-safe HTML content, tags, or an exact numbered line range without changing publication status. Safe heading markup such as <h2> is preserved. For section or line edits, first call get_post_for_editing and pass back its content_revision fingerprint.',
 			'inputSchema' => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -272,7 +301,7 @@ function kungfu_2026_mcp_tools() {
 						'type'        => 'string',
 						'minLength'   => 1,
 						'maxLength'   => 100000,
-						'description' => 'Optional replacement plain-text post content. HTML is removed.',
+						'description' => 'Optional complete replacement content. WordPress-safe HTML, including section headings such as <h2>, is preserved; unsafe markup is removed.',
 					),
 					'tags'    => array(
 						'type'        => 'array',
@@ -285,12 +314,49 @@ function kungfu_2026_mcp_tools() {
 							'maxLength' => 100,
 						),
 					),
+					'line_start' => array(
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'description' => 'Optional 1-based global starting line from get_post_for_editing.',
+					),
+					'line_end' => array(
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'description' => 'Optional inclusive global ending line. Defaults to line_start.',
+					),
+					'section' => array(
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'description' => 'Optional 1-based section number from get_post_for_editing.',
+					),
+					'section_line_start' => array(
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'description' => 'Optional 1-based line within the selected section.',
+					),
+					'section_line_end' => array(
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'description' => 'Optional inclusive ending line within the section. Defaults to section_line_start.',
+					),
+					'replacement' => array(
+						'type'        => 'string',
+						'maxLength'   => 100000,
+						'description' => 'Replacement content for the selected global or section-local line range. WordPress-safe HTML such as <h2> is preserved. An empty string deletes the selected lines.',
+					),
+					'content_revision' => array(
+						'type'        => 'string',
+						'pattern'     => '^[a-f0-9]{64}$',
+						'description' => 'SHA-256 content fingerprint returned by get_post_for_editing. Required for line-based edits.',
+					),
 				),
 				'required'             => array( 'post_id' ),
 				'anyOf'                => array(
 					array( 'required' => array( 'title' ) ),
 					array( 'required' => array( 'content' ) ),
 					array( 'required' => array( 'tags' ) ),
+					array( 'required' => array( 'line_start', 'replacement', 'content_revision' ) ),
+					array( 'required' => array( 'section', 'section_line_start', 'replacement', 'content_revision' ) ),
 				),
 				'additionalProperties' => false,
 			),
@@ -354,10 +420,14 @@ function kungfu_2026_mcp_add_post( $arguments ) {
 		);
 	}
 
+	if ( ! current_user_can( 'publish_posts' ) ) {
+		return kungfu_2026_mcp_tool_error( 'The connected WordPress user cannot publish posts.' );
+	}
+
 	$post_id = wp_insert_post(
 		array(
 			'post_type'    => 'post',
-			'post_status'  => 'draft',
+			'post_status'  => 'publish',
 			'post_title'   => wp_strip_all_tags( $title ),
 			'post_content' => sanitize_textarea_field( $content ),
 			'post_author'  => get_current_user_id(),
@@ -371,7 +441,7 @@ function kungfu_2026_mcp_add_post( $arguments ) {
 			'content' => array(
 				array(
 					'type' => 'text',
-					'text' => 'WordPress could not create the draft.',
+					'text' => 'WordPress could not publish the post.',
 				),
 			),
 		);
@@ -382,7 +452,7 @@ function kungfu_2026_mcp_add_post( $arguments ) {
 			array(
 				'type' => 'text',
 				'text' => sprintf(
-					'Draft created successfully. Post ID: %d. Title: %s.',
+					'Post published successfully. Post ID: %d. Title: %s.',
 					$post_id,
 					wp_strip_all_tags( $title )
 				),
@@ -410,6 +480,134 @@ function kungfu_2026_mcp_tool_error( $message ) {
 }
 
 /**
+ * Normalize line endings so MCP line references are stable across clients.
+ *
+ * @param string $content Raw post content.
+ * @return string
+ */
+function kungfu_2026_mcp_normalize_content( $content ) {
+	return str_replace( array( "\r\n", "\r" ), "\n", (string) $content );
+}
+
+/**
+ * Split raw content into global lines and nonblank sections.
+ *
+ * A section is a consecutive group of nonblank lines separated by one or
+ * more blank lines. Global indexes are zero-based internally; every number
+ * presented to an MCP client is one-based.
+ *
+ * @param string $content Raw post content.
+ * @return array
+ */
+function kungfu_2026_mcp_content_map( $content ) {
+	$lines            = explode( "\n", kungfu_2026_mcp_normalize_content( $content ) );
+	$sections         = array();
+	$current_section  = -1;
+	$inside_section   = false;
+
+	foreach ( $lines as $global_index => $line ) {
+		if ( '' === trim( $line ) ) {
+			$inside_section = false;
+			continue;
+		}
+
+		if ( ! $inside_section ) {
+			++$current_section;
+			$sections[ $current_section ] = array();
+			$inside_section = true;
+		}
+
+		$sections[ $current_section ][] = array(
+			'global_index' => $global_index,
+			'global_line'  => $global_index + 1,
+			'section_line' => count( $sections[ $current_section ] ) + 1,
+			'text'         => $line,
+		);
+	}
+
+	return array(
+		'lines'    => $lines,
+		'sections' => $sections,
+	);
+}
+
+/**
+ * Create the content fingerprint required for a targeted edit.
+ *
+ * @param string $content Raw post content.
+ * @return string
+ */
+function kungfu_2026_mcp_content_revision( $content ) {
+	return hash( 'sha256', kungfu_2026_mcp_normalize_content( $content ) );
+}
+
+/**
+ * Run get_post_for_editing and return numbered content for precise edits.
+ *
+ * @param array $arguments Tool arguments.
+ * @return array
+ */
+function kungfu_2026_mcp_get_post_for_editing( $arguments ) {
+	$post_id = isset( $arguments['post_id'] ) && is_int( $arguments['post_id'] ) ? $arguments['post_id'] : 0;
+	$post    = $post_id > 0 ? get_post( $post_id ) : null;
+
+	if ( ! $post || 'post' !== $post->post_type ) {
+		return kungfu_2026_mcp_tool_error( 'A valid WordPress post ID is required.' );
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return kungfu_2026_mcp_tool_error( 'The connected WordPress user cannot read this post for editing.' );
+	}
+
+	$content_map = kungfu_2026_mcp_content_map( $post->post_content );
+	$line_labels = array();
+
+	foreach ( $content_map['sections'] as $section_index => $section_lines ) {
+		foreach ( $section_lines as $line ) {
+			$line_labels[ $line['global_index'] ] = sprintf(
+				'S%d.L%d [global %d]',
+				$section_index + 1,
+				$line['section_line'],
+				$line['global_line']
+			);
+		}
+	}
+
+	$tags = wp_get_post_tags( $post_id, array( 'fields' => 'names' ) );
+	if ( is_wp_error( $tags ) ) {
+		$tags = array();
+	}
+
+	$output = array(
+		sprintf( 'Post ID: %d', $post_id ),
+		'Title: ' . $post->post_title,
+		'Status: ' . $post->post_status,
+		'Tags: ' . ( $tags ? implode( ', ', $tags ) : '(none)' ),
+		'Content revision: ' . kungfu_2026_mcp_content_revision( $post->post_content ),
+		'Reference format: S<section>.L<section-line> [global <line>]. Sections are groups of nonblank raw-content lines separated by blank lines.',
+		'',
+		'Numbered raw content:',
+	);
+
+	foreach ( $content_map['lines'] as $global_index => $line ) {
+		if ( isset( $line_labels[ $global_index ] ) ) {
+			$output[] = $line_labels[ $global_index ] . ' | ' . $line;
+		} else {
+			$output[] = sprintf( '[global %d] | (blank)', $global_index + 1 );
+		}
+	}
+
+	return array(
+		'content' => array(
+			array(
+				'type' => 'text',
+				'text' => implode( "\n", $output ),
+			),
+		),
+	);
+}
+
+/**
  * Run update_post and return an MCP tool result.
  *
  * @param array $arguments Tool arguments.
@@ -430,9 +628,22 @@ function kungfu_2026_mcp_update_post( $arguments ) {
 	$has_title   = array_key_exists( 'title', $arguments );
 	$has_content = array_key_exists( 'content', $arguments );
 	$has_tags    = array_key_exists( 'tags', $arguments );
+	$target_keys = array( 'line_start', 'line_end', 'section', 'section_line_start', 'section_line_end', 'replacement', 'content_revision' );
+	$has_target  = false;
 
-	if ( ! $has_title && ! $has_content && ! $has_tags ) {
-		return kungfu_2026_mcp_tool_error( 'Provide at least one of title, content, or tags.' );
+	foreach ( $target_keys as $target_key ) {
+		if ( array_key_exists( $target_key, $arguments ) ) {
+			$has_target = true;
+			break;
+		}
+	}
+
+	if ( ! $has_title && ! $has_content && ! $has_tags && ! $has_target ) {
+		return kungfu_2026_mcp_tool_error( 'Provide a title, content, tags, or a numbered line replacement.' );
+	}
+
+	if ( $has_content && $has_target ) {
+		return kungfu_2026_mcp_tool_error( 'Use either full content replacement or a numbered line replacement, not both.' );
 	}
 
 	$update         = array( 'ID' => $post_id );
@@ -452,8 +663,74 @@ function kungfu_2026_mcp_update_post( $arguments ) {
 		if ( '' === $content || kungfu_2026_mcp_length( $content ) > 100000 ) {
 			return kungfu_2026_mcp_tool_error( 'Content must contain 1 to 100,000 characters.' );
 		}
-		$update['post_content'] = sanitize_textarea_field( $content );
+		$update['post_content'] = wp_kses_post( $content );
 		$updated_fields[]       = 'content';
+	}
+
+	if ( $has_target ) {
+		$has_global_locator  = array_key_exists( 'line_start', $arguments );
+		$has_section_locator = array_key_exists( 'section', $arguments ) || array_key_exists( 'section_line_start', $arguments );
+
+		if ( $has_global_locator === $has_section_locator ) {
+			return kungfu_2026_mcp_tool_error( 'Choose exactly one locator: a global line range or a section-local line range.' );
+		}
+
+		if ( ! array_key_exists( 'replacement', $arguments ) || ! is_string( $arguments['replacement'] ) ) {
+			return kungfu_2026_mcp_tool_error( 'Replacement text is required for a numbered line edit.' );
+		}
+
+		$provided_revision = isset( $arguments['content_revision'] ) && is_string( $arguments['content_revision'] ) ? strtolower( $arguments['content_revision'] ) : '';
+		$current_revision  = kungfu_2026_mcp_content_revision( $post->post_content );
+
+		if ( 64 !== strlen( $provided_revision ) || ! hash_equals( $current_revision, $provided_revision ) ) {
+			return kungfu_2026_mcp_tool_error( 'The content revision does not match the current post. Call get_post_for_editing again and use its new line references and content_revision.' );
+		}
+
+		$content_map = kungfu_2026_mcp_content_map( $post->post_content );
+		$start_index = -1;
+		$end_index   = -1;
+		$range_label = '';
+
+		if ( $has_global_locator ) {
+			$line_start = is_int( $arguments['line_start'] ) ? $arguments['line_start'] : 0;
+			$line_end   = isset( $arguments['line_end'] ) && is_int( $arguments['line_end'] ) ? $arguments['line_end'] : $line_start;
+
+			if ( $line_start < 1 || $line_end < $line_start || $line_end > count( $content_map['lines'] ) ) {
+				return kungfu_2026_mcp_tool_error( 'The global line range is invalid for the current post.' );
+			}
+
+			$start_index = $line_start - 1;
+			$end_index   = $line_end - 1;
+			$range_label = sprintf( 'global lines %d–%d', $line_start, $line_end );
+		} else {
+			$section_number = isset( $arguments['section'] ) && is_int( $arguments['section'] ) ? $arguments['section'] : 0;
+			$section_start  = isset( $arguments['section_line_start'] ) && is_int( $arguments['section_line_start'] ) ? $arguments['section_line_start'] : 0;
+			$section_end    = isset( $arguments['section_line_end'] ) && is_int( $arguments['section_line_end'] ) ? $arguments['section_line_end'] : $section_start;
+			$section_index  = $section_number - 1;
+
+			if ( $section_number < 1 || ! isset( $content_map['sections'][ $section_index ] ) ) {
+				return kungfu_2026_mcp_tool_error( 'The section number is invalid for the current post.' );
+			}
+
+			$section_lines = $content_map['sections'][ $section_index ];
+			if ( $section_start < 1 || $section_end < $section_start || $section_end > count( $section_lines ) ) {
+				return kungfu_2026_mcp_tool_error( 'The section-local line range is invalid for the current post.' );
+			}
+
+			$start_index = $section_lines[ $section_start - 1 ]['global_index'];
+			$end_index   = $section_lines[ $section_end - 1 ]['global_index'];
+			$range_label = sprintf( 'section %d lines %d–%d', $section_number, $section_start, $section_end );
+		}
+
+		$replacement = wp_kses_post( kungfu_2026_mcp_normalize_content( $arguments['replacement'] ) );
+		if ( kungfu_2026_mcp_length( $replacement ) > 100000 ) {
+			return kungfu_2026_mcp_tool_error( 'Replacement text must be at most 100,000 characters.' );
+		}
+
+		$replacement_lines = '' === $replacement ? array() : explode( "\n", $replacement );
+		array_splice( $content_map['lines'], $start_index, $end_index - $start_index + 1, $replacement_lines );
+		$update['post_content'] = implode( "\n", $content_map['lines'] );
+		$updated_fields[]       = $range_label;
 	}
 
 	$tag_names = array();
@@ -474,7 +751,7 @@ function kungfu_2026_mcp_update_post( $arguments ) {
 		$updated_fields[] = 'tags';
 	}
 
-	if ( $has_title || $has_content ) {
+	if ( $has_title || $has_content || $has_target ) {
 		$result = wp_update_post( wp_slash( $update ), true );
 		if ( is_wp_error( $result ) ) {
 			return kungfu_2026_mcp_tool_error( 'WordPress could not update this post.' );
@@ -493,10 +770,11 @@ function kungfu_2026_mcp_update_post( $arguments ) {
 			array(
 				'type' => 'text',
 				'text' => sprintf(
-					'Post %d updated successfully. Updated: %s. Publication status remains %s.',
+					'Post %d updated successfully. Updated: %s. Publication status remains %s. Current content revision: %s. Call get_post_for_editing again before another line-based edit because line references may have changed.',
 					$post_id,
 					implode( ', ', $updated_fields ),
-					$post->post_status
+					$post->post_status,
+					kungfu_2026_mcp_content_revision( $update['post_content'] ?? $post->post_content )
 				),
 			),
 		),
@@ -543,9 +821,9 @@ function kungfu_2026_handle_mcp_request( WP_REST_Request $request ) {
 				),
 				'serverInfo'      => array(
 					'name'    => 'kungfu-wordpress',
-					'version' => '0.2.0',
+					'version' => '0.4.1',
 				),
-				'instructions'    => 'Use add_post to create a draft. Use update_post to change an existing post title, plain-text content, or tags. Neither tool publishes posts or changes publication status.',
+				'instructions'    => 'Use add_post to create and immediately publish a new post. Before editing a user-referenced section or line, call get_post_for_editing, use its S<section>.L<line> or global line references, and pass its content_revision to update_post. update_post preserves WordPress-safe HTML, including <h2> section headings, but removes unsafe markup. Reread the post after every line-based edit because line references may shift. update_post never changes publication status. There is no tool for changing status after creation.',
 			)
 		);
 	}
@@ -569,6 +847,10 @@ function kungfu_2026_handle_mcp_request( WP_REST_Request $request ) {
 
 		if ( KUNGFU_MCP_TOOL_NAME === $tool_name ) {
 			return kungfu_2026_mcp_result( $id, kungfu_2026_mcp_add_post( $arguments ) );
+		}
+
+		if ( KUNGFU_MCP_READ_TOOL_NAME === $tool_name ) {
+			return kungfu_2026_mcp_result( $id, kungfu_2026_mcp_get_post_for_editing( $arguments ) );
 		}
 
 		if ( KUNGFU_MCP_UPDATE_TOOL_NAME === $tool_name ) {

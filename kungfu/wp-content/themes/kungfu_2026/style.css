@@ -3,7 +3,7 @@ Theme Name: Kungfu 2026
 Theme URI: https://novel.369usa.com/
 Author: Townsquare Interactive
 Description: Serial fiction theme for novel.369usa.com. Chapters are posts, arcs are tags, and chapters are numbered continuously across the whole run.
-Version: 2.22.0
+Version: 2.26.0
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
@@ -450,6 +450,331 @@ h3 {
 	font-size: clamp(1.6rem, 1.25rem + 1.8vw, 2.25rem);
 	line-height: 1.2;
 	letter-spacing: -0.015em;
+}
+
+/* Top row: former-version link left, revision information right. */
+.chapter__head-top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	min-height: 2.6rem;
+	margin: 0 0 calc(0.75rem + 25px);
+}
+
+.chapter__head-top .chapter__version {
+	float: none;
+	margin-left: 0;
+}
+
+.chapter__revision-meta {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.2rem;
+	margin-left: auto;
+}
+
+.chapter__compare {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	min-height: 30px;
+	padding: 0.25rem 0.55rem;
+	border: 1px solid #111;
+	border-radius: 4px;
+	background: #111;
+	color: #fff;
+	font-size: 0.72rem;
+	line-height: 1.2;
+}
+
+.chapter__compare:hover,
+.chapter__compare:focus-visible {
+	border-color: #000;
+	background: #000;
+	color: #fff;
+}
+
+/* ---- Front-end revision comparison ---- */
+
+.revision-compare {
+	max-width: var(--measure);
+}
+
+.revision-compare__head {
+	margin-bottom: 2.5rem;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid var(--rule-soft);
+}
+
+.revision-compare__back {
+	display: inline-block;
+	margin-bottom: 1.5rem;
+	color: var(--ink-soft);
+	font-size: 0.85rem;
+}
+
+.revision-compare__eyebrow {
+	margin: 0 0 0.4rem;
+	color: var(--accent);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.revision-compare__title {
+	margin: 0;
+	font-size: clamp(1.6rem, 1.25rem + 1.8vw, 2.25rem);
+}
+
+.revision-compare__post-id {
+	margin: 0.55rem 0 0;
+	color: var(--ink-faint);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.75rem;
+}
+
+.revision-compare__summary {
+	max-width: var(--measure-text);
+	margin: 0.75rem 0 0;
+	color: var(--ink-soft);
+	font-size: 0.88rem;
+}
+
+.revision-compare__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0 0 2rem;
+}
+
+.revision-compare__filter {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-height: 36px;
+	padding: 0.4rem 0.85rem;
+	border: 1px solid var(--rule);
+	border-radius: 4px;
+	background: var(--paper);
+	color: var(--ink-soft);
+	font-size: 0.78rem;
+}
+
+.revision-compare__filter:hover,
+.revision-compare__filter:focus-visible,
+.revision-compare__filter.is-current {
+	border-color: var(--ink-strong);
+	color: var(--ink-strong);
+}
+
+.revision-compare__filter.is-current {
+	background: var(--shade);
+	font-weight: 600;
+}
+
+.revision-compare__filter-mark {
+	display: inline-block;
+	width: 0.65rem;
+	height: 0.65rem;
+	border-radius: 50%;
+}
+
+.revision-compare__filter--both .revision-compare__filter-mark {
+	background: linear-gradient(90deg, #b42318 0 50%, #175cd3 50% 100%);
+}
+
+.revision-compare__filter--deleted .revision-compare__filter-mark {
+	background: #b42318;
+}
+
+.revision-compare__filter--added .revision-compare__filter-mark {
+	background: #175cd3;
+}
+
+.revision-compare__filter--plain .revision-compare__filter-mark {
+	background: var(--ink-soft);
+}
+
+.revision-compare__section + .revision-compare__section {
+	margin-top: 2.5rem;
+}
+
+.revision-compare__section h2 {
+	margin: 0 0 0.8rem;
+	font-size: 1.1rem;
+}
+
+.revision-compare__diff {
+	overflow-x: auto;
+	border: 1px solid var(--rule);
+	border-radius: 4px;
+}
+
+.revision-compare__diff .diff {
+	width: 100%;
+	min-width: 0;
+	border-collapse: collapse;
+	table-layout: auto;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.82rem;
+	line-height: 1.55;
+}
+
+.revision-compare__diff .diff th {
+	display: none;
+}
+
+.revision-compare__diff .diff td {
+	width: auto;
+	padding: 0.55rem 0.85rem;
+	border: 0;
+	border-bottom: 1px solid var(--rule-soft);
+	vertical-align: top;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.revision-compare__diff .diff-changedline,
+.revision-compare__diff .diff-context {
+	color: var(--ink-strong);
+	text-decoration: none;
+}
+
+.revision-compare__diff .diff td.diff-line-numbers {
+	width: 4.75rem;
+	padding: 0.55rem 0.45rem;
+	background: var(--shade);
+	color: var(--ink-faint);
+	font-size: 0.68rem;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.diff-line-number {
+	display: inline-block;
+	width: 1.75rem;
+}
+
+.diff-line-number--old {
+	color: #b42318;
+}
+
+.diff-line-number--new {
+	color: #175cd3;
+}
+
+.revision-compare__diff .diff tr:last-child td {
+	border-bottom: 0;
+}
+
+.revision-compare__diff .diff-deletedline {
+	background: transparent;
+	color: #b42318;
+	text-decoration: line-through;
+	text-decoration-thickness: 1.5px;
+}
+
+.revision-compare__diff .diff-addedline {
+	background: transparent;
+	color: #175cd3;
+}
+
+.revision-compare__diff del,
+.revision-compare__diff ins {
+	padding: 0 0.12em;
+	text-decoration: none;
+}
+
+.revision-compare__diff del {
+	background: transparent;
+	color: #b42318;
+	text-decoration: line-through;
+	text-decoration-thickness: 1.5px;
+}
+
+.revision-compare__diff ins {
+	background: transparent;
+	color: #175cd3;
+	text-decoration: none;
+}
+
+.revision-compare--changes-deleted .diff-row--added,
+.revision-compare--changes-deleted .diff-row--changed ins,
+.revision-compare--changes-added .diff-row--deleted,
+.revision-compare--changes-added .diff-row--changed del,
+.revision-compare--changes-plain .diff-row--deleted,
+.revision-compare--changes-plain .diff-row--changed del {
+	display: none;
+}
+
+.revision-compare--changes-deleted .diff-line-number--new,
+.revision-compare--changes-added .diff-line-number--old,
+.revision-compare--changes-plain .diff-line-number--old {
+	visibility: hidden;
+}
+
+.revision-compare--changes-plain .diff-addedline,
+.revision-compare--changes-plain ins {
+	color: var(--ink-strong);
+	text-decoration: none;
+}
+
+.revision-compare__unchanged {
+	margin: 0;
+	padding: 0.8rem 1rem;
+	border: 1px solid var(--rule-soft);
+	background: var(--shade);
+	color: var(--ink-soft);
+	font-size: 0.88rem;
+}
+
+@media (max-width: 40rem) {
+	.revision-compare__head {
+		margin-bottom: 1.5rem;
+	}
+
+	.revision-compare__filters {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.35rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.revision-compare__filter {
+		min-width: 0;
+		padding-inline: 0.4rem;
+	}
+
+	.revision-compare__diff {
+		border-radius: 3px;
+	}
+
+	.revision-compare__diff .diff {
+		font-size: 0.76rem;
+		line-height: 1.5;
+	}
+
+	.revision-compare__diff .diff td {
+		padding: 0.65rem;
+	}
+
+	.revision-compare__diff .diff td.diff-line-numbers {
+		width: 3.8rem;
+		padding: 0.65rem 0.3rem;
+		font-size: 0.62rem;
+	}
+
+	.diff-line-number {
+		width: 1.4rem;
+	}
 }
 
 /* ---- Chapter tools ---- */

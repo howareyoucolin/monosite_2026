@@ -147,6 +147,11 @@ require_once get_theme_file_path( 'inc/chapter-tools.php' );
 require_once get_theme_file_path( 'inc/comments.php' );
 
 /**
+ * Administrator-only front-end comparison with the previous saved revision.
+ */
+require_once get_theme_file_path( 'inc/revision-compare.php' );
+
+/**
  * Authenticated, production-ready MCP endpoint for creating draft posts.
  */
 require_once get_theme_file_path( 'inc/mcp-server.php' );
