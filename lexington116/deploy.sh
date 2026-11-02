@@ -24,6 +24,30 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 SITE_NAME="$(basename "$SCRIPT_DIR")"
 CONFIG_FILE="${DEPLOY_CONFIG:-$REPO_ROOT/deploy.config.json}"
+PRODUCTION_ENV="$SCRIPT_DIR/.env.production"
+
+# Notification credentials live only in the gitignored production environment
+# file. They are never part of the theme upload or printed by this script.
+if [[ -f "$PRODUCTION_ENV" ]]; then
+	# shellcheck disable=SC1090
+	source "$PRODUCTION_ENV"
+fi
+
+LUMI_TEXTBELT_API_KEY="${LUMI_TEXTBELT_API_KEY:-}"
+LUMI_TEXTBELT_NOTIFY_PHONE="${LUMI_TEXTBELT_NOTIFY_PHONE:-}"
+SYNC_NOTIFICATION_CONFIG=0
+
+if [[ -n "$LUMI_TEXTBELT_API_KEY" || -n "$LUMI_TEXTBELT_NOTIFY_PHONE" ]]; then
+	if [[ -z "$LUMI_TEXTBELT_API_KEY" || -z "$LUMI_TEXTBELT_NOTIFY_PHONE" ]]; then
+		printf 'Error: .env.production must define both LUMI_TEXTBELT_API_KEY and LUMI_TEXTBELT_NOTIFY_PHONE.\n' >&2
+		exit 1
+	fi
+	if [[ ! "$LUMI_TEXTBELT_NOTIFY_PHONE" =~ ^\+?[0-9]{10,15}$ ]]; then
+		printf 'Error: LUMI_TEXTBELT_NOTIFY_PHONE must contain 10 to 15 digits, optionally prefixed with +.\n' >&2
+		exit 1
+	fi
+	SYNC_NOTIFICATION_CONFIG=1
+fi
 
 usage() {
 	awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"
@@ -323,6 +347,29 @@ elif ! rsh "test -d '$REMOTE_THEMES'"; then
 fi
 printf '    remote themes: %s\n' "$REMOTE_THEMES"
 
+REMOTE_ROOT="${REMOTE_THEMES%/wp-content/themes}"
+if [[ $SYNC_NOTIFICATION_CONFIG -eq 1 ]]; then
+	if [[ "$REMOTE_ROOT" == "$REMOTE_THEMES" ]] || ! rsh "test -f '$REMOTE_ROOT/wp-load.php'"; then
+		printf 'Error: could not resolve the WordPress root needed to configure booking notifications.\n' >&2
+		exit 1
+	fi
+	if ! rsh 'command -v wp >/dev/null'; then
+		printf 'Error: WP-CLI is required remotely to configure booking notifications.\n' >&2
+		exit 1
+	fi
+	printf '    production booking notification credentials are present (values hidden)\n'
+fi
+
+sync_notification_config() {
+	[[ $SYNC_NOTIFICATION_CONFIG -eq 1 ]] || return 0
+
+	printf '==> syncing production booking notification configuration (values hidden)\n'
+	printf '%s\n' "$LUMI_TEXTBELT_API_KEY" |
+		rsh "IFS= read -r secret && wp --path='$REMOTE_ROOT' config set LUMI_TEXTBELT_API_KEY \"\$secret\" --type=constant --quiet"
+	printf '%s\n' "$LUMI_TEXTBELT_NOTIFY_PHONE" |
+		rsh "IFS= read -r secret && wp --path='$REMOTE_ROOT' config set LUMI_TEXTBELT_NOTIFY_PHONE \"\$secret\" --type=constant --quiet"
+}
+
 # A theme prod has never seen is a new install, not an edit. Say so up front.
 for t in "${THEMES[@]}"; do
 	rsh "test -d '$REMOTE_THEMES/$t'" || printf '    new on prod: %s\n' "$t"
@@ -350,7 +397,8 @@ if [[ "$TRANSPORT" == "tar" ]]; then
 	confirm "Overwrite those files on prod?"
 	tar czf - -C "$SOURCE_DIR" --exclude=.DS_Store --exclude=.git "${THEMES[@]}" |
 		rsh "mkdir -p -- '$REMOTE_THEMES' && cd '$REMOTE_THEMES' && tar xzf -"
-	printf 'Deploy complete. Only themes were touched.\n'
+	sync_notification_config
+	printf 'Deploy complete. Themes and configured production notification constants are up to date.\n'
 	exit 0
 fi
 
@@ -388,13 +436,15 @@ done
 CHANGES="$(printf '%s' "$CHANGES" | sed '/^[[:space:]]*$/d')"
 if [[ -z "$CHANGES" ]]; then
 	printf '    prod already matches these themes; nothing to push.\n'
-	exit 0
-fi
-
-printf '%s\n' "$CHANGES"
-printf '    %s item(s) to change\n' "$(printf '%s\n' "$CHANGES" | wc -l | tr -d ' ')"
-if [[ $DELETE_REMOTE -eq 1 ]]; then
-	printf '    --delete is on: lines starting with *deleting are removed from prod\n'
+	if [[ $SYNC_NOTIFICATION_CONFIG -eq 0 ]]; then
+		exit 0
+	fi
+else
+	printf '%s\n' "$CHANGES"
+	printf '    %s item(s) to change\n' "$(printf '%s\n' "$CHANGES" | wc -l | tr -d ' ')"
+	if [[ $DELETE_REMOTE -eq 1 ]]; then
+		printf '    --delete is on: lines starting with *deleting are removed from prod\n'
+	fi
 fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
@@ -402,14 +452,18 @@ if [[ $DRY_RUN -eq 1 ]]; then
 	exit 0
 fi
 
-confirm "Push these changes to prod?"
+confirm "Push theme changes and sync production notification configuration?"
 
-for t in "${THEMES[@]}"; do
-	printf '==> uploading %s\n' "$t"
-	# --progress, not --info=progress2: macOS ships openrsync, which does not
-	# know the newer flag.
-	rsync "${RSYNC_BASE[@]}" --progress \
-		"$SOURCE_DIR/$t/" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_THEMES/$t/"
-done
+if [[ -n "$CHANGES" ]]; then
+	for t in "${THEMES[@]}"; do
+		printf '==> uploading %s\n' "$t"
+		# --progress, not --info=progress2: macOS ships openrsync, which does not
+		# know the newer flag.
+		rsync "${RSYNC_BASE[@]}" --progress \
+			"$SOURCE_DIR/$t/" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_THEMES/$t/"
+	done
+fi
 
-printf '\nDeploy complete. Only wp-content/themes/ was touched.\n'
+sync_notification_config
+
+printf '\nDeploy complete. Themes and configured production notification constants are up to date.\n'

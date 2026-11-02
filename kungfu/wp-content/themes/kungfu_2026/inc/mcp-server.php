@@ -219,7 +219,7 @@ function kungfu_2026_mcp_tools() {
 	return array(
 		array(
 			'name'        => KUNGFU_MCP_TOOL_NAME,
-			'description' => 'Create and immediately publish a new WordPress post with a plain title and short plain-text content. Use this only when the user wants the post publicly visible now.',
+			'description' => 'Create and immediately publish a new WordPress post. Content may be plain text, WordPress-safe HTML, or serialized Gutenberg block markup such as <!-- wp:heading --> and <!-- wp:paragraph -->. Gutenberg comments, headings, paragraphs, links, emphasis, and bold formatting are preserved; unsafe markup is removed.',
 			'inputSchema' => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -232,8 +232,8 @@ function kungfu_2026_mcp_tools() {
 					'content' => array(
 						'type'        => 'string',
 						'minLength'   => 1,
-						'maxLength'   => 2000,
-						'description' => 'Short plain-text post content. HTML is removed.',
+						'maxLength'   => 100000,
+						'description' => 'Post content as plain text, WordPress-safe HTML, or complete serialized Gutenberg blocks. Use valid paired block comments around their matching HTML.',
 					),
 				),
 				'required'             => array( 'title', 'content' ),
@@ -282,7 +282,7 @@ function kungfu_2026_mcp_tools() {
 		),
 		array(
 			'name'        => KUNGFU_MCP_UPDATE_TOOL_NAME,
-			'description' => 'Update an existing WordPress post title, WordPress-safe HTML content, tags, or an exact numbered line range without changing publication status. Safe heading markup such as <h2> is preserved. For section or line edits, first call get_post_for_editing and pass back its content_revision fingerprint.',
+			'description' => 'Update an existing WordPress post title, WordPress-safe HTML or serialized Gutenberg block content, tags, or an exact numbered line range without changing publication status. Existing and replacement Gutenberg comments and block HTML are preserved. For section or line edits, first call get_post_for_editing and pass back its content_revision fingerprint; when editing Gutenberg markup, replace complete block boundaries or send the complete content.',
 			'inputSchema' => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -301,7 +301,7 @@ function kungfu_2026_mcp_tools() {
 						'type'        => 'string',
 						'minLength'   => 1,
 						'maxLength'   => 100000,
-						'description' => 'Optional complete replacement content. WordPress-safe HTML, including section headings such as <h2>, is preserved; unsafe markup is removed.',
+						'description' => 'Optional complete replacement content as plain text, WordPress-safe HTML, or serialized Gutenberg blocks. Gutenberg comments and safe formatting are preserved; unsafe markup is removed.',
 					),
 					'tags'    => array(
 						'type'        => 'array',
@@ -342,7 +342,7 @@ function kungfu_2026_mcp_tools() {
 					'replacement' => array(
 						'type'        => 'string',
 						'maxLength'   => 100000,
-						'description' => 'Replacement content for the selected global or section-local line range. WordPress-safe HTML such as <h2> is preserved. An empty string deletes the selected lines.',
+						'description' => 'Replacement content for the selected global or section-local line range. Safe HTML and serialized Gutenberg markup are preserved. Select complete opening-comment/HTML/closing-comment block boundaries when replacing a Gutenberg block. An empty string deletes the selected lines.',
 					),
 					'content_revision' => array(
 						'type'        => 'string',
@@ -408,13 +408,13 @@ function kungfu_2026_mcp_add_post( $arguments ) {
 		);
 	}
 
-	if ( kungfu_2026_mcp_length( $title ) > 200 || kungfu_2026_mcp_length( $content ) > 2000 ) {
+	if ( kungfu_2026_mcp_length( $title ) > 200 || kungfu_2026_mcp_length( $content ) > 100000 ) {
 		return array(
 			'isError' => true,
 			'content' => array(
 				array(
 					'type' => 'text',
-					'text' => 'Title must be at most 200 characters and content at most 2,000 characters.',
+					'text' => 'Title must be at most 200 characters and content at most 100,000 characters.',
 				),
 			),
 		);
@@ -424,12 +424,20 @@ function kungfu_2026_mcp_add_post( $arguments ) {
 		return kungfu_2026_mcp_tool_error( 'The connected WordPress user cannot publish posts.' );
 	}
 
+	$sanitized_content = kungfu_2026_mcp_sanitize_post_content( $content );
+	if ( '' === trim( $sanitized_content ) ) {
+		return kungfu_2026_mcp_tool_error( 'Content is empty after WordPress safe-content filtering.' );
+	}
+	if ( has_blocks( $content ) && ! has_blocks( $sanitized_content ) ) {
+		return kungfu_2026_mcp_tool_error( 'WordPress could not preserve the supplied Gutenberg block markup. Send valid serialized blocks with paired block comments.' );
+	}
+
 	$post_id = wp_insert_post(
 		array(
 			'post_type'    => 'post',
 			'post_status'  => 'publish',
 			'post_title'   => wp_strip_all_tags( $title ),
-			'post_content' => sanitize_textarea_field( $content ),
+			'post_content' => $sanitized_content,
 			'post_author'  => get_current_user_id(),
 		),
 		true
@@ -487,6 +495,27 @@ function kungfu_2026_mcp_tool_error( $message ) {
  */
 function kungfu_2026_mcp_normalize_content( $content ) {
 	return str_replace( array( "\r\n", "\r" ), "\n", (string) $content );
+}
+
+/**
+ * Sanitize post content without flattening Gutenberg serialization.
+ *
+ * filter_block_content() parses serialized blocks, filters their attributes,
+ * and serializes the result back with its <!-- wp:* --> delimiters intact.
+ * wp_kses_post() then applies WordPress's normal safe-post HTML rules. The
+ * fallback supports older WordPress versions while retaining safe HTML.
+ *
+ * @param string $content Raw post content.
+ * @return string
+ */
+function kungfu_2026_mcp_sanitize_post_content( $content ) {
+	$content = kungfu_2026_mcp_normalize_content( $content );
+
+	if ( function_exists( 'filter_block_content' ) ) {
+		$content = filter_block_content( $content );
+	}
+
+	return wp_kses_post( $content );
 }
 
 /**
@@ -663,7 +692,17 @@ function kungfu_2026_mcp_update_post( $arguments ) {
 		if ( '' === $content || kungfu_2026_mcp_length( $content ) > 100000 ) {
 			return kungfu_2026_mcp_tool_error( 'Content must contain 1 to 100,000 characters.' );
 		}
-		$update['post_content'] = wp_kses_post( $content );
+		if ( has_blocks( $post->post_content ) && ! has_blocks( $content ) ) {
+			return kungfu_2026_mcp_tool_error( 'This post already uses Gutenberg blocks. Full replacement content must also use serialized Gutenberg blocks so existing formatting is not flattened.' );
+		}
+		$sanitized_content = kungfu_2026_mcp_sanitize_post_content( $content );
+		if ( '' === trim( $sanitized_content ) ) {
+			return kungfu_2026_mcp_tool_error( 'Content is empty after WordPress safe-content filtering.' );
+		}
+		if ( has_blocks( $content ) && ! has_blocks( $sanitized_content ) ) {
+			return kungfu_2026_mcp_tool_error( 'WordPress could not preserve the supplied Gutenberg block markup. Send valid serialized blocks with paired block comments.' );
+		}
+		$update['post_content'] = $sanitized_content;
 		$updated_fields[]       = 'content';
 	}
 
@@ -722,14 +761,36 @@ function kungfu_2026_mcp_update_post( $arguments ) {
 			$range_label = sprintf( 'section %d lines %d–%d', $section_number, $section_start, $section_end );
 		}
 
-		$replacement = wp_kses_post( kungfu_2026_mcp_normalize_content( $arguments['replacement'] ) );
+		$raw_replacement = kungfu_2026_mcp_normalize_content( $arguments['replacement'] );
+		if ( has_blocks( $post->post_content ) ) {
+			$selected_content = implode( "\n", array_slice( $content_map['lines'], $start_index, $end_index - $start_index + 1 ) );
+			$has_block_end    = false !== strpos( $selected_content, '<!-- /wp:' ) || (bool) preg_match( '/<!--\s+wp:[^>]+\/-->/', $selected_content );
+
+			if ( ! has_blocks( $selected_content ) || ! $has_block_end ) {
+				return kungfu_2026_mcp_tool_error( 'Targeted edits on a Gutenberg post must select complete serialized blocks, including their opening and closing block comments. Call get_post_for_editing again and select the full block range.' );
+			}
+			if ( '' !== $raw_replacement && ! has_blocks( $raw_replacement ) ) {
+				return kungfu_2026_mcp_tool_error( 'A nonempty replacement for a Gutenberg block range must contain complete serialized Gutenberg blocks.' );
+			}
+		}
+		$replacement     = kungfu_2026_mcp_sanitize_post_content( $raw_replacement );
 		if ( kungfu_2026_mcp_length( $replacement ) > 100000 ) {
 			return kungfu_2026_mcp_tool_error( 'Replacement text must be at most 100,000 characters.' );
+		}
+		if ( has_blocks( $raw_replacement ) && ! has_blocks( $replacement ) ) {
+			return kungfu_2026_mcp_tool_error( 'WordPress could not preserve the replacement Gutenberg block markup. Replace complete blocks with paired block comments.' );
 		}
 
 		$replacement_lines = '' === $replacement ? array() : explode( "\n", $replacement );
 		array_splice( $content_map['lines'], $start_index, $end_index - $start_index + 1, $replacement_lines );
-		$update['post_content'] = implode( "\n", $content_map['lines'] );
+		$updated_content = implode( "\n", $content_map['lines'] );
+		if ( has_blocks( $post->post_content ) ) {
+			$updated_content = kungfu_2026_mcp_sanitize_post_content( $updated_content );
+			if ( ! has_blocks( $updated_content ) ) {
+				return kungfu_2026_mcp_tool_error( 'The targeted edit would break the post’s Gutenberg structure, so no content was changed.' );
+			}
+		}
+		$update['post_content'] = $updated_content;
 		$updated_fields[]       = $range_label;
 	}
 
@@ -821,9 +882,9 @@ function kungfu_2026_handle_mcp_request( WP_REST_Request $request ) {
 				),
 				'serverInfo'      => array(
 					'name'    => 'kungfu-wordpress',
-					'version' => '0.4.1',
+					'version' => '0.5.0',
 				),
-				'instructions'    => 'Use add_post to create and immediately publish a new post. Before editing a user-referenced section or line, call get_post_for_editing, use its S<section>.L<line> or global line references, and pass its content_revision to update_post. update_post preserves WordPress-safe HTML, including <h2> section headings, but removes unsafe markup. Reread the post after every line-based edit because line references may shift. update_post never changes publication status. There is no tool for changing status after creation.',
+				'instructions'    => 'Use add_post to create and immediately publish a new post. Both add_post and update_post accept plain text, WordPress-safe HTML, and serialized Gutenberg block markup. When formatting matters, send canonical Gutenberg blocks with paired <!-- wp:* --> delimiters and matching HTML; <h2>, paragraphs, links, <strong>, and <em> are preserved while unsafe markup is removed. Before editing a user-referenced section or line, call get_post_for_editing, use its S<section>.L<line> or global line references, and pass its content_revision to update_post. For Gutenberg content, replace complete block boundaries or use full-content replacement. Reread after every line edit because references may shift. update_post never changes publication status.',
 			)
 		);
 	}

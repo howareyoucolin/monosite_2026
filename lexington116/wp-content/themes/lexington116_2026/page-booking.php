@@ -1,20 +1,15 @@
 <?php
-/** Preview appointment page, adapted from deyutcm's two-step booking layout. */
+/** Public appointment page, adapted from deyutcm's two-step booking layout. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 get_header();
-if ( ! lexington116_booking_preview_enabled() ) : ?>
-<main id="main" class="inner-page section-inner" data-booking-unavailable>
-    <header class="page-intro"><p class="eyebrow">Lumi Massage</p><h1>Online booking<br><em>is coming soon.</em></h1><p class="page-lead">Online booking is under construction. Please call <?php echo esc_html( lexington116_contact_detail( 'phone' ) ); ?> for appointments.</p></header>
-</main>
-<?php else :
-    list( $min_date, $max_date ) = lexington116_booking_window();
+list( $min_date, $max_date ) = lexington116_booking_window();
 ?>
 <main id="main" class="inner-page booking-page section-inner">
     <header class="page-intro"><p class="eyebrow">Lumi Massage · Appointment request</p><h1>Book your<br><em>massage.</em></h1><p class="page-lead">Choose a preferred date and time, then leave your contact details. Our team will confirm availability; submitting a request does not confirm an appointment.</p></header>
     <?php if ( isset( $_GET['request'] ) && 'received' === $_GET['request'] ) : ?>
         <section class="booking-success" role="status"><h2>Request received.</h2><p>Thank you. Our team will contact you to confirm your appointment.</p></section>
     <?php else : ?>
-    <form class="booking-form" method="post" action="<?php echo esc_url( add_query_arg( 'ff', '1', admin_url( 'admin-post.php' ) ) ); ?>">
+    <form class="booking-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
         <input type="hidden" name="action" value="lumi_booking">
         <?php wp_nonce_field( 'lumi_booking_request', 'lumi_booking_nonce' ); ?>
         <div class="booking-honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
@@ -42,4 +37,4 @@ if ( ! lexington116_booking_preview_enabled() ) : ?>
     </form>
     <?php endif; ?>
 </main>
-<?php endif; get_footer(); ?>
+<?php get_footer(); ?>

@@ -73,15 +73,14 @@ Old Visit Us links remain supported but are not in the navigation.
 pink-lit massage room, created with the built-in image tool. It is not a photograph
 of the actual premises. Exact prompt: `assets/about-room-prompt.txt`.
 
-## Booking preview (`ff=1`)
+## Public booking
 
 Booking follows deyutcm's two-step date/time + contact-details layout, adapted
 into this theme in English, using Lumi's hours and prices. No deyutcm endpoint,
 database, or file is changed or used for submissions.
 
-- Add `?ff=1` to the home URL to enable booking links; the flag follows navigation.
-- The booking page and its POST handler both require the exact query flag `ff=1`.
-- No flag, `ff=0`, or other values keep the under-construction booking modal.
+- Booking links go directly to the booking page; no query flag is required.
+- The booking page and its POST handler are publicly available.
 - Requests are saved privately under **Appointment requests** in Lumi wp-admin,
   visible to administrators. In production, an email is sent to
   `howareyoucolin@gmail.com` and a staff SMS is sent through Textbelt when
@@ -92,8 +91,8 @@ database, or file is changed or used for submissions.
 - Submission uses WordPress nonces, a honeypot, and server-side field validation.
 - Theme activation or the next administrator visit creates the Booking page.
 
-This query flag is a preview switch, not password protection. Preview and booking
-responses send no-cache headers; configure any hosting/CDN cache to honor them.
+Booking responses send no-cache headers; configure any hosting/CDN cache to
+honor them.
 
 ### Textbelt staff notifications
 
@@ -106,9 +105,12 @@ define( 'LUMI_TEXTBELT_API_KEY', 'replace-with-a-new-textbelt-key' );
 define( 'LUMI_TEXTBELT_NOTIFY_PHONE', 'replace-with-the-staff-mobile-number' );
 ```
 
-Do not put the API key in the theme or commit it to Git. Rotate the key that was
-previously exposed. SMS failures do not discard the appointment; the result is
-shown on that request in **Appointment requests** in wp-admin.
+Do not put the API key in the theme or commit it to Git. For this repository,
+place both values in the project’s gitignored `.env.production`; a real
+`npm run deploy` syncs them into `wp-config.php` through remote WP-CLI without
+printing their values. Rotate any key that was previously exposed. SMS failures
+do not discard the appointment; the result is shown on that request in
+**Appointment requests** in wp-admin.
 
 Booking email uses WordPress `wp_mail()` and defaults to
 `howareyoucolin@gmail.com`. It can be overridden in production with:

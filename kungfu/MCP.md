@@ -8,9 +8,37 @@ https://novel.369usa.com/wp-json/kungfu-mcp/v1/mcp
 
 It exposes three tools:
 
-- `add_post` accepts a title and up to 2,000 characters of plain text. It immediately publishes the new post.
+- `add_post` accepts a title and up to 100,000 characters of plain text, WordPress-safe HTML, or serialized Gutenberg blocks. It immediately publishes the new post.
 - `get_post_for_editing` returns a post’s title, status, tags, content fingerprint, and numbered raw content. Nonblank lines are addressable as `S2.L3` (section 2, line 3) or by their global line number.
-- `update_post` changes an existing post’s title, WordPress-safe HTML content, complete tag list, or an exact numbered line range. Safe markup such as `<h2>` section headings is preserved, while unsafe markup is removed. It never changes the post’s publication status.
+- `update_post` changes an existing post’s title, WordPress-safe HTML or serialized Gutenberg block content, complete tag list, or an exact numbered line range. Gutenberg delimiters and safe formatting are preserved, while unsafe markup is removed. It never changes the post’s publication status.
+
+## Gutenberg content
+
+Both writing tools support canonical serialized Gutenberg markup. Prefer this
+form whenever editable WordPress formatting matters:
+
+```html
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Section 1: Overview</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>This paragraph contains <strong>bold text</strong> and <em>italics</em>.</p>
+<!-- /wp:paragraph -->
+```
+
+The server uses WordPress’s block parser and safe-post HTML filter, which parse
+and reserialize blocks while preserving their `<!-- wp:* -->` delimiters and
+safe inner HTML. Unsafe elements and attributes are removed. If submitted content
+contains Gutenberg delimiters but they cannot be preserved, the tool returns an
+error instead of silently flattening the post.
+
+If an existing post already uses Gutenberg blocks, `update_post` rejects a
+plain-HTML or plain-text full replacement. The replacement must remain serialized
+Gutenberg content. Targeted edits on such a post must select complete block
+boundaries and either replace them with complete serialized blocks or delete the
+selected blocks. These guards prevent an edit from silently destroying existing
+block formatting.
 
 ## Editing a section or line
 
@@ -24,7 +52,7 @@ Use this read-before-write workflow whenever a user identifies part of a post in
 
 For example, a user can say “replace section 2, lines 3–4” or “replace global line 18.” An empty `replacement` deletes the selected range. The server rejects the edit if the post changed after it was read, preventing stale line references from modifying the wrong text.
 
-Full-content replacement remains available through `content` and does not use line references. Do not send `content` and a targeted line replacement in the same call.
+Full-content replacement remains available through `content` and does not use line references. Do not send `content` and a targeted line replacement in the same call. For Gutenberg posts, full-content replacement is safest. A targeted line replacement must include the complete opening block comment, matching HTML, and closing block comment so it cannot leave a broken block behind.
 
 Section titles may be supplied as HTML headings, for example:
 
@@ -34,7 +62,7 @@ Section titles may be supplied as HTML headings, for example:
 <h2>Section 3: Name</h2>
 ```
 
-Both full-content updates and targeted `replacement` updates preserve these headings through WordPress’s safe-HTML filtering.
+Both full-content updates and targeted `replacement` updates preserve these headings through WordPress’s safe-HTML filtering. Serialized Gutenberg headings are preferred when the content should remain directly editable as blocks.
 
 Example read call:
 

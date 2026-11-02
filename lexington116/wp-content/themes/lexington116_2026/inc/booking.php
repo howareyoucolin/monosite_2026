@@ -1,14 +1,6 @@
 <?php
-/** Feature-gated appointment requests for Lumi. */
+/** Appointment requests for Lumi. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-
-function lexington116_booking_preview_enabled() {
-    return isset( $_GET['ff'] ) && is_string( $_GET['ff'] ) && '1' === $_GET['ff'];
-}
-
-function lexington116_preview_url( $url ) {
-    return lexington116_booking_preview_enabled() ? add_query_arg( 'ff', '1', $url ) : $url;
-}
 
 function lexington116_booking_window() {
     $today = new DateTimeImmutable( 'today', new DateTimeZone( 'America/New_York' ) );
@@ -120,9 +112,6 @@ add_action( 'add_meta_boxes_lumi_appointment', function () {
 } );
 
 function lexington116_submit_booking() {
-    if ( ! lexington116_booking_preview_enabled() ) {
-        wp_die( 'Online booking is under construction. Please call Lumi Massage.', 'Booking unavailable', array( 'response' => 403 ) );
-    }
     if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
         wp_die( 'Please use the appointment form.', 'Invalid request', array( 'response' => 405 ) );
     }
@@ -187,15 +176,15 @@ function lexington116_submit_booking() {
         }
     }
     update_post_meta( $id, '_lumi_sms_status', sanitize_text_field( $sms_status ) );
-    wp_safe_redirect( add_query_arg( array( 'ff' => '1', 'request' => 'received' ), lexington116_page_url( 'booking' ) ), 303 );
+    wp_safe_redirect( add_query_arg( 'request', 'received', lexington116_page_url( 'booking' ) ), 303 );
     exit;
 }
 add_action( 'admin_post_nopriv_lumi_booking', 'lexington116_submit_booking' );
 add_action( 'admin_post_lumi_booking', 'lexington116_submit_booking' );
 
-// Prevent shared page caches from mixing the preview with the public modal.
+// Booking selections and the success response must not be served from cache.
 add_action( 'template_redirect', function () {
-    if ( lexington116_booking_preview_enabled() || is_page( 'booking' ) ) {
+    if ( is_page( 'booking' ) ) {
         if ( ! defined( 'DONOTCACHEPAGE' ) ) { define( 'DONOTCACHEPAGE', true ); }
         nocache_headers();
     }

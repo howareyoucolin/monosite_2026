@@ -14,7 +14,7 @@ add_action( 'wp_enqueue_scripts', function () {
     wp_enqueue_style( 'lexington116-fonts', get_theme_file_uri( '/assets/fonts.css' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/fonts.css' ) );
     wp_enqueue_style( 'lexington116', get_stylesheet_uri(), array( 'lexington116-fonts' ), (string) filemtime( get_stylesheet_directory() . '/style.css' ) );
     wp_enqueue_script( 'lexington116', get_theme_file_uri( '/assets/site.js' ), array(), (string) filemtime( get_stylesheet_directory() . '/assets/site.js' ), true );
-    if ( is_page( 'booking' ) && lexington116_booking_preview_enabled() ) {
+    if ( is_page( 'booking' ) ) {
         wp_enqueue_style( 'lumi-booking', get_theme_file_uri( '/assets/booking.css' ), array( 'lexington116' ), (string) filemtime( get_theme_file_path( '/assets/booking.css' ) ) );
         wp_enqueue_script( 'lumi-booking', get_theme_file_uri( '/assets/booking.js' ), array( 'jquery', 'jquery-ui-datepicker' ), (string) filemtime( get_theme_file_path( '/assets/booking.js' ) ), true );
     }
@@ -40,13 +40,9 @@ function lexington116_contact_detail( $key ) {
     return get_theme_mod( 'lexington116_' . $key, '' ) ?: $defaults[ $key ];
 }
 
-/** Only ff=1 enables the booking page; public visitors keep the modal. */
+/** Print a public booking link. */
 function lexington116_booking_link( $label, $class ) {
-    if ( lexington116_booking_preview_enabled() ) {
-        printf( '<a class="%s" href="%s">%s</a>', esc_attr( $class ), esc_url( lexington116_page_url( 'booking' ) ), esc_html( $label ) );
-    } else {
-        printf( '<button type="button" class="%s" data-open-booking>%s</button>', esc_attr( $class ), esc_html( $label ) );
-    }
+    printf( '<a class="%s" href="%s">%s</a>', esc_attr( $class ), esc_url( lexington116_page_url( 'booking' ) ), esc_html( $label ) );
 }
 
 add_action( 'customize_register', function ( $customizer ) {
@@ -106,5 +102,5 @@ add_action( 'admin_init', function () {
 
 function lexington116_page_url( $slug ) {
     $page = get_page_by_path( $slug, OBJECT, 'page' );
-    return lexington116_preview_url( $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' ) );
+    return $page ? get_permalink( $page ) : home_url( '/' . $slug . '/' );
 }

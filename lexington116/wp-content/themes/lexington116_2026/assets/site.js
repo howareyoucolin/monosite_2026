@@ -22,24 +22,6 @@
       toggle.focus();
     }
   });
-  const dialog = document.querySelector("#booking-dialog");
-  document.querySelectorAll("[data-open-booking]").forEach((button) => {
-    button.addEventListener("click", () => dialog?.showModal());
-  });
-  dialog
-    ?.querySelector(".dialog-close")
-    ?.addEventListener("click", () => dialog.close());
-  dialog?.addEventListener("click", (event) => {
-    if (event.target !== dialog) return;
-    const bounds = dialog.getBoundingClientRect();
-    if (
-      event.clientX < bounds.left ||
-      event.clientX > bounds.right ||
-      event.clientY < bounds.top ||
-      event.clientY > bounds.bottom
-    )
-      dialog.close();
-  });
   // Move the same controls on mobile, preserving their desktop position.
   const heroActions = document.querySelector('.hero-actions');
   const heroInner = document.querySelector('.hero-inner');
@@ -66,7 +48,6 @@
     });
     frame.src = frame.dataset.src;
   });
-  if (document.querySelector('[data-booking-unavailable]')) dialog?.showModal();
   const video = document.querySelector('.hero-video');
   const videoToggle = document.querySelector('.video-toggle');
   if (video && videoToggle) {

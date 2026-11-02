@@ -91,6 +91,13 @@ for all options, including `--config` to select a different configuration file.
 No deployment target is committed to the repository; local configuration stays
 in the gitignored `../deploy.config.json`.
 
+Production booking notification secrets belong in the gitignored
+`.env.production` file as `LUMI_TEXTBELT_API_KEY` and
+`LUMI_TEXTBELT_NOTIFY_PHONE`. On a real deployment, `deploy.sh` securely sends
+their values over SSH stdin and uses remote WP-CLI to create or update the
+matching constants in production `wp-config.php`. Values are hidden from deploy
+output. A dry run reports only whether notification configuration is present.
+
 ## Site seeder
 
 The idempotent seeder activates the Lexington theme, creates or republishes Home,

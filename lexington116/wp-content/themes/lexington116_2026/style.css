@@ -1,7 +1,7 @@
 /*
 Theme Name: Lexington116 2026
 Description: A calm, editorial massage theme for 116 Lexington.
-Version: 1.1.0
+Version: 1.2.0
 Requires at least: 6.0
 Requires PHP: 8.2
 Text Domain: lexington116
@@ -471,46 +471,6 @@ h2 {
   text-decoration: none;
   justify-self: end;
 }
-.booking-dialog {
-  width: min(520px, calc(100% - 36px));
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 54px 42px;
-  background: var(--background);
-  color: var(--text);
-  box-shadow: 0 24px 100px #00000090;
-}
-.booking-dialog::backdrop {
-  background: #000000b3;
-  backdrop-filter: blur(5px);
-}
-.booking-dialog .eyebrow {
-  margin-bottom: 20px;
-}
-.booking-dialog h2 {
-  font-size: 49px;
-  margin-bottom: 22px;
-}
-.booking-dialog > p:not(.eyebrow) {
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text-muted);
-  margin-bottom: 20px;
-}
-.dialog-close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  width: 38px;
-  height: 38px;
-  background: transparent;
-  border: 0;
-  color: var(--text);
-  font-size: 28px;
-}
-.booking-dialog .dialog-address {
-  margin-top: 22px;
-}
 .content-page {
   padding-block: 80px;
   min-height: 65vh;
@@ -806,12 +766,6 @@ h2 {
   }
   .footer-booking {
     justify-self: start;
-  }
-  .booking-dialog {
-    padding: 48px 27px 30px;
-  }
-  .booking-dialog h2 {
-    font-size: 43px;
   }
 }
 @media (max-width: 600px) {
