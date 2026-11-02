@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/mcp-block-editing.php';
+
 const KUNGFU_MCP_PROTOCOL_VERSION = '2025-06-18';
 const KUNGFU_MCP_TOOL_NAME        = 'add_post';
 const KUNGFU_MCP_READ_TOOL_NAME   = 'get_post_for_editing';
@@ -254,7 +256,7 @@ function kungfu_2026_mcp_tools() {
 		),
 		array(
 			'name'        => KUNGFU_MCP_READ_TOOL_NAME,
-			'description' => 'Read a WordPress post before editing it. Returns its title, status, tags, content revision fingerprint, and raw content grouped into numbered sections and numbered lines. Call this before update_post when the user refers to a section or line.',
+			'description' => 'Read a WordPress post before editing it. Returns its title, status, tags, content revision fingerprint, and raw content grouped into numbered sections and numbered lines. Also returns exact raw content, block IDs, and named H2 sections. Call before insert_content or update_content_block.',
 			'inputSchema' => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -280,99 +282,8 @@ function kungfu_2026_mcp_tools() {
 				),
 			),
 		),
-		array(
-			'name'        => KUNGFU_MCP_UPDATE_TOOL_NAME,
-			'description' => 'Update an existing WordPress post title, WordPress-safe HTML or serialized Gutenberg block content, tags, or an exact numbered line range without changing publication status. Existing and replacement Gutenberg comments and block HTML are preserved. For section or line edits, first call get_post_for_editing and pass back its content_revision fingerprint; when editing Gutenberg markup, replace complete block boundaries or send the complete content.',
-			'inputSchema' => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'post_id' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => 'The WordPress post ID to update.',
-					),
-					'title'   => array(
-						'type'        => 'string',
-						'minLength'   => 1,
-						'maxLength'   => 200,
-						'description' => 'Optional replacement post title.',
-					),
-					'content' => array(
-						'type'        => 'string',
-						'minLength'   => 1,
-						'maxLength'   => 100000,
-						'description' => 'Optional complete replacement content as plain text, WordPress-safe HTML, or serialized Gutenberg blocks. Gutenberg comments and safe formatting are preserved; unsafe markup is removed.',
-					),
-					'tags'    => array(
-						'type'        => 'array',
-						'maxItems'    => 30,
-						'uniqueItems' => true,
-						'description' => 'Optional complete replacement list of tag names. Send an empty list to remove all tags.',
-						'items'       => array(
-							'type'      => 'string',
-							'minLength' => 1,
-							'maxLength' => 100,
-						),
-					),
-					'line_start' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => 'Optional 1-based global starting line from get_post_for_editing.',
-					),
-					'line_end' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => 'Optional inclusive global ending line. Defaults to line_start.',
-					),
-					'section' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => 'Optional 1-based section number from get_post_for_editing.',
-					),
-					'section_line_start' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => 'Optional 1-based line within the selected section.',
-					),
-					'section_line_end' => array(
-						'type'        => 'integer',
-						'minimum'     => 1,
-						'description' => 'Optional inclusive ending line within the section. Defaults to section_line_start.',
-					),
-					'replacement' => array(
-						'type'        => 'string',
-						'maxLength'   => 100000,
-						'description' => 'Replacement content for the selected global or section-local line range. Safe HTML and serialized Gutenberg markup are preserved. Select complete opening-comment/HTML/closing-comment block boundaries when replacing a Gutenberg block. An empty string deletes the selected lines.',
-					),
-					'content_revision' => array(
-						'type'        => 'string',
-						'pattern'     => '^[a-f0-9]{64}$',
-						'description' => 'SHA-256 content fingerprint returned by get_post_for_editing. Required for line-based edits.',
-					),
-				),
-				'required'             => array( 'post_id' ),
-				'anyOf'                => array(
-					array( 'required' => array( 'title' ) ),
-					array( 'required' => array( 'content' ) ),
-					array( 'required' => array( 'tags' ) ),
-					array( 'required' => array( 'line_start', 'replacement', 'content_revision' ) ),
-					array( 'required' => array( 'section', 'section_line_start', 'replacement', 'content_revision' ) ),
-				),
-				'additionalProperties' => false,
-			),
-			'annotations' => array(
-				'title'           => 'Update a post',
-				'readOnlyHint'    => false,
-				'destructiveHint' => true,
-				'idempotentHint'  => true,
-				'openWorldHint'   => false,
-			),
-			'securitySchemes' => array(
-				array(
-					'type' => 'noauth',
-				),
-			),
-		),
+		// Block editing tools and the metadata-only update tool share this registry.
+		...kungfu_2026_mcp_editing_tools(),
 	);
 }
 
@@ -567,7 +478,7 @@ function kungfu_2026_mcp_content_map( $content ) {
  * @return string
  */
 function kungfu_2026_mcp_content_revision( $content ) {
-	return hash( 'sha256', kungfu_2026_mcp_normalize_content( $content ) );
+	return hash( 'sha256', (string) $content );
 }
 
 /**
@@ -612,7 +523,7 @@ function kungfu_2026_mcp_get_post_for_editing( $arguments ) {
 		'Title: ' . $post->post_title,
 		'Status: ' . $post->post_status,
 		'Tags: ' . ( $tags ? implode( ', ', $tags ) : '(none)' ),
-		'Content revision: ' . kungfu_2026_mcp_content_revision( $post->post_content ),
+		'Content revision: ' . kungfu_2026_mcp_edit_revision( $post ),
 		'Reference format: S<section>.L<section-line> [global <line>]. Sections are groups of nonblank raw-content lines separated by blank lines.',
 		'',
 		'Numbered raw content:',
@@ -626,8 +537,11 @@ function kungfu_2026_mcp_get_post_for_editing( $arguments ) {
 		}
 	}
 
+	$snapshot = kungfu_2026_mcp_editing_snapshot( $post );
 	return array(
+		'structuredContent' => $snapshot,
 		'content' => array(
+			array( 'type' => 'text', 'text' => wp_json_encode( $snapshot, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
 			array(
 				'type' => 'text',
 				'text' => implode( "\n", $output ),
@@ -643,203 +557,38 @@ function kungfu_2026_mcp_get_post_for_editing( $arguments ) {
  * @return array
  */
 function kungfu_2026_mcp_update_post( $arguments ) {
-	$post_id = isset( $arguments['post_id'] ) && is_int( $arguments['post_id'] ) ? $arguments['post_id'] : 0;
-	$post    = $post_id > 0 ? get_post( $post_id ) : null;
-
-	if ( ! $post || 'post' !== $post->post_type ) {
-		return kungfu_2026_mcp_tool_error( 'A valid WordPress post ID is required.' );
+	// Prevent old cached schemas from routing partial requests through full replacement.
+	if ( array_diff( array_keys( $arguments ), array( 'post_id', 'title', 'tags' ) ) ) {
+		return kungfu_2026_mcp_tool_error( 'update_post only edits title and tags. For content, read get_post_for_editing and use insert_content or update_content_block with dry_run and content_revision.' );
 	}
-
-	if ( ! current_user_can( 'edit_post', $post_id ) ) {
-		return kungfu_2026_mcp_tool_error( 'The connected WordPress user cannot edit this post.' );
+	$post_id = $arguments['post_id'] ?? null;
+	$post = is_int( $post_id ) && $post_id > 0 ? get_post( $post_id ) : null;
+	if ( ! $post || 'post' !== $post->post_type || ! current_user_can( 'edit_post', $post_id ) ) {
+		return kungfu_2026_mcp_tool_error( 'A valid editable post ID is required.' );
 	}
-
-	$has_title   = array_key_exists( 'title', $arguments );
-	$has_content = array_key_exists( 'content', $arguments );
-	$has_tags    = array_key_exists( 'tags', $arguments );
-	$target_keys = array( 'line_start', 'line_end', 'section', 'section_line_start', 'section_line_end', 'replacement', 'content_revision' );
-	$has_target  = false;
-
-	foreach ( $target_keys as $target_key ) {
-		if ( array_key_exists( $target_key, $arguments ) ) {
-			$has_target = true;
-			break;
-		}
-	}
-
-	if ( ! $has_title && ! $has_content && ! $has_tags && ! $has_target ) {
-		return kungfu_2026_mcp_tool_error( 'Provide a title, content, tags, or a numbered line replacement.' );
-	}
-
-	if ( $has_content && $has_target ) {
-		return kungfu_2026_mcp_tool_error( 'Use either full content replacement or a numbered line replacement, not both.' );
-	}
-
-	$update         = array( 'ID' => $post_id );
-	$updated_fields = array();
-
-	if ( $has_title ) {
-		$title = is_string( $arguments['title'] ) ? trim( $arguments['title'] ) : '';
-		if ( '' === $title || kungfu_2026_mcp_length( $title ) > 200 ) {
+	$update = array( 'ID' => $post_id );
+	if ( isset( $arguments['title'] ) ) {
+		if ( ! is_string( $arguments['title'] ) || '' === trim( $arguments['title'] ) || kungfu_2026_mcp_length( $arguments['title'] ) > 200 ) {
 			return kungfu_2026_mcp_tool_error( 'Title must contain 1 to 200 characters.' );
 		}
-		$update['post_title'] = wp_strip_all_tags( $title );
-		$updated_fields[]     = 'title';
+		$update['post_title'] = wp_strip_all_tags( $arguments['title'] );
 	}
-
-	if ( $has_content ) {
-		$content = is_string( $arguments['content'] ) ? trim( $arguments['content'] ) : '';
-		if ( '' === $content || kungfu_2026_mcp_length( $content ) > 100000 ) {
-			return kungfu_2026_mcp_tool_error( 'Content must contain 1 to 100,000 characters.' );
-		}
-		if ( has_blocks( $post->post_content ) && ! has_blocks( $content ) ) {
-			return kungfu_2026_mcp_tool_error( 'This post already uses Gutenberg blocks. Full replacement content must also use serialized Gutenberg blocks so existing formatting is not flattened.' );
-		}
-		$sanitized_content = kungfu_2026_mcp_sanitize_post_content( $content );
-		if ( '' === trim( $sanitized_content ) ) {
-			return kungfu_2026_mcp_tool_error( 'Content is empty after WordPress safe-content filtering.' );
-		}
-		if ( has_blocks( $content ) && ! has_blocks( $sanitized_content ) ) {
-			return kungfu_2026_mcp_tool_error( 'WordPress could not preserve the supplied Gutenberg block markup. Send valid serialized blocks with paired block comments.' );
-		}
-		$update['post_content'] = $sanitized_content;
-		$updated_fields[]       = 'content';
-	}
-
-	if ( $has_target ) {
-		$has_global_locator  = array_key_exists( 'line_start', $arguments );
-		$has_section_locator = array_key_exists( 'section', $arguments ) || array_key_exists( 'section_line_start', $arguments );
-
-		if ( $has_global_locator === $has_section_locator ) {
-			return kungfu_2026_mcp_tool_error( 'Choose exactly one locator: a global line range or a section-local line range.' );
-		}
-
-		if ( ! array_key_exists( 'replacement', $arguments ) || ! is_string( $arguments['replacement'] ) ) {
-			return kungfu_2026_mcp_tool_error( 'Replacement text is required for a numbered line edit.' );
-		}
-
-		$provided_revision = isset( $arguments['content_revision'] ) && is_string( $arguments['content_revision'] ) ? strtolower( $arguments['content_revision'] ) : '';
-		$current_revision  = kungfu_2026_mcp_content_revision( $post->post_content );
-
-		if ( 64 !== strlen( $provided_revision ) || ! hash_equals( $current_revision, $provided_revision ) ) {
-			return kungfu_2026_mcp_tool_error( 'The content revision does not match the current post. Call get_post_for_editing again and use its new line references and content_revision.' );
-		}
-
-		$content_map = kungfu_2026_mcp_content_map( $post->post_content );
-		$start_index = -1;
-		$end_index   = -1;
-		$range_label = '';
-
-		if ( $has_global_locator ) {
-			$line_start = is_int( $arguments['line_start'] ) ? $arguments['line_start'] : 0;
-			$line_end   = isset( $arguments['line_end'] ) && is_int( $arguments['line_end'] ) ? $arguments['line_end'] : $line_start;
-
-			if ( $line_start < 1 || $line_end < $line_start || $line_end > count( $content_map['lines'] ) ) {
-				return kungfu_2026_mcp_tool_error( 'The global line range is invalid for the current post.' );
-			}
-
-			$start_index = $line_start - 1;
-			$end_index   = $line_end - 1;
-			$range_label = sprintf( 'global lines %d–%d', $line_start, $line_end );
-		} else {
-			$section_number = isset( $arguments['section'] ) && is_int( $arguments['section'] ) ? $arguments['section'] : 0;
-			$section_start  = isset( $arguments['section_line_start'] ) && is_int( $arguments['section_line_start'] ) ? $arguments['section_line_start'] : 0;
-			$section_end    = isset( $arguments['section_line_end'] ) && is_int( $arguments['section_line_end'] ) ? $arguments['section_line_end'] : $section_start;
-			$section_index  = $section_number - 1;
-
-			if ( $section_number < 1 || ! isset( $content_map['sections'][ $section_index ] ) ) {
-				return kungfu_2026_mcp_tool_error( 'The section number is invalid for the current post.' );
-			}
-
-			$section_lines = $content_map['sections'][ $section_index ];
-			if ( $section_start < 1 || $section_end < $section_start || $section_end > count( $section_lines ) ) {
-				return kungfu_2026_mcp_tool_error( 'The section-local line range is invalid for the current post.' );
-			}
-
-			$start_index = $section_lines[ $section_start - 1 ]['global_index'];
-			$end_index   = $section_lines[ $section_end - 1 ]['global_index'];
-			$range_label = sprintf( 'section %d lines %d–%d', $section_number, $section_start, $section_end );
-		}
-
-		$raw_replacement = kungfu_2026_mcp_normalize_content( $arguments['replacement'] );
-		if ( has_blocks( $post->post_content ) ) {
-			$selected_content = implode( "\n", array_slice( $content_map['lines'], $start_index, $end_index - $start_index + 1 ) );
-			$has_block_end    = false !== strpos( $selected_content, '<!-- /wp:' ) || (bool) preg_match( '/<!--\s+wp:[^>]+\/-->/', $selected_content );
-
-			if ( ! has_blocks( $selected_content ) || ! $has_block_end ) {
-				return kungfu_2026_mcp_tool_error( 'Targeted edits on a Gutenberg post must select complete serialized blocks, including their opening and closing block comments. Call get_post_for_editing again and select the full block range.' );
-			}
-			if ( '' !== $raw_replacement && ! has_blocks( $raw_replacement ) ) {
-				return kungfu_2026_mcp_tool_error( 'A nonempty replacement for a Gutenberg block range must contain complete serialized Gutenberg blocks.' );
-			}
-		}
-		$replacement     = kungfu_2026_mcp_sanitize_post_content( $raw_replacement );
-		if ( kungfu_2026_mcp_length( $replacement ) > 100000 ) {
-			return kungfu_2026_mcp_tool_error( 'Replacement text must be at most 100,000 characters.' );
-		}
-		if ( has_blocks( $raw_replacement ) && ! has_blocks( $replacement ) ) {
-			return kungfu_2026_mcp_tool_error( 'WordPress could not preserve the replacement Gutenberg block markup. Replace complete blocks with paired block comments.' );
-		}
-
-		$replacement_lines = '' === $replacement ? array() : explode( "\n", $replacement );
-		array_splice( $content_map['lines'], $start_index, $end_index - $start_index + 1, $replacement_lines );
-		$updated_content = implode( "\n", $content_map['lines'] );
-		if ( has_blocks( $post->post_content ) ) {
-			$updated_content = kungfu_2026_mcp_sanitize_post_content( $updated_content );
-			if ( ! has_blocks( $updated_content ) ) {
-				return kungfu_2026_mcp_tool_error( 'The targeted edit would break the post’s Gutenberg structure, so no content was changed.' );
-			}
-		}
-		$update['post_content'] = $updated_content;
-		$updated_fields[]       = $range_label;
-	}
-
-	$tag_names = array();
-	if ( $has_tags ) {
+	if ( array_key_exists( 'tags', $arguments ) ) {
 		if ( ! is_array( $arguments['tags'] ) || count( $arguments['tags'] ) > 30 ) {
-			return kungfu_2026_mcp_tool_error( 'Tags must be a list containing at most 30 tag names.' );
+			return kungfu_2026_mcp_tool_error( 'Tags must be a list of at most 30 names.' );
 		}
-
 		foreach ( $arguments['tags'] as $tag ) {
-			$tag = is_string( $tag ) ? trim( $tag ) : '';
-			if ( '' === $tag || kungfu_2026_mcp_length( $tag ) > 100 ) {
+			if ( ! is_string( $tag ) || '' === trim( $tag ) || kungfu_2026_mcp_length( $tag ) > 100 ) {
 				return kungfu_2026_mcp_tool_error( 'Each tag must contain 1 to 100 characters.' );
 			}
-			$tag_names[] = sanitize_text_field( $tag );
 		}
-
-		$tag_names        = array_values( array_unique( $tag_names ) );
-		$updated_fields[] = 'tags';
+		$update['tags_input'] = array_map( 'sanitize_text_field', $arguments['tags'] );
 	}
-
-	if ( $has_title || $has_content || $has_target ) {
-		$result = wp_update_post( wp_slash( $update ), true );
-		if ( is_wp_error( $result ) ) {
-			return kungfu_2026_mcp_tool_error( 'WordPress could not update this post.' );
-		}
+	if ( count( $update ) < 2 ) {
+		return kungfu_2026_mcp_tool_error( 'Provide title or tags.' );
 	}
-
-	if ( $has_tags ) {
-		$result = wp_set_post_tags( $post_id, $tag_names, false );
-		if ( is_wp_error( $result ) ) {
-			return kungfu_2026_mcp_tool_error( 'WordPress could not update this post’s tags.' );
-		}
-	}
-
-	return array(
-		'content' => array(
-			array(
-				'type' => 'text',
-				'text' => sprintf(
-					'Post %d updated successfully. Updated: %s. Publication status remains %s. Current content revision: %s. Call get_post_for_editing again before another line-based edit because line references may have changed.',
-					$post_id,
-					implode( ', ', $updated_fields ),
-					$post->post_status,
-					kungfu_2026_mcp_content_revision( $update['post_content'] ?? $post->post_content )
-				),
-			),
-		),
-	);
+	$result = wp_update_post( wp_slash( $update ), true );
+	return is_wp_error( $result ) ? kungfu_2026_mcp_tool_error( $result->get_error_message() ) : kungfu_2026_mcp_json_result( array( 'post_id' => $post_id, 'message' => 'Title/tags updated; content and publication status preserved.' ) );
 }
 
 /**
@@ -882,9 +631,9 @@ function kungfu_2026_handle_mcp_request( WP_REST_Request $request ) {
 				),
 				'serverInfo'      => array(
 					'name'    => 'kungfu-wordpress',
-					'version' => '0.5.0',
+					'version' => '0.6.0',
 				),
-				'instructions'    => 'Use add_post to create and immediately publish a new post. Both add_post and update_post accept plain text, WordPress-safe HTML, and serialized Gutenberg block markup. When formatting matters, send canonical Gutenberg blocks with paired <!-- wp:* --> delimiters and matching HTML; <h2>, paragraphs, links, <strong>, and <em> are preserved while unsafe markup is removed. Before editing a user-referenced section or line, call get_post_for_editing, use its S<section>.L<line> or global line references, and pass its content_revision to update_post. For Gutenberg content, replace complete block boundaries or use full-content replacement. Reread after every line edit because references may shift. update_post never changes publication status.',
+				'instructions'    => 'For content edits first call get_post_for_editing. Use insert_content to insert complete Gutenberg blocks or plain paragraphs after a unique block or at the end of an exact named H2 section. Use update_content_block to replace exactly one complete block. Pass content_revision and dry_run:true for preview, then dry_run:false to apply the same edit. Reread after writes or conflicts. Block IDs are scoped to the returned revision. update_post only edits title/tags; it refuses all content and line replacements. Partial edits preserve publication status and save a restorable revision. add_post retains its existing immediate-publication behavior; do not use it for testing drafts.',
 			)
 		);
 	}
@@ -916,6 +665,10 @@ function kungfu_2026_handle_mcp_request( WP_REST_Request $request ) {
 
 		if ( KUNGFU_MCP_UPDATE_TOOL_NAME === $tool_name ) {
 			return kungfu_2026_mcp_result( $id, kungfu_2026_mcp_update_post( $arguments ) );
+		}
+
+		if ( in_array( $tool_name, array( 'insert_content', 'update_content_block' ), true ) ) {
+			return kungfu_2026_mcp_result( $id, kungfu_2026_mcp_edit_content( $arguments, $tool_name ) );
 		}
 
 		return kungfu_2026_mcp_error( $id, -32602, 'Unknown tool.' );

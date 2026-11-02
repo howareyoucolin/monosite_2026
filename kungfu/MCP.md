@@ -1,140 +1,198 @@
-# Kungfu WordPress MCP endpoint
+# Kungfu WordPress MCP endpoint — 0.6.0
 
-The active `kungfu_2026` theme exposes a minimal stateless MCP endpoint:
+The existing active `kungfu_2026` theme owns the server. No separate plugin,
+endpoint, credentials, or deployment service is introduced.
 
-```text
-https://novel.369usa.com/wp-json/kungfu-mcp/v1/mcp
-```
+- Registration and JSON-RPC dispatch: `wp-content/themes/kungfu_2026/inc/mcp-server.php`
+- Lossless block planning and safe writes: `wp-content/themes/kungfu_2026/inc/mcp-block-editing.php`
+- Existing endpoint: `https://novel.369usa.com/wp-json/kungfu-mcp/v1/mcp`
 
-It exposes three tools:
+## Inspection findings
 
-- `add_post` accepts a title and up to 100,000 characters of plain text, WordPress-safe HTML, or serialized Gutenberg blocks. It immediately publishes the new post.
-- `get_post_for_editing` returns a post’s title, status, tags, content fingerprint, and numbered raw content. Nonblank lines are addressable as `S2.L3` (section 2, line 3) or by their global line number.
-- `update_post` changes an existing post’s title, WordPress-safe HTML or serialized Gutenberg block content, complete tag list, or an exact numbered line range. Gutenberg delimiters and safe formatting are preserved, while unsafe markup is removed. It never changes the post’s publication status.
+Before this change, this repository already registered **three** tools:
+`add_post`, `get_post_for_editing`, and `update_post`. The read tool returned
+numbered raw lines and a content fingerprint. `update_post` accepted safe HTML,
+Gutenberg serialization, full replacement, and revision-checked line ranges.
+Those numbered "sections" were blank-line groups, not named H2 sections.
+The connected ChatGPT app currently advertises only `add_post` and the older
+plain-text `update_post`. Its metadata differs from this source. This establishes
+a source/connection mismatch; deployment state and cached action definitions
+must both be checked before attributing it to either one.
 
-## Gutenberg content
+No dedicated insertion tool, block-target tool, dry-run preview, atomic revision
+check/write, or explicit recovery revision existed. The old line guard checked
+for opening/closing comments without proving balanced complete block boundaries,
+and re-filtered the whole result, potentially changing unrelated bytes.
 
-Both writing tools support canonical serialized Gutenberg markup. Prefer this
-form whenever editable WordPress formatting matters:
+The available installed skill catalog and local custom skills contained no
+Kungfu WordPress editing skill implementing these capabilities. This is a
+separately hosted PHP MCP server; its `tools/list` registry and `initialize`
+instructions own discovery. There is no MCP plugin manifest in this repository
+to update. The update-plugin workflow was used for the existing server source.
+
+**Existing behavior discrepancy:** the installed app describes `add_post` as
+creating a draft, but the repository implementation immediately publishes.
+This release retains that existing implementation and describes it accurately.
+Do not use `add_post` for safe draft testing. Tests create drafts through local
+WordPress APIs.
+
+## Exact tool names after deployment and refresh
+
+| Tool | Behavior |
+| --- | --- |
+| `add_post` | Existing immediate-publication behavior; accepts safe HTML/Gutenberg. |
+| `get_post_for_editing` | Title, status, exact raw content, revision token, top-level block IDs/attributes/raw markup/line spans, named H2 sections, plus legacy numbered raw text. |
+| `insert_content` | Insert native blocks or escaped plain paragraphs after a unique block/paragraph, or at the end of a named H2 section. |
+| `update_content_block` | Replace exactly one selected complete block with a block of the same type. |
+| `update_post` | Title and tags only. **Content and legacy line replacements are rejected**, including calls from cached schemas. |
+
+The server advertises version `0.6.0`. Existing `update_post` content integrations
+must migrate to the two block tools. There is no full-content replacement path
+through `update_post`, which prevents a partial request from accidentally
+replacing the post.
+
+## Safe editing workflow
+
+1. Call `get_post_for_editing` with an integer `post_id`.
+2. Verify the returned title and status. Inspect `blocks` and `h2_sections`.
+   Use the exact `content_revision`; it hashes exact bytes, post ID, title,
+   status, and modified time. Block IDs/line references are scoped to this
+   snapshot and must be reread after any successful edit or conflict.
+3. Select one `block_id`, or the exact complete visible `paragraph_text`.
+   Optional `section_heading` constrains the target to the exact visible H2.
+   Duplicated paragraphs/headings and targets outside that section fail.
+4. Call `insert_content` or `update_content_block` with `dry_run: true` (the
+   default). Review `change.before`, `change.after`, and the complete preview
+   `change.content`. No post/revision is written by the preview.
+5. Apply the identical request with `dry_run: false` only when authorized.
+   Revision checks run again; preview does not reserve a revision or target.
+6. Keep the returned `restore_revision_id` / `restore_url`. Reread before another edit.
+
+`insert_content` accepts **either** `paragraphs` (a list of plain strings, escaped
+and wrapped in native paragraph blocks) **or** `content` (one or more complete
+serialized blocks). It inserts immediately after the selected block. With only
+`section_heading`, insertion occurs before the next H1/H2, or at post end.
+
+`update_content_block` requires `content` containing exactly one complete block
+of the target's type. Copy its original attributes and inline HTML, changing only
+the desired text. This supports sentence/line changes inside a paragraph while
+preserving its `<strong>`, `<em>`, classes, and attributes. The server never chooses
+text by fuzzy match or edits a raw line that might cut through a block boundary.
+
+Only top-level native blocks are independent targets. Nested groups/columns are
+preserved as complete parent blocks; edit a child by supplying the complete
+replacement parent. Freeform/classic HTML and malformed serialization can be
+read, but partial writes are rejected until converted to native Gutenberg blocks.
+New markup must be balanced and unchanged by WordPress safe-content filtering;
+otherwise it is rejected, with no silent sanitization. This is conservative and
+may require canonical markup for otherwise renderable HTML.
+
+Example native replacement:
 
 ```html
-<!-- wp:heading {"level":2} -->
-<h2 class="wp-block-heading">Section 1: Overview</h2>
-<!-- /wp:heading -->
-
-<!-- wp:paragraph -->
-<p>This paragraph contains <strong>bold text</strong> and <em>italics</em>.</p>
+<!-- wp:paragraph {"className":"spectators"} -->
+<p class="spectators">Spectators were <strong>cheering</strong>, <em>arguing</em>, and placing bigger bets.</p>
 <!-- /wp:paragraph -->
 ```
 
-The server uses WordPress’s block parser and safe-post HTML filter, which parse
-and reserialize blocks while preserving their `<!-- wp:* -->` delimiters and
-safe inner HTML. Unsafe elements and attributes are removed. If submitted content
-contains Gutenberg delimiters but they cannot be preserved, the tool returns an
-error instead of silently flattening the post.
+## Post 673: requested insertion preview
 
-If an existing post already uses Gutenberg blocks, `update_post` rejects a
-plain-HTML or plain-text full replacement. The replacement must remain serialized
-Gutenberg content. Targeted edits on such a post must select complete block
-boundaries and either replace them with complete serialized blocks or delete the
-selected blocks. These guards prevent an edit from silently destroying existing
-block formatting.
+Post 673 was **not present in the local database**. The exact supplied three
+paragraphs were tested on local draft fixtures with an H2 section named
+`Section 3: The Die-Hard Spectators` and a representative spectator paragraph.
+This verifies behavior, not the actual contents of the live post.
+No request to read, edit, or publish the live post was made during testing.
 
-## Editing a section or line
-
-Use this read-before-write workflow whenever a user identifies part of a post instead of replacing all content:
-
-1. Call `get_post_for_editing` with the post ID.
-2. Show or interpret the numbered content. A section is a consecutive group of nonblank raw-content lines separated by blank lines.
-3. Call `update_post` with either a global range (`line_start`, optional `line_end`) or a section-local range (`section`, `section_line_start`, optional `section_line_end`).
-4. Include `replacement` and the exact `content_revision` returned by the read call.
-5. Call `get_post_for_editing` again before another targeted edit because inserting or deleting text can change subsequent line numbers.
-
-For example, a user can say “replace section 2, lines 3–4” or “replace global line 18.” An empty `replacement` deletes the selected range. The server rejects the edit if the post changed after it was read, preventing stale line references from modifying the wrong text.
-
-Full-content replacement remains available through `content` and does not use line references. Do not send `content` and a targeted line replacement in the same call. For Gutenberg posts, full-content replacement is safest. A targeted line replacement must include the complete opening block comment, matching HTML, and closing block comment so it cannot leave a broken block behind.
-
-Section titles may be supplied as HTML headings, for example:
-
-```html
-<h2>Section 1: Overview</h2>
-<h2>Section 2: History and Management</h2>
-<h2>Section 3: Name</h2>
-```
-
-Both full-content updates and targeted `replacement` updates preserve these headings through WordPress’s safe-HTML filtering. Serialized Gutenberg headings are preferred when the content should remain directly editable as blocks.
-
-Example read call:
+After deployment/refresh, first read **673** and verify the title
+**Evenly Matched — Part 1**. Copy the `block_id` of the actual paragraph describing
+cheering, arguing, and bets. Do not guess its exact wording or block ID.
+Then preview:
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": 3,
-  "method": "tools/call",
-  "params": {
-    "name": "get_post_for_editing",
-    "arguments": { "post_id": 673 }
-  }
+  "post_id": 673,
+  "content_revision": "COPY_THE_REVISION_FROM_GET_POST_FOR_EDITING",
+  "section_heading": "Section 3: The Die-Hard Spectators",
+  "block_id": "COPY_THE_ACTUAL_SPECTATOR_PARAGRAPH_BLOCK_ID",
+  "paragraphs": [
+    "Several spectators pulled out their phones and began recording the fight from different angles.",
+    "One man raised his phone high and shouted with wild enthusiasm.",
+    "\"Holy cow! This is gonna be epic! I'm recording the whole thing!\""
+  ],
+  "dry_run": true
 }
 ```
 
-Example section-local update using the fingerprint returned by that read call:
+## Write protection and recovery
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "tools/call",
-  "params": {
-    "name": "update_post",
-    "arguments": {
-      "post_id": 673,
-      "section": 2,
-      "section_line_start": 3,
-      "section_line_end": 4,
-      "replacement": "Replacement line one\nReplacement line two",
-      "content_revision": "paste-the-64-character-fingerprint-from-the-read-call"
-    }
-  }
-}
-```
+Applied edits require InnoDB for the WordPress posts table. The server starts a
+transaction, reads the current row with `SELECT ... FOR UPDATE`, authorizes the
+post, checks the revision, and calculates one exact byte splice. It sends only
+the content field to `wp_update_post` and checks the saved content, title, and
+status against the intended values before commit. Unexpected save-filter changes
+cause a database rollback. Unrelated existing content is never reserialized or
+sanitized. Preview hashes identify the unchanged prefix and suffix.
 
-## Authentication
+WordPress revisions must be enabled. A pre-edit snapshot is explicitly saved
+inside the transaction and verified before commit. This snapshot is created
+after ordinary revision pruning so even a retention limit of one cannot remove
+the recovery revision returned for this edit. Subsequent retention/cleanup rules
+still apply. Restore through the returned native WordPress revision page, or
+`wp post revision restore REVISION_ID` on the target environment.
+Normal WordPress save hooks run; database rollback cannot undo third-party hook
+side effects outside the database.
 
-Create a WordPress Application Password under **Users → Profile → Application Passwords**. Configure the MCP client to send HTTP Basic authentication using the WordPress username and that Application Password. Do not use the account's normal login password.
+## Local tests
 
-The WordPress user must have permission to publish posts. Each published post is assigned to the authenticated user.
-
-## Direct test
-
-Set temporary shell variables (do not save the password in Git), then initialize and list the tools:
+Run from the repository root with Docker running:
 
 ```sh
-export KUNGFU_MCP_USER='your-wordpress-username'
-export KUNGFU_MCP_APP_PASSWORD='xxxx xxxx xxxx xxxx xxxx xxxx'
-
-curl --user "$KUNGFU_MCP_USER:$KUNGFU_MCP_APP_PASSWORD" \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl-test","version":"1.0"}}}' \
-  https://novel.369usa.com/wp-json/kungfu-mcp/v1/mcp
-
-curl --user "$KUNGFU_MCP_USER:$KUNGFU_MCP_APP_PASSWORD" \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  --data '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
-  https://novel.369usa.com/wp-json/kungfu-mcp/v1/mcp
+docker compose run --rm wpcli eval-file wp-content/themes/kungfu_2026/tests/mcp-block-editing.php
+python3 wp-content/themes/kungfu_2026/tests/mcp-concurrency.py
 ```
 
-Calling `add_post` creates a real, publicly visible post, so only run that test when publication is intended.
+The integration suite uses real WordPress REST dispatch and local draft fixtures,
+then removes its fixtures/revisions. It refuses non-localhost environments.
+It covers exact insertion placement, byte-identical prefix/suffix, attributes,
+bold/italic, nested blocks, H2/H1 boundaries, CRLF, previews without writes,
+stale revisions, ambiguous/missing/out-of-section targets, authorization,
+malformed/unsafe/multiple/wrong-type replacements, legacy replacement rejection,
+filter rollback, disabled revisions, revision retention, and native restore.
+The concurrency test runs two independent PHP processes: the first holds a row
+lock and applies once; the second waits, sees the new revision, and fails.
 
-## Temporary ChatGPT test connection
+Validated locally: **49 integration checks plus the two-process concurrency test**
+on WordPress 7.1 / PHP 8.2 / MariaDB InnoDB. Editor UI validation and the live
+post's actual content remain unverified.
 
-For a short-lived ChatGPT test, deploy the theme and open **WordPress Admin → Tools → Kungfu MCP Test**. Copy the generated secret URL, then:
+## Deploy and refresh the existing ChatGPT connection
 
-1. In ChatGPT on the web, add a custom MCP server/plugin.
-2. Use the complete secret URL as the Server URL.
-3. Choose **No authentication**.
-4. Create and install the plugin, then select it with `@` in a new conversation.
+The changes are local until the existing theme deployment is run. Review the
+normal theme deployment diff first; include **both** PHP files:
 
-Treat the complete URL as a password. It authenticates as the administrator who generated it, can publish posts, and may appear in HTTP access logs. Use **Rotate secret URL** in WordPress immediately after testing or whenever the URL may have been exposed. A real multi-user integration should replace this temporary mechanism with OAuth 2.1.
+```sh
+npm run deploy:dry -- kungfu_2026
+npm run deploy -- kungfu_2026
+```
+
+Use the existing server URL/authentication. The regular route uses a WordPress
+Application Password with HTTP Basic auth; the temporary secret-path route is
+available under **WordPress Admin → Tools → Kungfu MCP Test** for the existing
+no-auth ChatGPT connection. Do not rotate its secret merely to refresh tools.
+Treat the full secret URL as a password and never put it in docs or test output.
+
+1. In the existing ChatGPT app/plugin detail page, **Refresh** the connection to
+   reload tools, schemas, descriptions, and server instructions. For a managed
+   workspace, the owner/admin may need to refresh its tool actions.
+2. Enable the newly discovered read/edit actions if they are deselected.
+3. Start a new conversation with the existing Kungfu WordPress app selected.
+4. Verify all five exact names above are available, then read/preview only.
+5. If the list is still old, inspect the deployed server's `initialize` and
+   `tools/list`: version must be `0.6.0` and the list must contain five names.
+   Check that the connected URL serves this theme/version (and clear PHP opcode
+   cache if deployment requires it). Refresh again once that is correct.
+6. If this client has no refresh operation, reconnect the same existing server
+   URL with the same authentication. No duplicate WordPress plugin is needed.
+
+OpenAI documents refresh as the way to pull updated tool definitions and server
+instructions: [Add custom MCP server](https://developers.openai.com/api/docs/guides/custom-mcp-server).
