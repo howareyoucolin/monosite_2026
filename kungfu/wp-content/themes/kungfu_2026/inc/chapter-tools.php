@@ -68,9 +68,9 @@ function akw_count_letters( $html ) {
  *   also announced through the status region beside it — an icon that changes
  *   silently is a confirmation only sighted users get.
  *
- * @param int $count Character count, from akw_count_letters().
+ * @param int $count Character count, from akw_count_letters(). Omit to hide the count.
  */
-function akw_the_chapter_tools( $count ) {
+function akw_the_chapter_tools( $count = 0 ) {
 	?>
 	<div class="chapter-tools">
 		<?php
@@ -135,10 +135,10 @@ function akw_the_next_chapter_link( $post = null ) {
 }
 
 /**
- * Load the copy script, on chapter pages only.
+ * Load the shared copy script on chapters and pages.
  */
 function kungfu_2026_chapter_tools_assets() {
-	if ( ! is_singular( AKW_CHAPTER ) ) {
+	if ( ! is_singular( array( AKW_CHAPTER, 'page' ) ) ) {
 		return;
 	}
 
@@ -155,7 +155,7 @@ function kungfu_2026_chapter_tools_assets() {
 		'akwCopy',
 		array(
 			'copied' => __( 'Copied!', 'kungfu_2026' ),
-			'status' => __( 'Chapter copied to clipboard', 'kungfu_2026' ),
+			'status' => is_page() ? __( 'Page copied to clipboard', 'kungfu_2026' ) : __( 'Chapter copied to clipboard', 'kungfu_2026' ),
 			'failed' => __( 'Copy failed', 'kungfu_2026' ),
 		)
 	);

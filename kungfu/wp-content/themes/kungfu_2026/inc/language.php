@@ -486,6 +486,7 @@ function akw_zh_strings() {
 		'Copy Title + Content'       => '复制标题与正文',
 		'Copied!'                    => '已复制！',
 		'Chapter copied to clipboard' => '章节已复制到剪贴板',
+		'Page copied to clipboard'    => '页面已复制到剪贴板',
 		'Copy failed'                => '复制失败',
 		'Next chapter'               => '下一章',
 		'Draft'                      => '草稿',

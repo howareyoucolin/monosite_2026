@@ -22,12 +22,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Load the buttons on the chapter editor.
+ * Load editor tools for chapters and pages. Pages only show Clear content.
  */
 function kungfu_2026_format_sections_assets() {
 	$screen = get_current_screen();
 
-	if ( ! $screen || AKW_CHAPTER !== $screen->post_type ) {
+	if ( ! $screen || ! in_array( $screen->post_type, array( AKW_CHAPTER, 'page' ), true ) ) {
 		return;
 	}
 

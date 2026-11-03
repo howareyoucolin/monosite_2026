@@ -480,7 +480,7 @@
 		return el(
 			wp.element.Fragment,
 			null,
-			el(
+			wp.data.select( 'core/editor' ).getCurrentPostType() !== 'page' && el(
 				wp.components.Button,
 				{
 					variant: 'secondary',
