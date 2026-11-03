@@ -19,7 +19,7 @@ function kungfu_2026_mcp_editing_tools() {
 		'block_id' => array( 'type' => 'string', 'description' => 'Exact top-level block ID from get_post_for_editing. Scoped to content_revision.' ),
 		'section_heading' => array( 'type' => 'string', 'minLength' => 1, 'description' => 'Exact visible H2 text. Duplicate headings are rejected. With block_id, also asserts that the block is inside this section.' ),
 		'paragraph_text' => array( 'type' => 'string', 'minLength' => 1, 'description' => 'Alternative to block_id: exact full visible paragraph text, unique within section_heading (or the post).' ),
-		'dry_run' => array( 'type' => 'boolean', 'default' => true, 'description' => 'Defaults to preview only. Set false to apply after reviewing the preview.' ),
+		'dry_run' => array( 'type' => 'boolean', 'default' => true, 'description' => 'Defaults to preview only; no confirmation needed for true. Set false only after summarizing the proposed edit and receiving a separate POST reply from the user.' ),
 	);
 	foreach ( array( 'insert_content', 'update_content_block' ) as $name ) {
 		$properties = $common;
@@ -37,14 +37,14 @@ function kungfu_2026_mcp_editing_tools() {
 			$schema['oneOf'] = array( array( 'required' => array( 'content' ) ), array( 'required' => array( 'paragraphs' ) ) );
 		}
 		$tools[] = array(
-			'name' => $name, 'description' => $description,
+			'name' => $name, 'description' => $description . ' ' . kungfu_2026_mcp_write_confirmation_instructions(),
 			'inputSchema' => $schema,
 			'annotations' => array( 'readOnlyHint' => false, 'destructiveHint' => 'update_content_block' === $name, 'idempotentHint' => false, 'openWorldHint' => false ),
 			'securitySchemes' => array( array( 'type' => 'noauth' ) ),
 		);
 	}
 	$tools[] = array(
-		'name' => 'update_post', 'description' => 'Update only a post title or tags, preserving content and publication status. For content use get_post_for_editing, then insert_content or update_content_block. Legacy content and line replacement arguments are rejected.',
+		'name' => 'update_post', 'description' => 'Update only a post title or tags, preserving content and publication status. For content use get_post_for_editing, then insert_content or update_content_block. Legacy content and line replacement arguments are rejected. ' . kungfu_2026_mcp_write_confirmation_instructions(),
 		'inputSchema' => array( 'type' => 'object', 'properties' => array(
 			'post_id' => $common['post_id'],
 			'title' => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 200 ),

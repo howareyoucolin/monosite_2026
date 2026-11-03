@@ -63,6 +63,14 @@ function kungfu_2026_scripts() {
 		wp_get_theme()->get( 'Version' ),
 		true
 	);
+
+	wp_enqueue_script(
+		'kungfu-2026-menu-drawer',
+		get_theme_file_uri( 'js/menu-drawer.js' ),
+		array(),
+		wp_get_theme()->get( 'Version' ),
+		true
+	);
 }
 add_action( 'wp_enqueue_scripts', 'kungfu_2026_scripts' );
 

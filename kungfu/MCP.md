@@ -1,4 +1,20 @@
-# Kungfu WordPress MCP endpoint — 0.6.0
+# Kungfu WordPress MCP endpoint — 0.6.1
+
+## POST confirmation policy (0.6.1)
+
+The server's `initialize` instructions and every write tool description require
+the agent to briefly summarize the action, target post/page, proposed content or
+metadata changes, and publication effect, then ask **"Reply POST to apply these
+changes."** The agent must wait for a separate user reply containing only `POST`
+before calling `add_post`, `update_post`, or either block tool with `dry_run:false`.
+Reads and `dry_run:true` previews do not require confirmation. Approval covers
+only the exact summarized edit or explicitly listed batch; changed proposals and
+revision-conflict retries require a new summary and confirmation.
+
+This is an agent instruction policy, not server-enforced proof of user consent.
+The API cannot verify conversation replies and its write schemas are unchanged.
+Deploy the updated theme through the existing process and refresh the MCP
+connection to load the new instructions and tool descriptions (version `0.6.1`).
 
 The existing active `kungfu_2026` theme owns the server. No separate plugin,
 endpoint, credentials, or deployment service is introduced.
@@ -46,7 +62,7 @@ WordPress APIs.
 | `update_content_block` | Replace exactly one selected complete block with a block of the same type. |
 | `update_post` | Title and tags only. **Content and legacy line replacements are rejected**, including calls from cached schemas. |
 
-The server advertises version `0.6.0`. Existing `update_post` content integrations
+The server advertises version `0.6.1`. Existing `update_post` content integrations
 must migrate to the two block tools. There is no full-content replacement path
 through `update_post`, which prevents a partial request from accidentally
 replacing the post.
@@ -64,7 +80,9 @@ replacing the post.
 4. Call `insert_content` or `update_content_block` with `dry_run: true` (the
    default). Review `change.before`, `change.after`, and the complete preview
    `change.content`. No post/revision is written by the preview.
-5. Apply the identical request with `dry_run: false` only when authorized.
+5. Briefly summarize the action, target, proposed changes and publication effect.
+   Ask **"Reply POST to apply these changes."** Wait for the user's separate
+   `POST` reply, then apply the identical request with `dry_run: false`.
    Revision checks run again; preview does not reserve a revision or target.
 6. Keep the returned `restore_revision_id` / `restore_url`. Reread before another edit.
 
@@ -188,7 +206,7 @@ Treat the full secret URL as a password and never put it in docs or test output.
 3. Start a new conversation with the existing Kungfu WordPress app selected.
 4. Verify all five exact names above are available, then read/preview only.
 5. If the list is still old, inspect the deployed server's `initialize` and
-   `tools/list`: version must be `0.6.0` and the list must contain five names.
+   `tools/list`: version must be `0.6.1` and the list must contain five names.
    Check that the connected URL serves this theme/version (and clear PHP opcode
    cache if deployment requires it). Refresh again once that is correct.
 6. If this client has no refresh operation, reconnect the same existing server

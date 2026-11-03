@@ -39,6 +39,17 @@ $texts = array(
 	'"Holy cow! This is gonna be epic! I\'m recording the whole thing!"',
 );
 try {
+	$request = new WP_REST_Request( 'POST', '/kungfu-mcp/v1/mcp' );
+	$request->set_header( 'Content-Type', 'application/json' );
+	$request->set_body( wp_json_encode( array( 'jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize' ) ) );
+	$initialization = rest_do_request( $request )->get_data()['result'];
+	check_mcp( '0.6.1' === $initialization['serverInfo']['version'], 'confirmation policy version advertised' );
+	check_mcp( false !== strpos( $initialization['instructions'], 'Reply POST to apply these changes.' ), 'initialize advertises POST confirmation' );
+	foreach ( kungfu_2026_mcp_tools() as $tool ) {
+		if ( in_array( $tool['name'], array( 'add_post', 'update_post', 'insert_content', 'update_content_block' ), true ) ) {
+			check_mcp( false !== strpos( $tool['description'], kungfu_2026_mcp_write_confirmation_instructions() ), $tool['name'] . ' advertises the shared confirmation policy' );
+		}
+	}
 	$id = fixture_mcp( $raw );
 	$initial = read_mcp( $id );
 	check_mcp( $initial['content'] === $raw && 'draft' === $initial['status'], 'read returns exact content and status' );
@@ -134,7 +145,7 @@ try {
 		$request->set_body( wp_json_encode( array( 'jsonrpc' => '2.0', 'id' => 2, 'method' => $method ) ) );
 		$discovery[$method] = rest_do_request( $request )->get_data()['result'];
 	}
-	check_mcp( '0.6.0' === $discovery['initialize']['serverInfo']['version'], 'initialize advertises updated version' );
+	check_mcp( '0.6.1' === $discovery['initialize']['serverInfo']['version'], 'initialize advertises updated version' );
 	$names = array_column( $discovery['tools/list']['tools'], 'name' );
 	check_mcp( count( $names ) === 5 && count( array_unique( $names ) ) === 5 && in_array( 'insert_content', $names, true ), 'exactly five registered tools without duplicates' );
 	WP_CLI::success( "$checks checks passed; requested insertion validated on local drafts. Live post 673 was never accessed or modified." );
