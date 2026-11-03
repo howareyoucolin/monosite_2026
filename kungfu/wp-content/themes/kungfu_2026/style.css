@@ -690,20 +690,26 @@ h3 {
 .revision-compare__diff del,
 .revision-compare__diff ins {
 	padding: 0 0.12em;
+	border-radius: 3px;
+	font-weight: 700;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
 	text-decoration: none;
 }
 
 .revision-compare__diff del {
-	background: transparent;
-	color: #b42318;
+	background: #fee2e2;
+	color: #991b1b;
 	text-decoration: line-through;
 	text-decoration-thickness: 1.5px;
 }
 
 .revision-compare__diff ins {
-	background: transparent;
-	color: #175cd3;
-	text-decoration: none;
+	background: #dbeafe;
+	color: #1e40af;
+	text-decoration: underline;
+	text-decoration-thickness: 1.5px;
+	text-underline-offset: 0.15em;
 }
 
 .revision-compare--changes-deleted .diff-row--added,
@@ -723,7 +729,9 @@ h3 {
 
 .revision-compare--changes-plain .diff-addedline,
 .revision-compare--changes-plain ins {
+	background: transparent;
 	color: var(--ink-strong);
+	font-weight: inherit;
 	text-decoration: none;
 }
 
