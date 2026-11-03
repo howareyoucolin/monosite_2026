@@ -49,9 +49,9 @@ function kungfu_2026_scripts() {
 
 	wp_enqueue_style(
 		'kungfu-2026-style',
-		get_stylesheet_uri(),
+		add_query_arg( 'v', (string) filemtime( get_stylesheet_directory() . '/style.css' ), get_stylesheet_uri() ),
 		array( 'kungfu-2026-fonts' ),
-		wp_get_theme()->get( 'Version' )
+		null
 	);
 
 	// Every page has the back-to-top button, so unlike the copy script this one
