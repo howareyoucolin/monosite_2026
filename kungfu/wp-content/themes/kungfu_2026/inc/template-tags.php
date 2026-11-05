@@ -16,6 +16,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/** Show the current entry's ID beneath its title for administrators only. */
+function akw_the_admin_post_id() {
+	if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) || ! get_the_ID() ) {
+		return;
+	}
+	printf(
+		'<p class="admin-post-id">%s <span>%d</span></p>',
+		esc_html__( 'Post ID:', 'kungfu_2026' ),
+		(int) get_the_ID()
+	);
+}
+
 /**
  * The whole chapter structure, resolved once per request.
  *

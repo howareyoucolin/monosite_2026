@@ -13,6 +13,7 @@ while ( have_posts() ) :
 	<article <?php post_class( 'chapter' ); ?>>
 		<header class="chapter__head">
 			<h1 class="chapter__title"><?php the_title(); ?></h1>
+			<?php akw_the_admin_post_id(); ?>
 		</header>
 
 		<?php if ( ! post_password_required() ) : ?>

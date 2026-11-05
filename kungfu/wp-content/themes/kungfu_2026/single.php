@@ -60,6 +60,7 @@ while ( have_posts() ) :
 			<?php endif; ?>
 
 			<h1 class="chapter__title"><?php the_title(); ?></h1>
+			<?php akw_the_admin_post_id(); ?>
 		</header>
 
 		<?php akw_the_chapter_tools( $akw_letters ); ?>

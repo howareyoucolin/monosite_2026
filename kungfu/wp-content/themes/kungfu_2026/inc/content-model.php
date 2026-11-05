@@ -3,8 +3,8 @@
  * Chapters and arcs.
  *
  * A chapter is an ordinary post. There is no custom post type: the site has
- * nothing to write but chapters, so a second type would only have split the
- * editor in two.
+ * chapters in its main reading sequence. Character wiki pages have their own
+ * post type — see inc/characters.php.
  *
  * An arc is a tag. Tags are flat, which is the whole reason they fit — an arc
  * has no sub-arcs, and the editor already has a tag box on every post. The

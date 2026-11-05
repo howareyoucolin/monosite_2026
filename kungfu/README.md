@@ -27,6 +27,38 @@ needs one of two things. The script supports both and tells you which is missing
 
 ## Scripts
 
+### Character wiki
+
+With the Kungfu 2026 theme active, use **Characters → Add New Character** in
+WordPress admin. Each entry has a title, optional portrait (featured image),
+summary (excerpt), and an editable block outline: Overview, Appearance, Skills &
+abilities, Weapons & equipment, Personality & background, and References. Add
+images, galleries, and links to source chapters directly in those sections.
+Sections can be renamed, moved, or removed; revisions retain earlier edits.
+
+Published entries appear alphabetically at `/characters/`, with individual pages
+at `/characters/{slug}/`. Characters are separate from chapter posts and arc
+tags. Run `npm run seed` (or `npm run seed:local`) to add **Characters** to the
+sidebar menu. This repeatable seeder preserves existing menu links and character
+content, creates a primary menu with Home if none exists, and adds the character
+archive link without duplicating it on later runs. The native archive menu item
+uses the current site domain. There is no separate static Page to maintain: the
+directory automatically lists published characters alphabetically, with portraits,
+summaries, links to their wiki pages, and pagination.
+
+After deploying the updated theme, run `npm run seed:prod` (or
+`npm run seed -- --prod`) to seed the production menu over SSH. This reads
+`sites.kungfu` from `../deploy.config.json`, or the file specified by
+`DEPLOY_CONFIG`, just like deployment. Production needs WP-CLI installed and
+Kungfu 2026 already active. The command does not deploy or activate themes.
+Use `npm run seed:prod -- --dry-run` to check the target without connecting or
+changing anything. Plain `npm run seed` only changes the local Docker database.
+Registration lives in the theme, so it requires
+Kungfu 2026 to remain active. On an existing site, the first administrator visit
+after deploying the theme refreshes the new permalink routes automatically.
+
+### Commands
+
 | script | what it does |
 | --- | --- |
 | `npm run dev` | build + start, logs in foreground |
@@ -34,6 +66,8 @@ needs one of two things. The script supports both and tells you which is missing
 | `npm run stop` | stop; local database survives |
 | `npm run logs` | tail the WordPress container |
 | `npm run wp -- <args>` | run any wp-cli command |
+| `npm run seed` / `npm run seed:local` | add Characters to the local sidebar menu; safe to repeat |
+| `npm run seed:prod` | add Characters to the production sidebar menu over SSH; safe to repeat |
 | `npm run pull:db` | fresh dump from prod, then import |
 | `npm run pull:db <file.gz>` | re-import an earlier dump from `backups/` |
 | `npm run pull:files` | fetch `uploads/` and `plugins/` from prod |

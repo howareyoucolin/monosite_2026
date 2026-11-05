@@ -127,6 +127,8 @@ add_filter( 'wp_headers', 'kungfu_2026_revalidate_pages' );
  * Chapter/arc content model.
  */
 require_once get_theme_file_path( 'inc/content-model.php' );
+require_once get_theme_file_path( 'inc/characters.php' );
+require_once get_theme_file_path( 'inc/seed.php' );
 require_once get_theme_file_path( 'inc/template-tags.php' );
 
 /**
